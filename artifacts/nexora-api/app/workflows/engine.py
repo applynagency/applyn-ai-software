@@ -40,7 +40,7 @@ class AgentWorkflowEngine:
             status=AgentRunStatus.QUEUED,
             requirement_id=data.requirement_id,
             triggered_by=current_user.id,
-            model_used=settings.OPENAI_MODEL,
+            model_used=settings.ANTHROPIC_MODEL,
         )
 
         await self.req_repo.update(requirement, status=RequirementStatus.PROCESSING)

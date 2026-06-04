@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, model_validator
 from datetime import datetime
 from typing import Optional
 import re
@@ -9,13 +9,13 @@ class WorkspaceCreate(BaseModel):
     description: Optional[str] = None
     slug: Optional[str] = None
 
-    @field_validator("slug", mode="before")
-    @classmethod
-    def generate_slug(cls, v: Optional[str], info) -> str:
-        if v:
-            return re.sub(r"[^a-z0-9-]", "-", v.lower())
-        name = info.data.get("name", "workspace")
-        return re.sub(r"[^a-z0-9-]", "-", name.lower())
+    @model_validator(mode="after")
+    def set_slug(self) -> "WorkspaceCreate":
+        if not self.slug:
+            self.slug = re.sub(r"[^a-z0-9-]+", "-", self.name.lower()).strip("-")
+        else:
+            self.slug = re.sub(r"[^a-z0-9-]+", "-", self.slug.lower()).strip("-")
+        return self
 
 
 class WorkspaceUpdate(BaseModel):

@@ -70,12 +70,14 @@ Your output structure:
 Rules:
 - Use Fibonacci story points only: 1, 2, 3, 5, 8, or 13
 - Write user stories in the format: As a [role], I want [goal], So that [benefit]
-- Each epic should have 2-5 features
-- Each feature should have 2-6 user stories
-- Acceptance criteria must be measurable and testable
+- Each epic should have 2-4 features MAX
+- Each feature should have 2-4 user stories MAX
+- Acceptance criteria: 2-3 bullet points per story MAX, keep them SHORT (under 15 words each)
 - Sprint plan: 2-week sprints, max 40 points per sprint
-- Identify realistic risks and practical mitigations
+- Identify 3-5 risks total, keep descriptions SHORT (under 20 words each)
+- Keep ALL text fields concise — under 30 words each
 - Return ONLY the JSON object — no preamble, no explanation, no markdown
+- IMPORTANT: Keep total output under 6000 tokens
 """
 
 

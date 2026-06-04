@@ -26,8 +26,8 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "bash artifacts/nexora-api/start.sh"
-waitForPort = 1
+args = "cd artifacts/nexora-api && uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload --log-level info"
+waitForPort = 8001
 
 [agent]
 stack = "PNPM_WORKSPACE"
@@ -36,6 +36,10 @@ expertMode = true
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
+
+[[ports]]
+localPort = 8001
+externalPort = 3000
 
 [[ports]]
 localPort = 8080
@@ -47,4 +51,4 @@ externalPort = 8081
 
 [nix]
 channel = "stable-25_05"
-packages = ["libxcrypt", "postgresql"]
+packages = ["cargo", "libiconv", "libxcrypt", "postgresql", "rustc"]

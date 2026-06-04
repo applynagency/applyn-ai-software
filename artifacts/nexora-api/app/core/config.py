@@ -33,7 +33,7 @@ class Settings(BaseSettings):
 
     ANTHROPIC_API_KEY: Optional[str] = None
     ANTHROPIC_MODEL: str = "claude-sonnet-4-6"
-    ANTHROPIC_MAX_TOKENS: int = 8192
+    ANTHROPIC_MAX_TOKENS: int = 16000
 
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "json"
@@ -45,6 +45,11 @@ class Settings(BaseSettings):
             v = v.replace("postgres://", "postgresql+asyncpg://", 1)
         elif v.startswith("postgresql://") and "+asyncpg" not in v:
             v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        # asyncpg doesn't accept sslmode in the URL — strip it
+        import re
+        v = re.sub(r"[?&]sslmode=[^&]*", "", v)
+        v = re.sub(r"\?&", "?", v)
+        v = v.rstrip("?")
         return v
 
 

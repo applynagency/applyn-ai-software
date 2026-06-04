@@ -1,0 +1,16 @@
+kind = "api"
+previewPath = "/nexora-api"
+title = "Nexora API Server"
+version = "1.0.0"
+id = "nexora-api-server"
+
+[[services]]
+localPort = 8001
+name = "Nexora API"
+paths = ["/nexora-api"]
+
+[services.development]
+run = "cd artifacts/nexora-api && uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload --log-level info"
+
+[services.production.health.startup]
+path = "/nexora-api/health"

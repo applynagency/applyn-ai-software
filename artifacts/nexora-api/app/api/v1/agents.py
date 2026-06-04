@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Query
+from typing import Optional
 from app.auth.dependencies import CurrentUser, DBSession
 from app.schemas.agent import AgentRunRequest, AgentRunResponse
 from app.workflows.engine import AgentWorkflowEngine
@@ -26,18 +27,21 @@ async def run_product_owner_agent(
     return await engine.execute(data, current_user)
 
 
-@router.get("/runs", response_model=list[AgentRunResponse])
+@router.get("/runs", response_model=dict)
 async def list_agent_runs(
     current_user: CurrentUser,
     session: DBSession,
-    requirement_id: str = Query(..., description="Filter by requirement ID"),
+    requirement_id: Optional[str] = Query(default=None, description="Filter by requirement ID"),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=20, ge=1, le=100),
 ):
-    """List all agent runs for a given requirement."""
+    """List agent runs, optionally filtered by requirement."""
     run_repo = AgentRunRepository(session)
-    items, _ = await run_repo.list_by_requirement(requirement_id, offset=offset, limit=limit)
-    return [AgentRunResponse.model_validate(r) for r in items]
+    if requirement_id:
+        items, total = await run_repo.list_by_requirement(requirement_id, offset=offset, limit=limit)
+    else:
+        items, total = await run_repo.list_all(offset=offset, limit=limit)
+    return {"items": [AgentRunResponse.model_validate(r) for r in items], "total": total}
 
 
 @router.get("/runs/{run_id}", response_model=AgentRunResponse)
