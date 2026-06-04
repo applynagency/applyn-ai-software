@@ -1,0 +1,178 @@
+Act as a Staff Backend Engineer, Principal AI Architect, and Senior Product Owner.
+
+Build a production-ready MVP backend for an AI Development Team platform.
+
+Project Name:
+Nexora AI Development Team
+
+Objective:
+Create the first version of a multi-agent software delivery platform where a user submits a business requirement and an AI Product Owner Agent automatically generates Epics, Features, User Stories, Acceptance Criteria, and Story Points.
+
+Tech Stack:
+- Python 3.12
+- FastAPI
+- PostgreSQL
+- SQLAlchemy 2.0
+- Alembic
+- Pydantic v2
+- JWT Authentication
+- Async Architecture
+- OpenAI Compatible LLM
+- Docker Ready
+
+Architecture Requirements:
+Use Clean Architecture.
+
+Folder Structure:
+
+app/
+ ├── api/
+ ├── core/
+ ├── database/
+ ├── models/
+ ├── schemas/
+ ├── repositories/
+ ├── services/
+ ├── agents/
+ ├── workflows/
+ ├── auth/
+ ├── middleware/
+ ├── utils/
+ ├── tests/
+ └── main.py
+
+MVP Scope:
+
+1. Authentication Module
+- User Registration
+- User Login
+- Password Hashing
+- JWT Access Token
+- JWT Refresh Token
+- Protected Routes
+
+2. Workspace Module
+- Create Workspace
+- Update Workspace
+- List Workspaces
+- Delete Workspace
+
+3. Project Module
+- Create Project
+- Update Project
+- List Projects
+- Delete Project
+
+4. Requirement Module
+- Submit Requirement
+- Requirement History
+- Requirement Status
+
+5. Product Owner Agent Module
+
+Input:
+Business Requirement
+
+Example:
+"I need a healthcare appointment booking platform where patients can search doctors, book appointments, make payments, and receive reminders."
+
+Agent Output:
+
+A. Project Summary
+
+B. Epics
+
+C. Features
+
+D. User Stories
+
+Format:
+As a [User]
+I want [Goal]
+So that [Benefit]
+
+E. Acceptance Criteria
+
+F. Story Points
+
+G. Recommended Sprint Plan
+
+H. Risks & Assumptions
+
+6. Agent Workflow Engine
+
+Workflow:
+
+Requirement Submitted
+        ↓
+Product Owner Agent Triggered
+        ↓
+Generate Analysis
+        ↓
+Store Output
+        ↓
+Return Response
+
+Database Tables:
+
+users
+workspaces
+projects
+requirements
+agent_runs
+agent_outputs
+audit_logs
+
+Requirements:
+
+- UUID Primary Keys
+- Soft Delete Support
+- Created At
+- Updated At
+- Audit Trail
+
+API Endpoints:
+
+POST /auth/register
+POST /auth/login
+
+POST /workspaces
+GET /workspaces
+
+POST /projects
+GET /projects
+
+POST /requirements
+GET /requirements
+
+POST /agents/product-owner/run
+
+Quality Requirements:
+
+- Production Ready
+- Async APIs
+- Repository Pattern
+- Service Layer Pattern
+- Dependency Injection
+- Structured Logging
+- Exception Handling
+- OpenAPI Documentation
+- Type Safe
+
+Deliverables:
+
+1. Complete Folder Structure
+2. Database Models
+3. SQLAlchemy Models
+4. Pydantic Schemas
+5. Repository Layer
+6. Service Layer
+7. Product Owner Agent
+8. Workflow Engine
+9. API Routes
+10. FastAPI Startup Configuration
+11. Environment Variables
+12. Docker Configuration
+13. Alembic Migration Setup
+
+Generate the complete backend implementation with code, file-by-file, starting from project structure and database design.

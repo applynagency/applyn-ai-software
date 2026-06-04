@@ -1,0 +1,201 @@
+import json
+import uuid
+from typing import Optional
+from openai import AsyncOpenAI
+from app.core.config import settings
+from app.core.exceptions import AgentError
+from app.core.logging import get_logger
+from app.schemas.agent import (
+    ProductOwnerOutput, Epic, Feature, UserStory, SprintPlan, Risk
+)
+
+logger = get_logger(__name__)
+
+SYSTEM_PROMPT = """You are an expert AI Product Owner Agent. Your role is to analyze business requirements 
+and produce comprehensive, production-ready backlog items following agile best practices.
+
+You must return a valid JSON response with NO markdown formatting, NO code blocks, just raw JSON.
+
+Your output structure:
+{
+  "project_summary": "string",
+  "total_story_points": number,
+  "estimated_sprints": number,
+  "epics": [
+    {
+      "id": "E-001",
+      "name": "string",
+      "description": "string",
+      "features": [
+        {
+          "id": "F-001",
+          "name": "string",
+          "description": "string",
+          "user_stories": [
+            {
+              "id": "US-001",
+              "as_a": "user type",
+              "i_want": "goal",
+              "so_that": "benefit",
+              "acceptance_criteria": ["criterion 1", "criterion 2"],
+              "story_points": number (1/2/3/5/8/13),
+              "priority": "critical|high|medium|low"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "sprint_plan": [
+    {
+      "sprint_number": 1,
+      "duration_weeks": 2,
+      "stories": ["US-001", "US-002"],
+      "story_points": number,
+      "goals": ["goal 1"]
+    }
+  ],
+  "risks_and_assumptions": [
+    {
+      "id": "R-001",
+      "type": "risk|assumption",
+      "description": "string",
+      "impact": "high|medium|low",
+      "mitigation": "string"
+    }
+  ],
+  "tech_stack_recommendations": ["item1", "item2"]
+}
+
+Rules:
+- Use Fibonacci story points: 1, 2, 3, 5, 8, 13
+- Write user stories in the format: As a [role], I want [goal], So that [benefit]
+- Each epic should have 2-5 features
+- Each feature should have 2-6 user stories
+- Acceptance criteria should be measurable and testable
+- Sprint plan should distribute work evenly, 2-week sprints, max 40 points per sprint
+- Identify realistic risks and practical mitigations
+"""
+
+
+class ProductOwnerAgent:
+    def __init__(self):
+        if not settings.OPENAI_API_KEY:
+            raise AgentError("OPENAI_API_KEY is not configured")
+        self.client = AsyncOpenAI(
+            api_key=settings.OPENAI_API_KEY,
+            base_url=settings.OPENAI_BASE_URL,
+        )
+
+    async def run(self, requirement_text: str) -> tuple[ProductOwnerOutput, int]:
+        """
+        Analyze the requirement and return structured output + tokens used.
+        Returns (ProductOwnerOutput, tokens_used)
+        """
+        logger.info("product_owner_agent_start", requirement_length=len(requirement_text))
+
+        try:
+            response = await self.client.chat.completions.create(
+                model=settings.OPENAI_MODEL,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {
+                        "role": "user",
+                        "content": f"Analyze this business requirement and produce a full backlog:\n\n{requirement_text}",
+                    },
+                ],
+                max_tokens=settings.OPENAI_MAX_TOKENS,
+                temperature=settings.OPENAI_TEMPERATURE,
+                response_format={"type": "json_object"},
+            )
+        except Exception as e:
+            logger.error("openai_api_error", error=str(e))
+            raise AgentError(f"LLM call failed: {str(e)}")
+
+        tokens_used = response.usage.total_tokens if response.usage else 0
+        raw_content = response.choices[0].message.content
+
+        if not raw_content:
+            raise AgentError("Empty response from LLM")
+
+        try:
+            data = json.loads(raw_content)
+        except json.JSONDecodeError as e:
+            logger.error("json_parse_error", error=str(e), raw=raw_content[:500])
+            raise AgentError(f"Failed to parse LLM response as JSON: {str(e)}")
+
+        try:
+            output = self._parse_output(data)
+        except Exception as e:
+            logger.error("output_parse_error", error=str(e))
+            raise AgentError(f"Failed to structure agent output: {str(e)}")
+
+        logger.info(
+            "product_owner_agent_complete",
+            tokens_used=tokens_used,
+            epics_count=len(output.epics),
+            total_story_points=output.total_story_points,
+        )
+
+        return output, tokens_used
+
+    def _parse_output(self, data: dict) -> ProductOwnerOutput:
+        epics = []
+        for epic_data in data.get("epics", []):
+            features = []
+            for feature_data in epic_data.get("features", []):
+                stories = []
+                for story_data in feature_data.get("user_stories", []):
+                    stories.append(UserStory(
+                        id=story_data.get("id", str(uuid.uuid4())[:8]),
+                        as_a=story_data.get("as_a", ""),
+                        i_want=story_data.get("i_want", ""),
+                        so_that=story_data.get("so_that", ""),
+                        acceptance_criteria=story_data.get("acceptance_criteria", []),
+                        story_points=int(story_data.get("story_points", 3)),
+                        priority=story_data.get("priority", "medium"),
+                    ))
+                features.append(Feature(
+                    id=feature_data.get("id", str(uuid.uuid4())[:8]),
+                    name=feature_data.get("name", ""),
+                    description=feature_data.get("description", ""),
+                    user_stories=stories,
+                ))
+            epics.append(Epic(
+                id=epic_data.get("id", str(uuid.uuid4())[:8]),
+                name=epic_data.get("name", ""),
+                description=epic_data.get("description", ""),
+                features=features,
+            ))
+
+        sprint_plan = [
+            SprintPlan(
+                sprint_number=s.get("sprint_number", i + 1),
+                duration_weeks=s.get("duration_weeks", 2),
+                stories=s.get("stories", []),
+                story_points=s.get("story_points", 0),
+                goals=s.get("goals", []),
+            )
+            for i, s in enumerate(data.get("sprint_plan", []))
+        ]
+
+        risks = [
+            Risk(
+                id=r.get("id", str(uuid.uuid4())[:8]),
+                type=r.get("type", "risk"),
+                description=r.get("description", ""),
+                impact=r.get("impact", "medium"),
+                mitigation=r.get("mitigation", ""),
+            )
+            for r in data.get("risks_and_assumptions", [])
+        ]
+
+        return ProductOwnerOutput(
+            project_summary=data.get("project_summary", ""),
+            total_story_points=int(data.get("total_story_points", 0)),
+            estimated_sprints=int(data.get("estimated_sprints", 0)),
+            epics=epics,
+            sprint_plan=sprint_plan,
+            risks_and_assumptions=risks,
+            tech_stack_recommendations=data.get("tech_stack_recommendations", []),
+        )
