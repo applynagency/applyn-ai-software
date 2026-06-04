@@ -26,7 +26,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd artifacts/nexora-api && uvicorn app.main:app --host 0.0.0.0 --port $PORT --reload --log-level info"
+args = "bash artifacts/nexora-api/start.sh"
 waitForPort = 1
 
 [agent]

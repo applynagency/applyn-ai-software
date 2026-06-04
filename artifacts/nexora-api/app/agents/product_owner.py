@@ -1,7 +1,7 @@
 import json
 import uuid
-from typing import Optional
-from openai import AsyncOpenAI
+import re
+import anthropic
 from app.core.config import settings
 from app.core.exceptions import AgentError
 from app.core.logging import get_logger
@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 SYSTEM_PROMPT = """You are an expert AI Product Owner Agent. Your role is to analyze business requirements 
 and produce comprehensive, production-ready backlog items following agile best practices.
 
-You must return a valid JSON response with NO markdown formatting, NO code blocks, just raw JSON.
+You must return a valid JSON object with NO markdown formatting, NO code blocks, NO backticks — just raw JSON.
 
 Your output structure:
 {
@@ -38,7 +38,7 @@ Your output structure:
               "i_want": "goal",
               "so_that": "benefit",
               "acceptance_criteria": ["criterion 1", "criterion 2"],
-              "story_points": number (1/2/3/5/8/13),
+              "story_points": 3,
               "priority": "critical|high|medium|low"
             }
           ]
@@ -51,14 +51,14 @@ Your output structure:
       "sprint_number": 1,
       "duration_weeks": 2,
       "stories": ["US-001", "US-002"],
-      "story_points": number,
+      "story_points": 20,
       "goals": ["goal 1"]
     }
   ],
   "risks_and_assumptions": [
     {
       "id": "R-001",
-      "type": "risk|assumption",
+      "type": "risk",
       "description": "string",
       "impact": "high|medium|low",
       "mitigation": "string"
@@ -68,24 +68,22 @@ Your output structure:
 }
 
 Rules:
-- Use Fibonacci story points: 1, 2, 3, 5, 8, 13
+- Use Fibonacci story points only: 1, 2, 3, 5, 8, or 13
 - Write user stories in the format: As a [role], I want [goal], So that [benefit]
 - Each epic should have 2-5 features
 - Each feature should have 2-6 user stories
-- Acceptance criteria should be measurable and testable
-- Sprint plan should distribute work evenly, 2-week sprints, max 40 points per sprint
+- Acceptance criteria must be measurable and testable
+- Sprint plan: 2-week sprints, max 40 points per sprint
 - Identify realistic risks and practical mitigations
+- Return ONLY the JSON object — no preamble, no explanation, no markdown
 """
 
 
 class ProductOwnerAgent:
     def __init__(self):
-        if not settings.OPENAI_API_KEY:
-            raise AgentError("OPENAI_API_KEY is not configured")
-        self.client = AsyncOpenAI(
-            api_key=settings.OPENAI_API_KEY,
-            base_url=settings.OPENAI_BASE_URL,
-        )
+        if not settings.ANTHROPIC_API_KEY:
+            raise AgentError("ANTHROPIC_API_KEY is not configured. Add it in the Secrets panel.")
+        self.client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
     async def run(self, requirement_text: str) -> tuple[ProductOwnerOutput, int]:
         """
@@ -95,34 +93,51 @@ class ProductOwnerAgent:
         logger.info("product_owner_agent_start", requirement_length=len(requirement_text))
 
         try:
-            response = await self.client.chat.completions.create(
-                model=settings.OPENAI_MODEL,
+            message = await self.client.messages.create(
+                model=settings.ANTHROPIC_MODEL,
+                max_tokens=settings.ANTHROPIC_MAX_TOKENS,
+                system=SYSTEM_PROMPT,
                 messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
                     {
                         "role": "user",
-                        "content": f"Analyze this business requirement and produce a full backlog:\n\n{requirement_text}",
-                    },
+                        "content": (
+                            f"Analyze this business requirement and produce a complete product backlog:\n\n"
+                            f"{requirement_text}\n\n"
+                            f"Return only the JSON object, no other text."
+                        ),
+                    }
                 ],
-                max_tokens=settings.OPENAI_MAX_TOKENS,
-                temperature=settings.OPENAI_TEMPERATURE,
-                response_format={"type": "json_object"},
             )
+        except anthropic.AuthenticationError as e:
+            logger.error("anthropic_auth_error", error=str(e))
+            raise AgentError("Invalid ANTHROPIC_API_KEY — check your Secrets panel.")
+        except anthropic.RateLimitError as e:
+            logger.error("anthropic_rate_limit", error=str(e))
+            raise AgentError("Anthropic rate limit hit — please retry in a moment.")
         except Exception as e:
-            logger.error("openai_api_error", error=str(e))
+            logger.error("anthropic_api_error", error=str(e))
             raise AgentError(f"LLM call failed: {str(e)}")
 
-        tokens_used = response.usage.total_tokens if response.usage else 0
-        raw_content = response.choices[0].message.content
+        tokens_used = (message.usage.input_tokens + message.usage.output_tokens) if message.usage else 0
+
+        raw_content = ""
+        for block in message.content:
+            if block.type == "text":
+                raw_content = block.text
+                break
 
         if not raw_content:
-            raise AgentError("Empty response from LLM")
+            raise AgentError("Empty response from Claude")
+
+        # Strip any accidental markdown fences
+        raw_content = re.sub(r"^```(?:json)?\s*", "", raw_content.strip())
+        raw_content = re.sub(r"\s*```$", "", raw_content.strip())
 
         try:
             data = json.loads(raw_content)
         except json.JSONDecodeError as e:
             logger.error("json_parse_error", error=str(e), raw=raw_content[:500])
-            raise AgentError(f"Failed to parse LLM response as JSON: {str(e)}")
+            raise AgentError(f"Failed to parse Claude's response as JSON: {str(e)}")
 
         try:
             output = self._parse_output(data)
@@ -147,7 +162,7 @@ class ProductOwnerAgent:
                 stories = []
                 for story_data in feature_data.get("user_stories", []):
                     stories.append(UserStory(
-                        id=story_data.get("id", str(uuid.uuid4())[:8]),
+                        id=story_data.get("id", f"US-{str(uuid.uuid4())[:6]}"),
                         as_a=story_data.get("as_a", ""),
                         i_want=story_data.get("i_want", ""),
                         so_that=story_data.get("so_that", ""),
@@ -156,13 +171,13 @@ class ProductOwnerAgent:
                         priority=story_data.get("priority", "medium"),
                     ))
                 features.append(Feature(
-                    id=feature_data.get("id", str(uuid.uuid4())[:8]),
+                    id=feature_data.get("id", f"F-{str(uuid.uuid4())[:6]}"),
                     name=feature_data.get("name", ""),
                     description=feature_data.get("description", ""),
                     user_stories=stories,
                 ))
             epics.append(Epic(
-                id=epic_data.get("id", str(uuid.uuid4())[:8]),
+                id=epic_data.get("id", f"E-{str(uuid.uuid4())[:6]}"),
                 name=epic_data.get("name", ""),
                 description=epic_data.get("description", ""),
                 features=features,
@@ -173,7 +188,7 @@ class ProductOwnerAgent:
                 sprint_number=s.get("sprint_number", i + 1),
                 duration_weeks=s.get("duration_weeks", 2),
                 stories=s.get("stories", []),
-                story_points=s.get("story_points", 0),
+                story_points=int(s.get("story_points", 0)),
                 goals=s.get("goals", []),
             )
             for i, s in enumerate(data.get("sprint_plan", []))
@@ -181,7 +196,7 @@ class ProductOwnerAgent:
 
         risks = [
             Risk(
-                id=r.get("id", str(uuid.uuid4())[:8]),
+                id=r.get("id", f"R-{str(uuid.uuid4())[:6]}"),
                 type=r.get("type", "risk"),
                 description=r.get("description", ""),
                 impact=r.get("impact", "medium"),
