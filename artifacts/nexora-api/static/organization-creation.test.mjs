@@ -5,9 +5,10 @@ import { fileURLToPath } from "node:url";
 import { loadFrontendExports } from "./frontend.harness.mjs";
 
 const appJsPath = fileURLToPath(new URL("./app.js", import.meta.url));
+const settingsOrgJsPath = fileURLToPath(new URL("./settings-org-ui.js", import.meta.url));
 
 test("organization page shows create button for authenticated users", () => {
-  const source = readFileSync(appJsPath, "utf8");
+  const source = readFileSync(settingsOrgJsPath, "utf8");
   const block = source.match(/function renderCustomerOrganization\(\)[\s\S]*?^function renderOrganizations\(/m);
   assert.ok(block);
   assert.match(block[0], /Create organization/);

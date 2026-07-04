@@ -65,6 +65,8 @@ const SOURCES = [
   { name: "reliability-ops-ui.js", loader: "js" },
   { name: "customer-journey-ui.js", loader: "js" },
   { name: "copilot-runbooks-ui.js", loader: "js" },
+  { name: "ops-command-center-ui.js", loader: "js" },
+  { name: "settings-org-ui.js", loader: "js" },
   { name: "styles.css", loader: "css" },
 ];
 

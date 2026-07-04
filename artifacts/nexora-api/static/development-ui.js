@@ -5167,27 +5167,6 @@ function renderAiAgentRunPanel(agent) {
   `;
 }
 
-function renderSettings() {
-  const tab = state.settingsTab || state.route.settingsTab || "profile";
-  let body = "";
-  if (tab === "profile") body = renderSettingsProfileTab();
-  else if (tab === "security") body = renderSettingsSecurityTab();
-  else if (tab === "sessions") body = renderSettingsSessionsTab();
-  else if (tab === "api-keys") body = renderSettingsApiKeysTab();
-  else if (tab === "service-accounts") body = renderSettingsServiceAccountsTab();
-  else if (tab === "audit") body = renderSettingsAuditTab();
-  else if (tab === "notifications") body = renderSettingsNotificationsTab();
-  else body = renderSettingsProfileTab();
-  return `
-    <div class="container">
-      ${renderHeader("Settings", "Manage your account and organization security")}
-      ${renderAlerts()}
-      ${renderSettingsTabs()}
-      ${body}
-    </div>
-  `;
-}
-
 function infrastructureStatusBadge(credential) {
   if (credential.is_active === false) {
     return '<span class="badge status-pending">Disconnected</span>';
@@ -8239,3 +8218,628 @@ function renderRetiredHubPage(title, targetPath, targetLabel) {
   </div>`;
 }
 
+
+/* ---------------------------------------------------------------------- *
+ * Development route loaders (moved from app.js shell)
+ * ---------------------------------------------------------------------- */
+
+async function loadAiTeams() {
+  try {
+    const data = await api("/v1/ai-teams");
+    state.aiTeams = data.items || [];
+  } catch {
+    state.aiTeams = [];
+  }
+}
+async function loadAiTeamDetail(teamId) {
+  state.selectedAiTeam = await api(`/v1/ai-teams/${teamId}`);
+  await Promise.all([loadAiTeamRuns(teamId), loadAiTeamDocuments(teamId)]);
+}
+async function loadAiTeamDocuments(teamId) {
+  try {
+    const data = await api(`/v1/ai-teams/${teamId}/documents`);
+    state.aiTeamDocuments = data.items || [];
+  } catch {
+    state.aiTeamDocuments = [];
+  }
+}
+async function loadAiWorkflows() {
+  try {
+    const data = await api("/v1/ai-team-workflows");
+    state.aiWorkflows = data.items || [];
+  } catch {
+    state.aiWorkflows = [];
+  }
+}
+async function loadAiWorkflowDetail(workflowId) {
+  state.selectedAiWorkflow = await api(`/v1/ai-team-workflows/${workflowId}`);
+  await loadAiWorkflowRuns(workflowId);
+  await loadAiWorkflowSchedules(workflowId);
+  await loadAiWorkflowApprovals(workflowId);
+}
+async function loadAiWorkflowApprovals(workflowId) {
+  try {
+    const data = await api(`/v1/workflow-approvals?workflow_id=${workflowId}`);
+    state.aiWorkflowApprovals = data.items || [];
+  } catch {
+    state.aiWorkflowApprovals = [];
+  }
+}
+async function loadAiWorkflowRuns(workflowId) {
+  try {
+    const data = await api(`/v1/ai-team-workflows/${workflowId}/runs`);
+    state.aiWorkflowRuns = data.items || [];
+  } catch {
+    state.aiWorkflowRuns = [];
+  }
+}
+async function loadAiWorkflowSchedules(workflowId) {
+  try {
+    const data = await api(`/v1/ai-team-workflow-schedules?workflow_id=${workflowId}`);
+    state.aiWorkflowSchedules = data.items || [];
+  } catch {
+    state.aiWorkflowSchedules = [];
+  }
+}
+async function loadAiAgentRuns(agentId) {
+  try {
+    const data = await api(`/v1/ai-team-agents/${agentId}/runs`);
+    state.aiAgentRuns = data.items || [];
+  } catch {
+    state.aiAgentRuns = [];
+  }
+}
+async function loadAiAgentMemories(agentId) {
+  const params = new URLSearchParams();
+  if (state.aiMemoryFilter) params.set("memory_type", state.aiMemoryFilter);
+  if (state.aiMemorySearch) params.set("search", state.aiMemorySearch);
+  const qs = params.toString();
+  try {
+    const data = await api(`/v1/ai-team-agents/${agentId}/memory${qs ? "?" + qs : ""}`);
+    state.aiMemories = data.items || [];
+  } catch {
+    state.aiMemories = [];
+  }
+}
+async function loadAiAgentTools(agentId) {
+  try {
+    const [assigned, all] = await Promise.all([
+      api(`/v1/ai-team-agents/${agentId}/tools`),
+      api(`/v1/ai-tools?limit=200`),
+    ]);
+    state.aiAgentTools = assigned.items || [];
+    state.aiAllTools = all.items || [];
+  } catch {
+    state.aiAgentTools = [];
+    state.aiAllTools = [];
+  }
+}
+async function loadAiToolRuns(toolId) {
+  try {
+    const data = await api(`/v1/ai-tools/${toolId}/runs`);
+    state.aiToolRuns = data.items || [];
+  } catch {
+    state.aiToolRuns = [];
+  }
+}
+async function loadAiTools() {
+  try {
+    const data = await api(`/v1/ai-tools?limit=200`);
+    state.aiTools = data.items || [];
+  } catch {
+    state.aiTools = [];
+  }
+}
+async function loadAiToolConnection(toolId) {
+  try {
+    const [status, creds] = await Promise.all([
+      api(`/v1/ai-tools/${toolId}/connection-status`),
+      api(`/v1/credentials?limit=200`).catch(() => ({ items: [] })),
+    ]);
+    state.aiToolConnStatus = status;
+    state.aiToolCredentials = creds.items || [];
+  } catch {
+    state.aiToolConnStatus = null;
+    state.aiToolCredentials = [];
+  }
+}
+async function loadAiTeamRuns(teamId) {
+  try {
+    const data = await api(`/v1/ai-teams/${teamId}/runs`);
+    state.aiTeamRuns = data.items || [];
+  } catch {
+    state.aiTeamRuns = [];
+  }
+}
+async function loadAiTeamRunDetail(runId) {
+  try {
+    state.aiTeamRunDetail = await api(`/v1/ai-teams/runs/${runId}`);
+  } catch {
+    state.aiTeamRunDetail = null;
+  }
+}
+async function loadTeams() {
+  const data = await api("/v1/teams");
+  state.teams = data.items;
+}
+async function loadTeamDetail(teamId) {
+  state.selectedTeam = await api(`/v1/teams/${teamId}`);
+  if (state.selectedTeamTab === "audit") {
+    await loadTeamAudit(teamId);
+  }
+}
+async function loadTeamAudit(teamId) {
+  const data = await api(`/v1/teams/${teamId}/audit`);
+  state.teamAuditLogs = data.items;
+}
+async function loadWorkflows() {
+  const data = await api("/v1/workflows");
+  state.workflows = data.items;
+}
+async function loadWorkflowDetail(workflowId) {
+  state.selectedWorkflow = await api(`/v1/workflows/${workflowId}`);
+  if (state.selectedWorkflowTab === "execution") {
+    state.workflowExecutionPlan = await api(`/v1/workflows/${workflowId}/execution-plan`);
+  }
+  if (state.selectedWorkflowTab === "audit") {
+    await loadWorkflowAudit(workflowId);
+  }
+}
+async function loadWorkflowAudit(workflowId) {
+  const data = await api(`/v1/workflows/${workflowId}/audit`);
+  state.workflowAuditLogs = data.items;
+}
+async function loadWorkflowExecutions() {
+  const data = await api("/v1/workflow-executions");
+  state.workflowExecutions = data.items;
+}
+async function loadWorkflowExecutionDetail(executionId) {
+  state.selectedExecution = await api(`/v1/workflow-executions/${executionId}`);
+  try {
+    const audit = await api(`/v1/workflow-executions/${executionId}/audit`);
+    state.executionAuditLogs = audit.items;
+  } catch {
+    state.executionAuditLogs = [];
+  }
+}
+async function loadRunsByRequirement(agentPath, requirements) {
+  if (!requirements.length) {
+    return [];
+  }
+  const batches = await Promise.all(
+    requirements.map(async (req) => {
+      try {
+        const data = await api(`/v1/agents/${agentPath}/${req.id}`);
+        return data.items.map((item) => ({ ...item, requirement_title: req.title }));
+      } catch {
+        return [];
+      }
+    }),
+  );
+  return batches.flat().sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
+}
+async function loadBusinessAnalystPage() {
+  await loadExecutionFormData();
+  state.businessAnalystRuns = await loadRunsByRequirement("business-analyst", state.requirements);
+}
+async function loadBusinessAnalystDetail(runId) {
+  state.selectedBusinessAnalystRun = await api(`/v1/agents/business-analyst/runs/${runId}`);
+}
+async function loadBackendArchitectPage() {
+  await loadExecutionFormData();
+  state.backendArchitectRuns = await loadRunsByRequirement(
+    "backend-architect",
+    state.requirements,
+  );
+}
+async function loadBackendArchitectDetail(runId) {
+  state.selectedBackendArchitectRun = await api(`/v1/agents/backend-architect/runs/${runId}`);
+}
+async function loadBackendV1Page() {
+  await loadExecutionFormData();
+  state.backendV1Runs = await loadRunsByRequirement("backend-v1", state.requirements);
+}
+async function loadBackendV1Detail(runId) {
+  state.selectedBackendV1Run = await api(`/v1/agents/backend-v1/runs/${runId}`);
+}
+async function loadBackendV2Page() {
+  await loadExecutionFormData();
+  state.backendV2Runs = await loadRunsByRequirement("backend-v2", state.requirements);
+}
+async function loadBackendV2Detail(runId) {
+  state.selectedBackendV2Run = await api(`/v1/agents/backend-v2/runs/${runId}`);
+}
+async function loadUiuxPage() {
+  await loadExecutionFormData();
+  state.uiuxRuns = await loadRunsByRequirement("uiux", state.requirements);
+}
+async function loadUiuxDetail(runId) {
+  state.selectedUiuxRun = await api(`/v1/agents/uiux/runs/${runId}`);
+}
+async function loadFrontendArchitectPage() {
+  await loadExecutionFormData();
+  state.frontendArchitectRuns = await loadRunsByRequirement(
+    "frontend-architect",
+    state.requirements,
+  );
+}
+async function loadFrontendArchitectDetail(runId) {
+  state.selectedFrontendArchitectRun = await api(`/v1/agents/frontend-architect/runs/${runId}`);
+}
+async function loadFrontendV1Page() {
+  await loadExecutionFormData();
+  state.frontendV1Runs = await loadRunsByRequirement("frontend-v1", state.requirements);
+}
+async function loadFrontendV1Detail(runId) {
+  state.selectedFrontendV1Run = await api(`/v1/agents/frontend-v1/runs/${runId}`);
+}
+async function loadFrontendV2Page() {
+  await loadExecutionFormData();
+  state.frontendV2Runs = await loadRunsByRequirement("frontend-v2", state.requirements);
+}
+async function loadFrontendV2Detail(runId) {
+  state.selectedFrontendV2Run = await api(`/v1/agents/frontend-v2/runs/${runId}`);
+}
+async function loadFrontendV3Page() {
+  await loadExecutionFormData();
+  state.frontendV3Runs = await loadRunsByRequirement("frontend-v3", state.requirements);
+}
+async function loadFrontendV3Detail(runId) {
+  state.selectedFrontendV3Run = await api(`/v1/agents/frontend-v3/runs/${runId}`);
+}
+async function loadBackendV3Page() {
+  await loadExecutionFormData();
+  state.backendV3Runs = await loadRunsByRequirement("backend-v3", state.requirements);
+}
+async function loadBackendV3Detail(runId) {
+  state.selectedBackendV3Run = await api(`/v1/agents/backend-v3/runs/${runId}`);
+}
+async function loadBackendCodeReviewPage() {
+  await loadExecutionFormData();
+  state.backendCodeReviewRuns = await loadRunsByRequirement(
+    "backend-code-review",
+    state.requirements,
+  );
+}
+async function loadBackendCodeReviewDetail(runId) {
+  state.selectedBackendCodeReviewRun = await api(
+    `/v1/agents/backend-code-review/runs/${runId}`,
+  );
+}
+async function loadBackendExecutionPage() {
+  await loadExecutionFormData();
+  state.backendExecutionRuns = await loadRunsByRequirement(
+    "backend-execution",
+    state.requirements,
+  );
+}
+async function loadBackendExecutionDetail(runId) {
+  state.selectedBackendExecutionRun = await api(
+    `/v1/agents/backend-execution/runs/${runId}`,
+  );
+}
+async function loadFrontendCodeReviewPage() {
+  await loadExecutionFormData();
+  state.frontendCodeReviewRuns = await loadRunsByRequirement(
+    "frontend-code-review",
+    state.requirements,
+  );
+}
+async function loadFrontendCodeReviewDetail(runId) {
+  state.selectedFrontendCodeReviewRun = await api(
+    `/v1/agents/frontend-code-review/runs/${runId}`,
+  );
+}
+async function loadFrontendExecutionPage() {
+  await loadExecutionFormData();
+  state.frontendExecutionRuns = await loadRunsByRequirement(
+    "frontend-execution",
+    state.requirements,
+  );
+}
+async function loadFrontendExecutionDetail(runId) {
+  state.selectedFrontendExecutionRun = await api(
+    `/v1/agents/frontend-execution/runs/${runId}`,
+  );
+}
+async function loadQAArchitectPage() {
+  await loadExecutionFormData();
+  state.qaArchitectRuns = await loadRunsByRequirement("qa-architect", state.requirements);
+}
+async function loadQAArchitectDetail(runId) {
+  state.selectedQAArchitectRun = await api(`/v1/agents/qa-architect/runs/${runId}`);
+}
+async function loadUnitTestsPage() {
+  await loadExecutionFormData();
+  state.unitTestRuns = await loadRunsByRequirement("unit-tests", state.requirements);
+}
+async function loadUnitTestsDetail(runId) {
+  state.selectedUnitTestRun = await api(`/v1/agents/unit-tests/runs/${runId}`);
+}
+async function loadIntegrationTestsPage() {
+  await loadExecutionFormData();
+  state.integrationTestRuns = await loadRunsByRequirement("integration-tests", state.requirements);
+}
+async function loadIntegrationTestsDetail(runId) {
+  state.selectedIntegrationTestRun = await api(`/v1/agents/integration-tests/runs/${runId}`);
+}
+async function loadSecurityTestsPage() {
+  await loadExecutionFormData();
+  state.securityTestRuns = await loadRunsByRequirement("security-tests", state.requirements);
+}
+async function loadSecurityTestsDetail(runId) {
+  state.selectedSecurityTestRun = await api(`/v1/agents/security-tests/runs/${runId}`);
+}
+async function loadPerformanceTestsPage() {
+  await loadExecutionFormData();
+  state.performanceTestRuns = await loadRunsByRequirement("performance-tests", state.requirements);
+}
+async function loadPerformanceTestsDetail(runId) {
+  state.selectedPerformanceTestRun = await api(`/v1/agents/performance-tests/runs/${runId}`);
+}
+async function loadQAApprovalsPage() {
+  await loadExecutionFormData();
+  state.qaApprovalRuns = await loadRunsByRequirement("qa-approvals", state.requirements);
+}
+async function loadQAApprovalsDetail(runId) {
+  state.selectedQAApprovalRun = await api(`/v1/agents/qa-approvals/runs/${runId}`);
+}
+async function loadInfrastructureArchitectPage() {
+  await loadExecutionFormData();
+  state.infrastructureArchitectRuns = await loadRunsByRequirement(
+    "infrastructure-architect",
+    state.requirements,
+  );
+}
+async function loadInfrastructureArchitectDetail(runId) {
+  state.selectedInfrastructureArchitectRun = await api(
+    `/v1/agents/infrastructure-architect/runs/${runId}`,
+  );
+}
+async function loadDockerAgentPage() {
+  await loadExecutionFormData();
+  state.dockerAgentRuns = await loadRunsByRequirement("docker-agent", state.requirements);
+}
+async function loadDockerAgentDetail(runId) {
+  state.selectedDockerAgentRun = await api(`/v1/agents/docker-agent/runs/${runId}`);
+}
+async function loadCicdPage() {
+  await loadExecutionFormData();
+  state.cicdRuns = await loadRunsByRequirement("cicd", state.requirements);
+}
+async function loadCicdDetail(runId) {
+  state.selectedCicdRun = await api(`/v1/agents/cicd/runs/${runId}`);
+}
+async function loadKubernetesPage() {
+  await loadExecutionFormData();
+  state.kubernetesRuns = await loadRunsByRequirement("kubernetes", state.requirements);
+}
+async function loadKubernetesDetail(runId) {
+  state.selectedKubernetesRun = await api(`/v1/agents/kubernetes/runs/${runId}`);
+}
+async function loadObservabilityPage() {
+  await loadExecutionFormData();
+  state.observabilityRuns = await loadRunsByRequirement("observability", state.requirements);
+}
+async function loadObservabilityDetail(runId) {
+  state.selectedObservabilityRun = await api(`/v1/agents/observability/runs/${runId}`);
+}
+async function loadSreApprovalsPage() {
+  await loadExecutionFormData();
+  state.sreApprovalRuns = await loadRunsByRequirement("sre-approval", state.requirements);
+}
+async function loadSreApprovalsDetail(runId) {
+  state.selectedSreApprovalRun = await api(`/v1/agents/sre-approval/runs/${runId}`);
+}
+async function loadFullstackAssemblyPage() {
+  await loadExecutionFormData();
+  state.fullstackAssemblyRuns = await loadRunsByRequirement(
+    "fullstack-assembly",
+    state.requirements,
+  );
+}
+async function loadFullstackAssemblyDetail(runId) {
+  state.selectedFullstackAssemblyRun = await api(
+    `/v1/agents/fullstack-assembly/runs/${runId}`,
+  );
+}
+async function loadApplicationsPage() {
+  await loadExecutionFormData();
+  state.customerApplications = loadCustomerApplications();
+  if (!state.selectedProjectId) {
+    state.lifecycleVersions = [];
+    return;
+  }
+  state.lifecycleVersions = await api(
+    `/v1/application-versions?project_id=${state.selectedProjectId}`,
+  );
+}
+async function loadApplicationDetail(versionId) {
+  await loadApplicationsPage();
+  await Promise.all([
+    loadWorkflowExecutions(),
+    loadDeploymentsPage(),
+    loadReleasesPage(),
+    loadChangeRequestsPage(),
+  ]);
+  state.selectedLifecycleVersion = (state.lifecycleVersions || []).find((v) => v.id === versionId) || null;
+  state.selectedCustomerApplication = (state.customerApplications || []).find((app) => app.id === versionId) || null;
+}
+async function loadApplicationCreatePage() {
+  await Promise.all([
+    loadExecutionFormData(),
+    loadTeams(),
+    loadWorkflows(),
+  ]);
+  state.customerApplications = loadCustomerApplications();
+}
+async function loadChangeRequestsPage() {
+  await loadExecutionFormData();
+  if (!state.requirements.length) {
+    state.lifecycleChangeRequests = [];
+    return;
+  }
+  const reqId = state.requirements[0].id;
+  const data = await api(`/v1/change-requests?requirement_id=${reqId}`);
+  state.lifecycleChangeRequests = data.items || [];
+}
+async function loadChangeRequestDetail(runId) {
+  state.selectedLifecycleChangeRequest = await api(`/v1/change-requests/${runId}`);
+}
+async function loadReleasesPage() {
+  await loadExecutionFormData();
+  if (!state.selectedProjectId) {
+    state.lifecycleReleases = [];
+    return;
+  }
+  const data = await api(`/v1/releases?project_id=${state.selectedProjectId}`);
+  state.lifecycleReleases = data.items || [];
+}
+async function loadApprovalsPage() {
+  await loadExecutionFormData();
+  state.approvalRuns = await loadRunsByRequirement("approval", state.requirements);
+}
+async function loadApprovalDetail(runId) {
+  state.selectedApprovalRun = await api(`/v1/agents/approval/runs/${runId}`);
+}
+async function loadProductOwnerPage() {
+  await loadExecutionFormData();
+  const data = await api("/v1/agents/runs?limit=100");
+  const titleByRequirement = Object.fromEntries(
+    state.requirements.map((req) => [req.id, req.title]),
+  );
+  state.productOwnerRuns = data.items
+    .filter((run) => String(run.agent_type).toLowerCase() === "product_owner")
+    .map((run) => ({
+      ...run,
+      requirement_title: titleByRequirement[run.requirement_id] || run.requirement_id.slice(0, 8),
+    }))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+}
+async function loadProductOwnerDetail(runId) {
+  state.selectedProductOwnerRun = await api(`/v1/agents/runs/${runId}`);
+}
+async function loadDeploymentsPage() {
+  await loadExecutionFormData();
+  const data = await api("/v1/deployments");
+  state.deploymentRuns = (data.items || []).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
+  state.deploymentRisk = await api("/v1/deployment-risk").catch(() => null);
+}
+async function loadDeploymentDetail(deploymentId) {
+  state.selectedDeploymentRun = await api(`/v1/deployments/${deploymentId}`);
+  const logs = await api(`/v1/deployments/${deploymentId}/logs`);
+  state.selectedDeploymentLogs = logs.items || [];
+}
+async function loadExecutionFormData() {
+  const [workspaces, projects] = await Promise.all([
+    api("/v1/workspaces"),
+    api("/v1/projects"),
+  ]);
+  state.workspaces = workspaces.items;
+  state.projects = projects.items;
+  if (!state.selectedWorkspaceId && state.workspaces[0]) {
+    state.selectedWorkspaceId = state.workspaces[0].id;
+  }
+  const workspaceProjects = state.projects.filter(
+    (project) => project.workspace_id === state.selectedWorkspaceId,
+  );
+  if (!state.selectedProjectId && workspaceProjects[0]) {
+    state.selectedProjectId = workspaceProjects[0].id;
+  }
+  if (state.selectedProjectId) {
+    const requirements = await api(
+      `/v1/requirements?project_id=${state.selectedProjectId}`,
+    );
+    state.requirements = requirements.items;
+  } else {
+    state.requirements = [];
+  }
+}
+async function loadAiAgents() {
+  const data = await api("/v1/ai-agents");
+  state.aiAgents = data.items;
+}
+async function loadAiAgentDetail(agentId) {
+  state.selectedAgent = await api(`/v1/ai-agents/${agentId}`);
+  if (state.selectedAgentTab === "execution" && state.selectedAgent.workflow_assignments?.[0]) {
+    const stageId = state.selectedAgent.workflow_assignments[0].workflow_stage_id;
+    state.agentStageResolution = await api(`/v1/ai-agents/stages/${stageId}/resolution`);
+  }
+  if (state.selectedAgentTab === "audit") {
+    await loadAiAgentAudit(agentId);
+  }
+}
+async function loadAiAgentAudit(agentId) {
+  const data = await api(`/v1/ai-agents/${agentId}/audit`);
+  state.agentAuditLogs = data.items;
+}
+async function loadAiAgentTemplates() {
+  const data = await api("/v1/ai-agent-templates");
+  state.aiAgentTemplates = data.items;
+}
+async function loadWorkflowTemplates() {
+  const data = await api("/v1/workflow-templates");
+  state.workflowTemplates = data.items;
+}
+async function loadTeamTemplates() {
+  const data = await api("/v1/team-templates");
+  state.teamTemplates = data.items;
+}
+
+async function loadDevelopmentDashboard() {
+  const [workspaces, projects, agentRuns, teams, workflowExecutions, deployments] = await Promise.all([
+    api("/v1/workspaces"),
+    api("/v1/projects"),
+    api("/v1/agents/runs"),
+    api("/v1/teams"),
+    api("/v1/workflow-executions"),
+    api("/v1/deployments"),
+  ]);
+
+  state.workspaces = workspaces.items;
+  state.projects = projects.items;
+  state.agentRuns = agentRuns.items;
+  state.teams = teams.items;
+  state.workflowExecutions = workflowExecutions.items || [];
+  state.deploymentRuns = (deployments.items || []).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
+  state.customerApplications = loadCustomerApplications();
+
+  if (!state.selectedWorkspaceId && state.workspaces[0]) {
+    state.selectedWorkspaceId = state.workspaces[0].id;
+  }
+
+  const workspaceProjects = state.projects.filter(
+    (project) => project.workspace_id === state.selectedWorkspaceId,
+  );
+  if (!state.selectedProjectId && workspaceProjects[0]) {
+    state.selectedProjectId = workspaceProjects[0].id;
+  }
+
+  if (state.selectedProjectId) {
+    const [requirements, versions, releases] = await Promise.all([
+      api(`/v1/requirements?project_id=${state.selectedProjectId}`),
+      api(`/v1/application-versions?project_id=${state.selectedProjectId}`),
+      api(`/v1/releases?project_id=${state.selectedProjectId}`),
+    ]);
+    state.requirements = requirements.items;
+    state.lifecycleVersions = versions;
+    state.lifecycleReleases = releases.items || [];
+    if (state.requirements.length > 0) {
+      const changes = await api(`/v1/change-requests?requirement_id=${state.requirements[0].id}`);
+      state.lifecycleChangeRequests = changes.items || [];
+    } else {
+      state.lifecycleChangeRequests = [];
+    }
+  } else {
+    state.requirements = [];
+    state.lifecycleVersions = [];
+    state.lifecycleReleases = [];
+    state.lifecycleChangeRequests = [];
+  }
+}

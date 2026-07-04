@@ -1,0 +1,648 @@
+/*
+ * Nexora Ops Command Center UI chunk — lazy-loaded on dashboard (ops mode).
+ * Globals: state, api, escapeHtml, render, renderHeader, renderAlerts, renderSkeleton,
+ * navIcon, saveDashboardGuideDismissed, loadIncidents, loadCredentials,
+ * loadReliabilityOpsUiChunk, loadCopilotRunbooksUiChunk, loadServiceHealth, loadRunbooks,
+ * countOpenIncidents, countCriticalIncidents.
+ */
+
+async function loadOpsDashboardSignals() {
+  state.opsDashboard = { loaded: false };
+  await Promise.all([
+    loadIncidents().catch(() => {}),
+    loadReliabilityOpsUiChunk().then(() => { if (typeof loadServiceHealth === "function") return loadServiceHealth(); }).catch(() => {}),
+    loadCopilotRunbooksUiChunk().then(() => { if (typeof loadRunbooks === "function") return loadRunbooks(); }).catch(() => {}),
+    loadCredentials().catch(() => { state.credentials = []; }),
+    api("/v1/integrations/connections").then((r) => { state.integrationConnections = r || []; }).catch(() => { state.integrationConnections = []; }),
+  ]);
+  const [myWork, queue, alerts, changes, deliveryOps] = await Promise.all([
+    api("/v1/ops-workspace/my-work").catch(() => null),
+    api("/v1/ops-workspace/queue").catch(() => null),
+    api("/v1/monitoring/alerts?limit=30").catch(() => ({ items: [] })),
+    api("/v1/change-requests?offset=0&limit=50").catch(() => ({ items: [] })),
+    api("/v1/delivery/operations").catch(() => []),
+  ]);
+  state.opsMyWork = myWork;
+  state.opsQueue = queue;
+  const firingAlerts = (alerts.items || []).filter((a) => /FIRING|ACTIVE|OPEN/i.test(String(a.status || "")));
+  const pendingChanges = (changes.items || []).filter((c) => {
+    const approval = String(c.approval_status || "").toUpperCase();
+    const status = String(c.status || "").toUpperCase();
+    return approval === "SUBMITTED" || approval === "PENDING"
+      || (status === "PENDING" && approval !== "APPROVED" && approval !== "REJECTED");
+  });
+  const deliveryOpsRaw = deliveryOps;
+  const deliveryOpsList = Array.isArray(deliveryOpsRaw)
+    ? deliveryOpsRaw
+    : (deliveryOpsRaw?.items || []);
+  const pendingApprovals = deliveryOpsList.filter((o) => String(o.status || "") === "PENDING_APPROVAL");
+  state.opsDashboard = {
+    loaded: true,
+    firingAlerts,
+    pendingChanges,
+    pendingApprovals,
+    attentionItems: myWork?.total_attention_items || 0,
+    queueTotal: queue?.total || (queue?.items || []).length,
+  };
+}
+const OPS_OPERATIONAL_FLOWS = [
+  {
+    id: "respond",
+    order: 1,
+    title: "Respond",
+    summary: "AI investigates alerts, finds root cause, suggests fixes.",
+    when: "Something broke — alert fired, build failed, or customers impacted.",
+    lookFor: "Root cause, ranked fix suggestions, linked alerts.",
+    outcome: "You know why it broke and what to do next — without opening 5 dashboards.",
+    href: "/incidents",
+    icon: "incident",
+    links: [
+      { label: "Incidents", href: "/incidents" },
+      { label: "Alerts", href: "/alerts" },
+      { label: "On-call", href: "/incidents/on-call" },
+      { label: "AI Copilot", href: "/copilot" },
+    ],
+  },
+  {
+    id: "connect",
+    order: 2,
+    title: "Connect",
+    summary: "Wire Jenkins, Datadog, K8s — Nexora reads them for you.",
+    when: "First setup or adding a new tool to your estate.",
+    lookFor: "Verified integrations with live data sync.",
+    outcome: "AI can investigate across your real infrastructure.",
+    href: "/integrations",
+    icon: "plug",
+    links: [
+      { label: "Integrations", href: "/integrations" },
+      { label: "Connections", href: "/connections-secrets" },
+    ],
+  },
+  {
+    id: "observe",
+    order: 3,
+    title: "Observe",
+    summary: "Alerts, service health, and logs in one place.",
+    when: "Proactive monitoring — catch degradation before customers do.",
+    lookFor: "Firing alerts, SLO burn, services at risk.",
+    outcome: "Problems surface here before you check native tool UIs.",
+    href: "/alerts",
+    icon: "monitor",
+    links: [
+      { label: "Alerts", href: "/alerts" },
+      { label: "Service Health", href: "/services" },
+      { label: "Logs", href: "/logs" },
+      { label: "Metrics", href: "/metrics" },
+    ],
+  },
+  {
+    id: "deliver",
+    order: 4,
+    title: "Deliver",
+    summary: "Ship changes with approvals and pipeline visibility.",
+    when: "Releasing code or reviewing CI/CD health.",
+    lookFor: "Failed pipelines, pending approvals, DORA trends.",
+    outcome: "Delivery risk visible alongside incident context.",
+    href: "/delivery",
+    icon: "upload",
+    links: [
+      { label: "Delivery", href: "/delivery" },
+      { label: "Pipelines", href: "/delivery/pipelines" },
+      { label: "Approvals", href: "/delivery/approvals" },
+    ],
+  },
+  {
+    id: "improve",
+    order: 5,
+    title: "Improve",
+    summary: "Postmortems, runbooks — prevent repeat incidents.",
+    when: "After resolving — capture lessons and automate recovery.",
+    lookFor: "Postmortem drafts, runbook gaps.",
+    outcome: "Same incident does not happen twice.",
+    href: "/incident-response/postmortems",
+    icon: "book",
+    links: [
+      { label: "Postmortems", href: "/incident-response/postmortems" },
+      { label: "Runbooks", href: "/runbooks" },
+    ],
+  },
+];
+
+const OPS_DASHBOARD_SECTIONS = [
+  { anchor: "ops-guide", title: "How to read this page", hint: "Your shift workflow in plain language" },
+  { anchor: "ops-priority", title: "Recommended next step", hint: "One action based on live signals" },
+  { anchor: "ops-signals", title: "Live signals", hint: "Click a number to jump to that area" },
+  { anchor: "ops-workflow", title: "Operational workflow", hint: "5-step SRE path with links" },
+  { anchor: "ops-attention", title: "Needs attention", hint: "Specific items waiting for you" },
+];
+
+const OPS_SIGNAL_HELP = [
+  { key: "openIncidents", label: "Open Incidents", help: "Unresolved customer-impacting events" },
+  { key: "firingAlerts", label: "Firing Alerts", help: "Monitoring rules currently in alert state" },
+  { key: "servicesAtRisk", label: "Services at Risk", help: "SLO burn or health score degraded" },
+  { key: "queueTotal", label: "Queue Items", help: "Prioritized work in your ops queue" },
+  { key: "pendingApprovals", label: "Pending Approvals", help: "Delivery operations awaiting sign-off" },
+  { key: "pendingChanges", label: "Change Requests", help: "Changes submitted but not decided" },
+];
+function countOpenIncidents(incidents) {
+  return (incidents || []).filter(
+    (i) => !["RESOLVED", "CLOSED"].includes(String(i.status || "").toUpperCase()),
+  ).length;
+}
+function countCriticalIncidents(incidents) {
+  return (incidents || []).filter((i) => {
+    const status = String(i.status || "").toUpperCase();
+    const sev = String(i.severity || "").toUpperCase();
+    return !["RESOLVED", "CLOSED"].includes(status) && /CRITICAL|SEV1|SEV_1|P1/.test(sev);
+  }).length;
+}
+function isDashboardQuiet(snapshot) {
+  if (!snapshot) return true;
+  return snapshot.openIncidents === 0
+    && snapshot.firingAlerts === 0
+    && snapshot.servicesAtRisk === 0
+    && snapshot.queueTotal === 0
+    && snapshot.pendingApprovals === 0
+    && snapshot.pendingChanges === 0;
+}
+function dashboardGreetingName() {
+  return state.user?.full_name || state.user?.username || state.user?.email || "there";
+}
+function activeOrgLabel() {
+  const org = state.organizations.find((o) => o.id === state.activeOrganization);
+  return org?.name || "your organization";
+}
+function renderOpsDashboardSectionNav() {
+  return `
+    <nav class="ops-section-nav" aria-label="Dashboard sections">
+      ${OPS_DASHBOARD_SECTIONS.map((section, idx) => `
+        <a class="ops-section-pill" href="#${escapeHtml(section.anchor)}" data-scroll-to="${escapeHtml(section.anchor)}">
+          <span class="ops-section-pill-num">${idx + 1}</span>
+          <span class="ops-section-pill-text">
+            <strong>${escapeHtml(section.title)}</strong>
+            <span class="muted">${escapeHtml(section.hint)}</span>
+          </span>
+        </a>`).join("")}
+    </nav>`;
+}
+function renderOpsDashboardSetupStrip() {
+  return `
+    <section class="ops-dashboard-setup" aria-label="Get started">
+      <div class="ops-dashboard-setup-copy">
+        <h2>Connect your estate</h2>
+        <p class="muted">No live signals yet. Add integrations and credentials so incidents, health, and delivery data appear here.</p>
+      </div>
+      <div class="ops-dashboard-setup-actions">
+        <a class="btn btn-primary" href="/customer-onboarding" data-nav="/customer-onboarding">Start onboarding</a>
+        <a class="btn btn-secondary" href="/connections-secrets" data-nav="/connections-secrets">Connections & secrets</a>
+        <a class="btn btn-secondary" href="/integrations/onboarding" data-nav="/integrations/onboarding">Connect integrations</a>
+      </div>
+    </section>`;
+}
+function renderOpsDashboardWelcome(snapshot) {
+  const showExpanded = !state.dashboardGuideDismissed;
+  if (!showExpanded) {
+    return `
+      <section class="card ops-guide-compact" id="ops-guide">
+        <div class="ops-guide-compact-inner">
+          <p class="muted">Welcome back, <strong>${escapeHtml(dashboardGreetingName())}</strong> · ${escapeHtml(activeOrgLabel())}</p>
+          <button type="button" class="btn btn-secondary btn-sm" data-show-dashboard-guide>Show dashboard guide</button>
+        </div>
+      </section>`;
+  }
+  return `
+    <section class="card ops-guide-card" id="ops-guide">
+      <div class="section-heading">
+        <div>
+          <p class="ops-guide-eyebrow">Welcome, ${escapeHtml(dashboardGreetingName())}</p>
+          <h2>How to use this dashboard</h2>
+          <p class="muted">You are operating <strong>${escapeHtml(activeOrgLabel())}</strong>. Follow one path every shift: <strong>Connect</strong> tools → <strong>Respond</strong> to alerts & incidents → <strong>Observe</strong> health → <strong>Deliver</strong> changes → <strong>Improve</strong> with postmortems.</p>
+        </div>
+        <button type="button" class="btn btn-secondary" data-dismiss-dashboard-guide aria-label="Dismiss dashboard guide">Got it</button>
+      </div>
+      <div class="ops-guide-flow-strip" aria-label="Shift workflow">
+        ${OPS_OPERATIONAL_FLOWS.map((flow, idx) => `
+          <div class="ops-guide-flow-step">
+            <span class="ops-guide-flow-num">${flow.order}</span>
+            <strong>${escapeHtml(flow.title)}</strong>
+            <span class="muted">${escapeHtml(flow.when)}</span>
+            ${idx < OPS_OPERATIONAL_FLOWS.length - 1 ? '<span class="ops-guide-flow-arrow" aria-hidden="true">→</span>' : ""}
+          </div>`).join("")}
+      </div>
+      <div class="ops-guide-read-order">
+        <h3>Read this page top to bottom</h3>
+        <ol>
+          <li><strong>Recommended next step</strong> — the one action Nexora suggests right now.</li>
+          <li><strong>Live signals</strong> — click any number to jump to incidents, health, delivery, etc.</li>
+          <li><strong>Operational workflow</strong> — the 5 lanes with links for each type of work.</li>
+          <li><strong>Needs attention</strong> — specific incidents, approvals, and at-risk services.</li>
+        </ol>
+      </div>
+      ${renderOpsDashboardSectionNav()}
+    </section>`;
+}
+function buildOpsDashboardSnapshot(stateObj) {
+  const openIncidents = countOpenIncidents(stateObj.incidents);
+  const criticalIncidents = countCriticalIncidents(stateObj.incidents);
+  const services = (stateObj.serviceOverview?.services) || stateObj.serviceHealth || [];
+  const servicesTracked = services.length;
+  const servicesAtRisk = stateObj.serviceOverview?.services_at_risk
+    ?? services.filter((s) => /WARNING|CRITICAL/i.test(String(s.burn_status || ""))).length;
+  const dash = stateObj.opsDashboard || {};
+  const integrations = Array.isArray(stateObj.integrationConnections)
+    ? stateObj.integrationConnections
+    : (stateObj.integrationConnections?.items || []);
+  const credentials = Array.isArray(stateObj.credentials)
+    ? stateObj.credentials
+    : (stateObj.credentials?.items || []);
+  return {
+    openIncidents,
+    criticalIncidents,
+    servicesTracked,
+    servicesAtRisk,
+    runbooks: (stateObj.runbooks || []).length,
+    integrations: integrations.length,
+    integrationsVerified: integrations.filter((c) => /VERIFIED/i.test(String(c.status || ""))).length,
+    integrationsLive: integrations.filter((c) => c.last_sync_at).length,
+    integrationsHealthy: integrations.filter((c) => /HEALTHY/i.test(String(c.health || ""))).length,
+    infrastructure: credentials.length,
+    attentionItems: dash.attentionItems || 0,
+    queueTotal: dash.queueTotal || 0,
+    firingAlerts: (dash.firingAlerts || []).length,
+    pendingChanges: (dash.pendingChanges || []).length,
+    pendingApprovals: (dash.pendingApprovals || []).length,
+  };
+}
+function computeOpsRecommendedAction(snapshot) {
+  if (!snapshot) return null;
+  if (snapshot.criticalIncidents > 0) {
+    return {
+      title: "Triage critical incidents",
+      description: `${snapshot.criticalIncidents} critical incident(s) need immediate response.`,
+      href: "/incidents",
+      cta: "Open Incidents",
+      priority: "critical",
+    };
+  }
+  if (snapshot.openIncidents > 0) {
+    return {
+      title: "Review open incidents",
+      description: `${snapshot.openIncidents} incident(s) are still open.`,
+      href: "/incidents",
+      cta: "View Incidents",
+      priority: "high",
+    };
+  }
+  if (snapshot.firingAlerts > 0) {
+    return {
+      title: "Investigate firing alerts",
+      description: `${snapshot.firingAlerts} alert(s) are active in monitoring.`,
+      href: "/alerts",
+      cta: "Open Alerts",
+      priority: "high",
+    };
+  }
+  if (snapshot.servicesAtRisk > 0) {
+    return {
+      title: "Review services at risk",
+      description: `${snapshot.servicesAtRisk} service(s) have elevated SLO burn or degraded health.`,
+      href: "/services",
+      cta: "Service Health",
+      priority: "medium",
+    };
+  }
+  if (snapshot.pendingApprovals > 0) {
+    return {
+      title: "Approve pending delivery operations",
+      description: `${snapshot.pendingApprovals} delivery operation(s) await approval.`,
+      href: "/delivery/approvals",
+      cta: "Review Approvals",
+      priority: "medium",
+    };
+  }
+  if (snapshot.pendingChanges > 0) {
+    return {
+      title: "Review change requests",
+      description: `${snapshot.pendingChanges} change request(s) need a decision.`,
+      href: "/delivery/changes",
+      cta: "Open Changes",
+      priority: "medium",
+    };
+  }
+  if (snapshot.queueTotal > 0 || snapshot.attentionItems > 0) {
+    const n = Math.max(snapshot.queueTotal, snapshot.attentionItems);
+    return {
+      title: "Triage open incidents and alerts",
+      description: `${n} item(s) need attention — investigate root cause and fixes.`,
+      href: "/incidents",
+      cta: "Open Incidents",
+      priority: "low",
+    };
+  }
+  return {
+    title: "All clear — strengthen reliability posture",
+    description: "No urgent signals. Connect tools or review service health.",
+    href: "/integrations",
+    cta: "Connect Tools",
+    priority: "clear",
+  };
+}
+function opsFlowLaneCount(flowId, snapshot) {
+  const map = {
+    respond: snapshot.openIncidents + snapshot.firingAlerts,
+    connect: Math.max(0, 3 - snapshot.integrationsVerified),
+    observe: snapshot.servicesAtRisk + snapshot.firingAlerts,
+    deliver: snapshot.pendingApprovals + snapshot.pendingChanges,
+    improve: snapshot.runbooks,
+  };
+  return map[flowId] ?? 0;
+}
+function renderOpsEstateStatCard(label, value, href, opts = {}) {
+  const warn = opts.warn ? " ops-estate-stat-warn" : "";
+  return `<a class="ops-estate-stat${warn}" href="${escapeHtml(href)}" data-nav="${escapeHtml(href)}" style="--estate-accent:${opts.color || "#2563eb"}">
+    <span class="ops-estate-stat-icon" aria-hidden="true">${opts.icon || "•"}</span>
+    <span class="ops-estate-stat-value">${value}</span>
+    <span class="ops-estate-stat-label">${escapeHtml(label)}</span>
+  </a>`;
+}
+function renderOpsEstateOverview(snapshot) {
+  const needsConnect = snapshot.integrations === 0 && snapshot.infrastructure === 0;
+  const connectBanner = needsConnect ? `
+    <div class="ops-connect-banner">
+      <span class="muted">No connectors yet.</span>
+      <a href="/connections-secrets" data-nav="/connections-secrets">Add connections</a>
+      <span class="muted">·</span>
+      <a href="/integrations/onboarding" data-nav="/integrations/onboarding">Connect integrations</a>
+    </div>` : "";
+  return `
+    <section class="ops-estate-overview" aria-label="Estate overview">
+      ${connectBanner}
+      <div class="ops-estate-grid">
+        ${renderOpsEstateStatCard("Integrations", snapshot.integrations, "/integrations", { icon: "🔌", color: "#7c3aed" })}
+        ${renderOpsEstateStatCard("Infrastructure", snapshot.infrastructure, "/connections-secrets", { icon: "☁️", color: "#0891b2" })}
+        ${renderOpsEstateStatCard("Services", snapshot.servicesTracked, "/services", { icon: "💚", color: "#2563eb" })}
+        ${renderOpsEstateStatCard("Runbooks", snapshot.runbooks, "/runbooks", { icon: "📖", color: "#059669" })}
+        ${renderOpsEstateStatCard("Open incidents", snapshot.openIncidents, "/incidents", { icon: "🚨", color: "#dc2626", warn: snapshot.openIncidents > 0 })}
+        ${renderOpsEstateStatCard("Firing alerts", snapshot.firingAlerts, "/alerts", { icon: "⚡", color: "#ea580c", warn: snapshot.firingAlerts > 0 })}
+      </div>
+    </section>`;
+}
+function renderOpsAlertStrip(snapshot) {
+  const action = computeOpsRecommendedAction(snapshot);
+  if (!action || !["critical", "high"].includes(action.priority)) return "";
+  const cls = action.priority === "critical" ? "ops-alert-critical" : "ops-alert-high";
+  return `
+    <section class="ops-alert-strip ${cls}" aria-label="Urgent action">
+      <span class="ops-alert-strip-text"><strong>${escapeHtml(action.title)}</strong> — ${escapeHtml(action.description)}</span>
+      <a class="btn btn-sm" href="${escapeHtml(action.href)}" data-nav="${escapeHtml(action.href)}">${escapeHtml(action.cta)}</a>
+    </section>`;
+}
+function renderOpsPriorityCard(snapshot) {
+  const action = computeOpsRecommendedAction(snapshot);
+  if (!action) return "";
+  const cls = action.priority === "critical" ? "ops-priority-critical"
+    : action.priority === "high" ? "ops-priority-high"
+      : action.priority === "medium" ? "ops-priority-medium"
+        : action.priority === "clear" ? "ops-priority-clear" : "";
+  return `
+    <section class="card ops-priority-card ${cls}" id="ops-priority" aria-label="Recommended next action">
+      <div class="ops-priority-inner">
+        <div>
+          <p class="ops-priority-eyebrow">① Recommended next step</p>
+          <h2 class="ops-priority-title">${escapeHtml(action.title)}</h2>
+          <p class="muted">${escapeHtml(action.description)}</p>
+          <p class="ops-priority-why muted">Why here? Nexora ranks open incidents and alerts first, then service risk, then delivery approvals, then your queue.</p>
+        </div>
+        <a class="btn" href="${escapeHtml(action.href)}" data-nav="${escapeHtml(action.href)}">${escapeHtml(action.cta)}</a>
+      </div>
+    </section>`;
+}
+function renderOpsSignalsBar(snapshot) {
+  const signals = [
+    { key: "openIncidents", label: "Open Incidents", value: snapshot.openIncidents, href: "/incidents", warn: snapshot.openIncidents > 0 },
+    { key: "firingAlerts", label: "Firing Alerts", value: snapshot.firingAlerts, href: "/alerts", warn: snapshot.firingAlerts > 0 },
+    { key: "servicesAtRisk", label: "Services at Risk", value: snapshot.servicesAtRisk, href: "/services", warn: snapshot.servicesAtRisk > 0 },
+    { key: "queueTotal", label: "Needs Triage", value: snapshot.queueTotal, href: "/incidents", warn: snapshot.queueTotal > 0 },
+    { key: "pendingApprovals", label: "Pending Approvals", value: snapshot.pendingApprovals, href: "/delivery/approvals", warn: snapshot.pendingApprovals > 0 },
+    { key: "pendingChanges", label: "Change Requests", value: snapshot.pendingChanges, href: "/delivery/changes", warn: snapshot.pendingChanges > 0 },
+  ];
+  const helpByKey = Object.fromEntries(OPS_SIGNAL_HELP.map((h) => [h.key, h.help]));
+  return `
+    <section class="card" id="ops-signals" aria-label="Live operational signals">
+      <h2 class="ops-panel-title">Live signals</h2>
+      <div class="ops-signals-bar">
+        ${signals.map((s) => `
+          <a class="ops-signal${s.warn ? " ops-signal-warn" : ""}" href="${escapeHtml(s.href)}" data-nav="${escapeHtml(s.href)}" title="${escapeHtml(helpByKey[s.key] || "")}">
+            <span class="ops-signal-value">${s.value}</span>
+            <span class="ops-signal-label">${escapeHtml(s.label)}</span>
+          </a>`).join("")}
+      </div>
+    </section>`;
+}
+function renderOpsModuleStats(snapshot) {
+  const areas = [
+    {
+      title: "Respond",
+      summary: "Incidents and paging",
+      href: "/incidents",
+      icon: "incident",
+      color: "#dc2626",
+      metrics: [
+        { value: snapshot.openIncidents, label: "open incidents", warn: true },
+        { value: snapshot.firingAlerts, label: "firing alerts", warn: true },
+        { value: snapshot.criticalIncidents, label: "critical", warn: true },
+      ],
+    },
+    {
+      title: "Observe",
+      summary: "Health and reliability",
+      href: "/services",
+      icon: "monitor",
+      color: "#2563eb",
+      metrics: [
+        { value: snapshot.servicesTracked, label: "services" },
+        { value: snapshot.servicesAtRisk, label: "at risk", warn: true },
+        { value: snapshot.runbooks, label: "runbooks" },
+      ],
+    },
+    {
+      title: "Deliver",
+      summary: "Changes and releases",
+      href: "/delivery",
+      icon: "upload",
+      color: "#7c3aed",
+      metrics: [
+        { value: snapshot.pendingApprovals, label: "approvals", warn: true },
+        { value: snapshot.pendingChanges, label: "changes", warn: true },
+        { value: snapshot.queueTotal, label: "queue items", warn: true },
+      ],
+    },
+    {
+      title: "Connect",
+      summary: "Integrations health board & credentials",
+      href: "/integrations",
+      icon: "plug",
+      color: "#0891b2",
+      metrics: [
+        { value: snapshot.integrations, label: "integrations" },
+        { value: snapshot.integrationsVerified, label: "verified" },
+        { value: snapshot.integrationsLive, label: "live data" },
+        { value: snapshot.infrastructure, label: "credentials" },
+      ],
+    },
+  ];
+  const metricHtml = (m) => {
+    const warn = m.warn && m.value > 0 ? " is-warn" : "";
+    return `<span class="ops-area-metric${warn}"><strong>${m.value}</strong> ${escapeHtml(m.label)}</span>`;
+  };
+  const rowAttention = (area) => area.metrics.some((m) => m.warn && m.value > 0);
+  return `
+    <section class="card ops-areas-panel" id="ops-modules" aria-label="Operations areas">
+      <h2 class="ops-panel-title">Operations areas</h2>
+      <div class="ops-area-list">
+        ${areas.map((area) => `
+          <a class="ops-area-row${rowAttention(area) ? " has-attention" : ""}" href="${escapeHtml(area.href)}" data-nav="${escapeHtml(area.href)}" style="--area-accent:${area.color}">
+            <div class="ops-area-brand">
+              <span class="ops-area-icon" aria-hidden="true">${navIcon(area.icon)}</span>
+              <div class="ops-area-copy">
+                <span class="ops-area-title">${escapeHtml(area.title)}</span>
+                <span class="ops-area-summary">${escapeHtml(area.summary)}</span>
+              </div>
+            </div>
+            <div class="ops-area-metrics">
+              ${area.metrics.map((m, idx) => `${idx ? '<span class="ops-area-sep" aria-hidden="true">·</span>' : ""}${metricHtml(m)}`).join("")}
+            </div>
+            <span class="ops-area-arrow" aria-hidden="true">→</span>
+          </a>`).join("")}
+      </div>
+    </section>`;
+}
+function renderOpsFlowLanes(snapshot) {
+  const lanes = OPS_OPERATIONAL_FLOWS.map((flow) => {
+    const count = opsFlowLaneCount(flow.id, snapshot);
+    const links = flow.links.map((l) => `
+      <a class="ops-flow-link" href="${escapeHtml(l.href)}" data-nav="${escapeHtml(l.href)}">${escapeHtml(l.label)}</a>`).join("");
+    return `
+      <article class="ops-flow-lane">
+        <div class="ops-flow-lane-head">
+          <span class="ops-flow-order">${flow.order}</span>
+          <div class="ops-flow-lane-icon">${navIcon(flow.icon)}</div>
+          <div class="ops-flow-lane-meta">
+            <h3><a href="${escapeHtml(flow.href)}" data-nav="${escapeHtml(flow.href)}">${escapeHtml(flow.title)}</a></h3>
+            <p class="muted">${escapeHtml(flow.summary)}</p>
+          </div>
+          ${count > 0 ? `<span class="ops-flow-count" title="Items needing attention">${count}</span>` : ""}
+        </div>
+        <div class="ops-flow-guide">
+          <p><span class="ops-flow-guide-label">When</span> ${escapeHtml(flow.when)}</p>
+          <p><span class="ops-flow-guide-label">Look for</span> ${escapeHtml(flow.lookFor)}</p>
+          <p><span class="ops-flow-guide-label">Outcome</span> ${escapeHtml(flow.outcome)}</p>
+        </div>
+        <div class="ops-flow-links">${links}</div>
+      </article>`;
+  }).join("");
+  return `
+    <section class="card ops-flow-section" id="ops-workflow" aria-label="Operational workflow">
+      <div class="section-heading">
+        <div>
+          <h2>③ Your operational workflow</h2>
+          <p class="muted">Five lanes — same order every shift. Expand the left sidebar sections for deeper links.</p>
+        </div>
+        <a class="btn btn-secondary" href="/help/getting-started" data-nav="/help/getting-started">Full guide</a>
+      </div>
+      <div class="ops-flow-grid">${lanes}</div>
+    </section>`;
+}
+function renderOpsAttentionList(stateObj, snapshot) {
+  const rows = [];
+  const open = (stateObj.incidents || []).filter(
+    (i) => !["RESOLVED", "CLOSED"].includes(String(i.status || "").toUpperCase()),
+  ).slice(0, 4);
+  open.forEach((inc) => {
+    rows.push({
+      kind: "Incident",
+      title: inc.title || inc.id,
+      meta: `${inc.severity || "—"} · ${inc.status || "—"}`,
+      href: `/incidents/${inc.id}`,
+      priority: /CRITICAL|SEV1|P1/i.test(String(inc.severity || "")) ? "high" : "normal",
+    });
+  });
+  (stateObj.opsDashboard?.pendingApprovals || []).slice(0, 3).forEach((op) => {
+    rows.push({
+      kind: "Approval",
+      title: op.name || op.operation_type || op.id,
+      meta: "Pending delivery approval",
+      href: "/delivery/approvals",
+      priority: "medium",
+    });
+  });
+  const atRisk = ((stateObj.serviceOverview?.services) || []).filter(
+    (s) => /WARNING|CRITICAL/i.test(String(s.burn_status || "")),
+  ).slice(0, 3);
+  atRisk.forEach((svc) => {
+    rows.push({
+      kind: "Service",
+      title: svc.name,
+      meta: `Burn: ${svc.burn_status || "—"}`,
+      href: `/services/${svc.service_id}`,
+      priority: "medium",
+    });
+  });
+  if (!rows.length) {
+    return `
+      <section class="card" id="ops-attention">
+        <h2 class="ops-panel-title">Needs attention</h2>
+        <p class="muted">No urgent incidents, approvals, or at-risk services.</p>
+      </section>`;
+  }
+  return `
+    <section class="card" id="ops-attention">
+      <h2 class="ops-panel-title">Needs attention</h2>
+      <div class="ops-attention-list">
+        ${rows.map((r) => `
+          <a class="ops-attention-row ops-attention-${r.priority}" href="${escapeHtml(r.href)}" data-nav="${escapeHtml(r.href)}">
+            <span class="ops-attention-kind">${escapeHtml(r.kind)}</span>
+            <span class="ops-attention-title">${escapeHtml(r.title)}</span>
+            <span class="ops-attention-meta muted">${escapeHtml(r.meta)}</span>
+          </a>`).join("")}
+      </div>
+    </section>`;
+}
+function renderOpsCommandCenterDashboard() {
+  const snapshot = buildOpsDashboardSnapshot(state);
+  const needsConnect = snapshot.integrations === 0 && snapshot.infrastructure === 0;
+  return `
+    <div class="container ops-command-center">
+      ${renderHeader("AI Ops Command Center", "Detect → investigate → fix — across all your tools")}
+      ${renderAlerts()}
+      ${renderOpsDashboardWelcome(snapshot)}
+      ${renderOpsPriorityCard(snapshot)}
+      ${renderOpsSignalsBar(snapshot)}
+      ${needsConnect ? renderOpsDashboardSetupStrip() : ""}
+      <div id="ops-workflow">${renderOpsFlowLanes(snapshot)}</div>
+      <div class="ops-dashboard-grid">
+        ${renderOpsModuleStats(snapshot)}
+        ${renderOpsAttentionList(state, snapshot)}
+      </div>
+    </div>`;
+}
+
+function bindOpsCommandCenterEvents() {
+  document.querySelector("[data-dismiss-dashboard-guide]")?.addEventListener("click", () => {
+    state.dashboardGuideDismissed = true;
+    saveDashboardGuideDismissed(true);
+    render();
+  });
+  document.querySelector("[data-show-dashboard-guide]")?.addEventListener("click", () => {
+    state.dashboardGuideDismissed = false;
+    saveDashboardGuideDismissed(false);
+    render();
+  });
+  document.querySelectorAll("[data-scroll-to]").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      const target = document.getElementById(link.dataset.scrollTo);
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}

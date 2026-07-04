@@ -21,6 +21,8 @@ const discoveryUiJsPath = fileURLToPath(new URL("./discovery-ui.js", import.meta
 const reliabilityOpsUiJsPath = fileURLToPath(new URL("./reliability-ops-ui.js", import.meta.url));
 const customerJourneyUiJsPath = fileURLToPath(new URL("./customer-journey-ui.js", import.meta.url));
 const copilotRunbooksUiJsPath = fileURLToPath(new URL("./copilot-runbooks-ui.js", import.meta.url));
+const opsCommandCenterUiJsPath = fileURLToPath(new URL("./ops-command-center-ui.js", import.meta.url));
+const settingsOrgUiJsPath = fileURLToPath(new URL("./settings-org-ui.js", import.meta.url));
 const secretsHubJsPath = fileURLToPath(new URL("./secrets-hub.js", import.meta.url));
 
 class MockHeaders {
@@ -130,8 +132,8 @@ if (globalThis.__NEXORA_RUN_BOOTSTRAP__ !== false) {
 }
 `;
   const source = readFileSync(appJsPath, "utf8").replace(bootstrapGuard, "");
-  const harness = `
-${source}
+  const appHarness = `\n${source}\n`;
+  const exportsHarness = `
 globalThis.__nexoraExports = {
   parseRoute,
   isValidJwtFormat,
@@ -281,8 +283,10 @@ globalThis.__nexoraExports = {
 `;
 
   vm.createContext(sandbox);
-  vm.runInContext(harness, sandbox);
+  vm.runInContext(appHarness, sandbox);
   vm.runInContext(readFileSync(developmentUiJsPath, "utf8"), sandbox);
+  vm.runInContext(readFileSync(opsCommandCenterUiJsPath, "utf8"), sandbox);
+  vm.runInContext(readFileSync(settingsOrgUiJsPath, "utf8"), sandbox);
   if (options.chunks?.includes("security-platform")) {
     vm.runInContext(readFileSync(securityPlatformJsPath, "utf8"), sandbox);
   }
@@ -331,6 +335,7 @@ globalThis.__nexoraExports = {
   if (options.chunks?.includes("secrets-hub")) {
     vm.runInContext(readFileSync(secretsHubJsPath, "utf8"), sandbox);
   }
+  vm.runInContext(exportsHarness, sandbox);
   const exports = sandbox.__nexoraExports;
   exports.applicationDetailHref = sandbox.applicationDetailHref;
   exports.renderContinueWorking = sandbox.renderContinueWorking;

@@ -8,6 +8,7 @@ import { loadFrontendExports } from "./frontend.harness.mjs";
 const appJsPath = fileURLToPath(new URL("./app.js", import.meta.url));
 const customerJourneyUiJsPath = fileURLToPath(new URL("./customer-journey-ui.js", import.meta.url));
 const developmentUiJsPath = fileURLToPath(new URL("./development-ui.js", import.meta.url));
+const settingsOrgUiJsPath = fileURLToPath(new URL("./settings-org-ui.js", import.meta.url));
 const pilotOperatorJsPath = fileURLToPath(new URL("./pilot-operator.js", import.meta.url));
 const validateScript = fileURLToPath(new URL("../scripts/validate-frontend.js", import.meta.url));
 
@@ -19,8 +20,12 @@ function readDevelopmentUiSource() {
   return readFileSync(developmentUiJsPath, "utf8");
 }
 
+function readSettingsOrgSource() {
+  return readFileSync(settingsOrgUiJsPath, "utf8");
+}
+
 function readCustomerUiSource() {
-  return readAppSource() + readDevelopmentUiSource();
+  return readAppSource() + readDevelopmentUiSource() + readSettingsOrgSource();
 }
 
 function sliceBetween(source, startMarker, endMarker) {
@@ -447,12 +452,13 @@ test("Sprint 31A: single primary Create CTA in hero; others secondary", () => {
 });
 
 test("Sprint 31A: customer Organization page is distinct from admin Organizations", () => {
-  const source = readFileSync(appJsPath, "utf8");
-  assert.match(source, /function renderCustomerOrganization\(\)/);
-  assert.match(source, /case "organization":\s*\n\s*return renderCustomerOrganization\(\);/);
-  assert.match(source, /case "organizations":\s*\n\s*return renderOrganizations\(\);/);
-  assert.match(source, /Organizations you belong to/);
-  assert.match(source, /function renderCustomerOrganization\(\)[\s\S]*Your company account/);
+  const appSource = readAppSource();
+  const settingsSource = readSettingsOrgSource();
+  assert.match(settingsSource, /function renderCustomerOrganization\(\)/);
+  assert.match(appSource, /case "organization":\s*\n\s*return lazySettingsOrgView\("renderCustomerOrganization"\);/);
+  assert.match(appSource, /case "organizations":\s*\n\s*return lazySettingsOrgView\("renderOrganizations"\);/);
+  assert.match(settingsSource, /Organizations you belong to/);
+  assert.match(settingsSource, /function renderCustomerOrganization\(\)[\s\S]*Your company account/);
 });
 
 test("Sprint 30: useApplicationTemplate prefills the create wizard", () => {
@@ -756,7 +762,7 @@ test("Sprint 31D: first-time dashboard shows only hero + onboarding + quick star
   const fn = sliceBetween(
     source,
     "function renderDashboard()",
-    "function renderCustomerOrganization()",
+    "function renderTeams()",
   );
   // First-time branch is gated on zero applications and returns the focused path.
   assert.match(fn, /if \(isFirstTime\) \{/);
@@ -775,7 +781,7 @@ test("Sprint 31D: returning dashboard adds Continue Working and conditional sect
   const fn = sliceBetween(
     source,
     "// Returning customer",
-    "function renderCustomerOrganization()",
+    "function renderTeams()",
   );
   assert.match(fn, /renderContinueWorking\(latestApp\)/);
   // KPIs only when value > 0.
@@ -791,7 +797,7 @@ test("Sprint 31D: dashboard removes demo gallery and duplicate count widgets", (
   const fn = sliceBetween(
     shell,
     "function renderDashboard()",
-    "function renderCustomerOrganization()",
+    "function renderTeams()",
   );
   // No Demo gallery anywhere.
   assert.doesNotMatch(customerUi, /renderDemoSection|See What APPYLN Can Build/);

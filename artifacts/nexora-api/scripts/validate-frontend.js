@@ -28,13 +28,15 @@ const discoveryUiJsPath = path.join(root, "static", "discovery-ui.js");
 const reliabilityOpsUiJsPath = path.join(root, "static", "reliability-ops-ui.js");
 const customerJourneyUiJsPath = path.join(root, "static", "customer-journey-ui.js");
 const copilotRunbooksUiJsPath = path.join(root, "static", "copilot-runbooks-ui.js");
+const opsCommandCenterUiJsPath = path.join(root, "static", "ops-command-center-ui.js");
+const settingsOrgUiJsPath = path.join(root, "static", "settings-org-ui.js");
 
 function fail(message) {
   console.error(`Frontend validation failed: ${message}`);
   process.exit(1);
 }
 
-for (const file of [appJsPath, helpJsPath, pilotOperatorJsPath, billingJsPath, productCatalogJsPath, operationsOverviewJsPath, integrationOnboardingJsPath, incidentsJsPath, deliveryJsPath, warRoomsJsPath, observabilityUiJsPath, developmentUiJsPath, securityPlatformJsPath, platformOpsUiJsPath, controlPlaneJsPath, incidentResponseUiJsPath, discoveryUiJsPath, reliabilityOpsUiJsPath, customerJourneyUiJsPath, copilotRunbooksUiJsPath]) {
+for (const file of [appJsPath, helpJsPath, pilotOperatorJsPath, billingJsPath, productCatalogJsPath, operationsOverviewJsPath, integrationOnboardingJsPath, incidentsJsPath, deliveryJsPath, warRoomsJsPath, observabilityUiJsPath, developmentUiJsPath, securityPlatformJsPath, platformOpsUiJsPath, controlPlaneJsPath, incidentResponseUiJsPath, discoveryUiJsPath, reliabilityOpsUiJsPath, customerJourneyUiJsPath, copilotRunbooksUiJsPath, opsCommandCenterUiJsPath, settingsOrgUiJsPath]) {
   try {
     execSync(`node --check "${file}"`, { stdio: "pipe" });
   } catch (error) {
@@ -403,4 +405,65 @@ if (!copilotRunbooksUiSource.includes("const COPILOT_SUGGESTIONS")) {
   fail("static/copilot-runbooks-ui.js must define COPILOT_SUGGESTIONS");
 }
 
-console.log("Frontend validation passed: static/app.js + help.js + pilot-operator.js + billing.js + product-catalog.js + operations-overview.js + integration-onboarding.js + incidents.js + delivery.js + war-rooms.js + observability-ui.js + development-ui.js + security-platform.js + platform-ops-ui.js + control-plane.js + incident-response-ui.js + discovery-ui.js + reliability-ops-ui.js + customer-journey-ui.js + copilot-runbooks-ui.js parse successfully.");
+if (!source.includes("function loadOpsCommandCenterUiChunk(")) {
+  fail("missing loadOpsCommandCenterUiChunk() lazy loader in static/app.js");
+}
+if (source.includes("function renderOpsCommandCenterDashboard(")) {
+  fail("renderOpsCommandCenterDashboard() must live in ops-command-center-ui.js, not static/app.js");
+}
+if (source.includes("async function loadOpsDashboardSignals(")) {
+  fail("loadOpsDashboardSignals() must live in ops-command-center-ui.js, not static/app.js");
+}
+if (source.includes("const OPS_OPERATIONAL_FLOWS")) {
+  fail("OPS_OPERATIONAL_FLOWS must live in ops-command-center-ui.js, not static/app.js");
+}
+
+if (!source.includes("function loadSettingsOrgUiChunk(")) {
+  fail("missing loadSettingsOrgUiChunk() lazy loader in static/app.js");
+}
+if (source.includes("function renderSettingsTabs(")) {
+  fail("renderSettingsTabs() must live in settings-org-ui.js, not static/app.js");
+}
+if (source.includes("async function probeIdentityCapabilities(")) {
+  fail("probeIdentityCapabilities() must live in settings-org-ui.js, not static/app.js");
+}
+if (source.includes("async function loadTeams(")) {
+  fail("loadTeams() must live in development-ui.js, not static/app.js");
+}
+if (source.includes("async function loadAiTeams(")) {
+  fail("loadAiTeams() must live in development-ui.js, not static/app.js");
+}
+
+const opsCommandCenterUiSource = readFileSync(opsCommandCenterUiJsPath, "utf8");
+if (!opsCommandCenterUiSource.includes("function renderOpsCommandCenterDashboard(")) {
+  fail("static/ops-command-center-ui.js must define ops command center renderers");
+}
+if (!opsCommandCenterUiSource.includes("function bindOpsCommandCenterEvents(")) {
+  fail("static/ops-command-center-ui.js must define bindOpsCommandCenterEvents()");
+}
+if (!opsCommandCenterUiSource.includes("async function loadOpsDashboardSignals(")) {
+  fail("static/ops-command-center-ui.js must define loadOpsDashboardSignals()");
+}
+
+const settingsOrgUiSource = readFileSync(settingsOrgUiJsPath, "utf8");
+if (!settingsOrgUiSource.includes("function renderSettings(")) {
+  fail("static/settings-org-ui.js must define renderSettings()");
+}
+if (!settingsOrgUiSource.includes("function bindSettingsOrgEvents(")) {
+  fail("static/settings-org-ui.js must define bindSettingsOrgEvents()");
+}
+if (!settingsOrgUiSource.includes("async function probeIdentityCapabilities(")) {
+  fail("static/settings-org-ui.js must define probeIdentityCapabilities()");
+}
+
+if (developmentUiSource.includes("function renderSettings(")) {
+  fail("renderSettings() must live in settings-org-ui.js, not development-ui.js");
+}
+if (!developmentUiSource.includes("async function loadDevelopmentDashboard(")) {
+  fail("static/development-ui.js must define loadDevelopmentDashboard()");
+}
+if (!developmentUiSource.includes("async function loadTeams(")) {
+  fail("static/development-ui.js must define development route loaders");
+}
+
+console.log("Frontend validation passed: static/app.js + help.js + pilot-operator.js + billing.js + product-catalog.js + operations-overview.js + integration-onboarding.js + incidents.js + delivery.js + war-rooms.js + observability-ui.js + development-ui.js + security-platform.js + platform-ops-ui.js + control-plane.js + incident-response-ui.js + discovery-ui.js + reliability-ops-ui.js + customer-journey-ui.js + copilot-runbooks-ui.js + ops-command-center-ui.js + settings-org-ui.js parse successfully.");

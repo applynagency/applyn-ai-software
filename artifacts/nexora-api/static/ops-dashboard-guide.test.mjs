@@ -5,26 +5,27 @@ import test from "node:test";
 import { loadFrontendExports } from "./frontend.harness.mjs";
 
 const appJsPath = fileURLToPath(new URL("./app.js", import.meta.url));
+const opsChunkPath = fileURLToPath(new URL("./ops-command-center-ui.js", import.meta.url));
 
 test("dashboard guide: welcome panel explains page sections", () => {
-  const source = readFileSync(appJsPath, "utf8");
-  assert.match(source, /renderOpsDashboardWelcome/);
-  assert.match(source, /OPS_DASHBOARD_SECTIONS/);
-  assert.match(source, /data-dismiss-dashboard-guide/);
-  assert.match(source, /data-show-dashboard-guide/);
-  assert.match(source, /DASHBOARD_GUIDE_STORAGE_KEY/);
+  const opsSource = readFileSync(opsChunkPath, "utf8");
+  assert.match(opsSource, /renderOpsDashboardWelcome/);
+  assert.match(opsSource, /OPS_DASHBOARD_SECTIONS/);
+  assert.match(opsSource, /data-dismiss-dashboard-guide/);
+  assert.match(opsSource, /data-show-dashboard-guide/);
+  assert.match(readFileSync(appJsPath, "utf8"), /DASHBOARD_GUIDE_STORAGE_KEY/);
 });
 
 test("dashboard: stats-first layout with signals and modules", () => {
-  const source = readFileSync(appJsPath, "utf8");
-  const dashFn = source.slice(
-    source.indexOf("function renderOpsCommandCenterDashboard()"),
-    source.indexOf("function renderDashboard()"),
+  const opsSource = readFileSync(opsChunkPath, "utf8");
+  const dashFn = opsSource.slice(
+    opsSource.indexOf("function renderOpsCommandCenterDashboard()"),
+    opsSource.indexOf("function bindOpsCommandCenterEvents"),
   );
-  assert.match(source, /id="ops-modules"/);
-  assert.match(source, /ops-area-list/);
-  assert.match(source, /Operations areas/);
-  assert.match(source, /id="ops-attention"/);
+  assert.match(opsSource, /id="ops-modules"/);
+  assert.match(opsSource, /ops-area-list/);
+  assert.match(opsSource, /Operations areas/);
+  assert.match(opsSource, /id="ops-attention"/);
   assert.match(dashFn, /renderOpsDashboardWelcome/);
   assert.match(dashFn, /renderOpsFlowLanes/);
   assert.match(dashFn, /renderOpsModuleStats/);
@@ -48,7 +49,7 @@ test("dashboard guide: quiet org shows setup hints", () => {
 });
 
 test("dashboard guide: dismiss persists — guide does not re-expand when quiet", () => {
-  const source = readFileSync(appJsPath, "utf8");
-  assert.match(source, /ops-connect-banner/);
-  assert.doesNotMatch(source, /dashboardGuideDismissed \|\| isDashboardQuiet/);
+  const opsSource = readFileSync(opsChunkPath, "utf8");
+  assert.match(opsSource, /ops-connect-banner/);
+  assert.doesNotMatch(opsSource, /dashboardGuideDismissed \|\| isDashboardQuiet/);
 });

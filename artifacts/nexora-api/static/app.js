@@ -1318,125 +1318,18 @@ async function loadCredentials() {
   }
 }
 
-async function loadAiTeams() {
-  try {
-    const data = await api("/v1/ai-teams");
-    state.aiTeams = data.items || [];
-  } catch {
-    state.aiTeams = [];
-  }
-}
 
-async function loadAiTeamDetail(teamId) {
-  state.selectedAiTeam = await api(`/v1/ai-teams/${teamId}`);
-  await Promise.all([loadAiTeamRuns(teamId), loadAiTeamDocuments(teamId)]);
-}
 
-async function loadAiTeamDocuments(teamId) {
-  try {
-    const data = await api(`/v1/ai-teams/${teamId}/documents`);
-    state.aiTeamDocuments = data.items || [];
-  } catch {
-    state.aiTeamDocuments = [];
-  }
-}
 
-async function loadAiWorkflows() {
-  try {
-    const data = await api("/v1/ai-team-workflows");
-    state.aiWorkflows = data.items || [];
-  } catch {
-    state.aiWorkflows = [];
-  }
-}
 
-async function loadAiWorkflowDetail(workflowId) {
-  state.selectedAiWorkflow = await api(`/v1/ai-team-workflows/${workflowId}`);
-  await loadAiWorkflowRuns(workflowId);
-  await loadAiWorkflowSchedules(workflowId);
-  await loadAiWorkflowApprovals(workflowId);
-}
 
-async function loadAiWorkflowApprovals(workflowId) {
-  try {
-    const data = await api(`/v1/workflow-approvals?workflow_id=${workflowId}`);
-    state.aiWorkflowApprovals = data.items || [];
-  } catch {
-    state.aiWorkflowApprovals = [];
-  }
-}
 
-async function loadAiWorkflowRuns(workflowId) {
-  try {
-    const data = await api(`/v1/ai-team-workflows/${workflowId}/runs`);
-    state.aiWorkflowRuns = data.items || [];
-  } catch {
-    state.aiWorkflowRuns = [];
-  }
-}
 
-async function loadAiWorkflowSchedules(workflowId) {
-  try {
-    const data = await api(`/v1/ai-team-workflow-schedules?workflow_id=${workflowId}`);
-    state.aiWorkflowSchedules = data.items || [];
-  } catch {
-    state.aiWorkflowSchedules = [];
-  }
-}
 
-async function loadAiAgentRuns(agentId) {
-  try {
-    const data = await api(`/v1/ai-team-agents/${agentId}/runs`);
-    state.aiAgentRuns = data.items || [];
-  } catch {
-    state.aiAgentRuns = [];
-  }
-}
 
-async function loadAiAgentMemories(agentId) {
-  const params = new URLSearchParams();
-  if (state.aiMemoryFilter) params.set("memory_type", state.aiMemoryFilter);
-  if (state.aiMemorySearch) params.set("search", state.aiMemorySearch);
-  const qs = params.toString();
-  try {
-    const data = await api(`/v1/ai-team-agents/${agentId}/memory${qs ? "?" + qs : ""}`);
-    state.aiMemories = data.items || [];
-  } catch {
-    state.aiMemories = [];
-  }
-}
 
-async function loadAiAgentTools(agentId) {
-  try {
-    const [assigned, all] = await Promise.all([
-      api(`/v1/ai-team-agents/${agentId}/tools`),
-      api(`/v1/ai-tools?limit=200`),
-    ]);
-    state.aiAgentTools = assigned.items || [];
-    state.aiAllTools = all.items || [];
-  } catch {
-    state.aiAgentTools = [];
-    state.aiAllTools = [];
-  }
-}
 
-async function loadAiToolRuns(toolId) {
-  try {
-    const data = await api(`/v1/ai-tools/${toolId}/runs`);
-    state.aiToolRuns = data.items || [];
-  } catch {
-    state.aiToolRuns = [];
-  }
-}
 
-async function loadAiTools() {
-  try {
-    const data = await api(`/v1/ai-tools?limit=200`);
-    state.aiTools = data.items || [];
-  } catch {
-    state.aiTools = [];
-  }
-}
 
 async function loadIncidents() {
   try {
@@ -1529,103 +1422,12 @@ async function loadPilot() {
 
 
 
-async function loadOpsDashboardSignals() {
-  state.opsDashboard = { loaded: false };
-  await Promise.all([
-    loadIncidents().catch(() => {}),
-    loadReliabilityOpsUiChunk().then(() => { if (typeof loadServiceHealth === "function") return loadServiceHealth(); }).catch(() => {}),
-    loadCopilotRunbooksUiChunk().then(() => { if (typeof loadRunbooks === "function") return loadRunbooks(); }).catch(() => {}),
-    loadCredentials().catch(() => { state.credentials = []; }),
-    api("/v1/integrations/connections").then((r) => { state.integrationConnections = r || []; }).catch(() => { state.integrationConnections = []; }),
-  ]);
-  const [myWork, queue, alerts, changes, deliveryOps] = await Promise.all([
-    api("/v1/ops-workspace/my-work").catch(() => null),
-    api("/v1/ops-workspace/queue").catch(() => null),
-    api("/v1/monitoring/alerts?limit=30").catch(() => ({ items: [] })),
-    api("/v1/change-requests?offset=0&limit=50").catch(() => ({ items: [] })),
-    api("/v1/delivery/operations").catch(() => []),
-  ]);
-  state.opsMyWork = myWork;
-  state.opsQueue = queue;
-  const firingAlerts = (alerts.items || []).filter((a) => /FIRING|ACTIVE|OPEN/i.test(String(a.status || "")));
-  const pendingChanges = (changes.items || []).filter((c) => {
-    const approval = String(c.approval_status || "").toUpperCase();
-    const status = String(c.status || "").toUpperCase();
-    return approval === "SUBMITTED" || approval === "PENDING"
-      || (status === "PENDING" && approval !== "APPROVED" && approval !== "REJECTED");
-  });
-  const deliveryOpsRaw = deliveryOps;
-  const deliveryOpsList = Array.isArray(deliveryOpsRaw)
-    ? deliveryOpsRaw
-    : (deliveryOpsRaw?.items || []);
-  const pendingApprovals = deliveryOpsList.filter((o) => String(o.status || "") === "PENDING_APPROVAL");
-  state.opsDashboard = {
-    loaded: true,
-    firingAlerts,
-    pendingChanges,
-    pendingApprovals,
-    attentionItems: myWork?.total_attention_items || 0,
-    queueTotal: queue?.total || (queue?.items || []).length,
-  };
-}
 
 
-async function loadAiToolConnection(toolId) {
-  try {
-    const [status, creds] = await Promise.all([
-      api(`/v1/ai-tools/${toolId}/connection-status`),
-      api(`/v1/credentials?limit=200`).catch(() => ({ items: [] })),
-    ]);
-    state.aiToolConnStatus = status;
-    state.aiToolCredentials = creds.items || [];
-  } catch {
-    state.aiToolConnStatus = null;
-    state.aiToolCredentials = [];
-  }
-}
 
-async function loadAiTeamRuns(teamId) {
-  try {
-    const data = await api(`/v1/ai-teams/${teamId}/runs`);
-    state.aiTeamRuns = data.items || [];
-  } catch {
-    state.aiTeamRuns = [];
-  }
-}
 
-async function loadAiTeamRunDetail(runId) {
-  try {
-    state.aiTeamRunDetail = await api(`/v1/ai-teams/runs/${runId}`);
-  } catch {
-    state.aiTeamRunDetail = null;
-  }
-}
 
-async function loadOrganizationDetail(organizationId) {
-  const [organization, members, invitations] = await Promise.all([
-    api(`/v1/organizations/${organizationId}`),
-    api(`/v1/organizations/${organizationId}/members`),
-    api(`/v1/organizations/${organizationId}/invitations`).catch(() => ({ items: [] })),
-  ]);
-  state.selectedOrganizationId = organizationId;
-  state.organizationMembers = members.items;
-  state.organizationInvitations = invitations.items || [];
-  const index = state.organizations.findIndex((org) => org.id === organizationId);
-  if (index >= 0) {
-    state.organizations[index] = organization;
-  } else {
-    state.organizations.push(organization);
-  }
-  return organization;
-}
 
-async function loadInvitationPreview(token) {
-  if (!token) {
-    state.invitationPreview = null;
-    return;
-  }
-  state.invitationPreview = await api(`/v1/invitations/preview/${encodeURIComponent(token)}`);
-}
 
 async function reloadApplicationData(options = {}) {
   const { refreshUser = true, successMessage = null } = options;
@@ -1691,7 +1493,8 @@ async function runFullstackAssembly(requirementId) {
 async function ensureWorkflowForAutomation(preferredWorkflowId = null) {
   if (!state.workflows.length) {
     try {
-      await loadWorkflows();
+      await loadDevelopmentUiChunk();
+    if (typeof loadWorkflows === "function") await loadWorkflows();
     } catch {
       // fall through to template bootstrap
     }
@@ -1710,7 +1513,8 @@ async function ensureWorkflowForAutomation(preferredWorkflowId = null) {
     method: "POST",
     body: JSON.stringify({ template_slug: firstTemplate.slug }),
   });
-  await loadWorkflows();
+  await loadDevelopmentUiChunk();
+    if (typeof loadWorkflows === "function") await loadWorkflows();
   selected = state.workflows.find((workflow) => workflow.is_default) || state.workflows[0];
   if (!selected) {
     throw new Error("Workflow initialization failed for this organization.");
@@ -1843,595 +1647,118 @@ async function createAndExecuteRelease({
   return { changeRequest, regeneration };
 }
 
-async function loadTeams() {
-  const data = await api("/v1/teams");
-  state.teams = data.items;
-}
-
-async function loadTeamDetail(teamId) {
-  state.selectedTeam = await api(`/v1/teams/${teamId}`);
-  if (state.selectedTeamTab === "audit") {
-    await loadTeamAudit(teamId);
-  }
-}
-
-async function loadTeamAudit(teamId) {
-  const data = await api(`/v1/teams/${teamId}/audit`);
-  state.teamAuditLogs = data.items;
-}
-
-async function loadWorkflows() {
-  const data = await api("/v1/workflows");
-  state.workflows = data.items;
-}
-
-async function loadWorkflowDetail(workflowId) {
-  state.selectedWorkflow = await api(`/v1/workflows/${workflowId}`);
-  if (state.selectedWorkflowTab === "execution") {
-    state.workflowExecutionPlan = await api(`/v1/workflows/${workflowId}/execution-plan`);
-  }
-  if (state.selectedWorkflowTab === "audit") {
-    await loadWorkflowAudit(workflowId);
-  }
-}
-
-async function loadWorkflowAudit(workflowId) {
-  const data = await api(`/v1/workflows/${workflowId}/audit`);
-  state.workflowAuditLogs = data.items;
-}
-
-async function loadWorkflowExecutions() {
-  const data = await api("/v1/workflow-executions");
-  state.workflowExecutions = data.items;
-}
-
-async function loadWorkflowExecutionDetail(executionId) {
-  state.selectedExecution = await api(`/v1/workflow-executions/${executionId}`);
-  try {
-    const audit = await api(`/v1/workflow-executions/${executionId}/audit`);
-    state.executionAuditLogs = audit.items;
-  } catch {
-    state.executionAuditLogs = [];
-  }
-}
-
-async function loadRunsByRequirement(agentPath, requirements) {
-  if (!requirements.length) {
-    return [];
-  }
-  const batches = await Promise.all(
-    requirements.map(async (req) => {
-      try {
-        const data = await api(`/v1/agents/${agentPath}/${req.id}`);
-        return data.items.map((item) => ({ ...item, requirement_title: req.title }));
-      } catch {
-        return [];
-      }
-    }),
-  );
-  return batches.flat().sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-  );
-}
-
-async function loadBusinessAnalystPage() {
-  await loadExecutionFormData();
-  state.businessAnalystRuns = await loadRunsByRequirement("business-analyst", state.requirements);
-}
-
-async function loadBusinessAnalystDetail(runId) {
-  state.selectedBusinessAnalystRun = await api(`/v1/agents/business-analyst/runs/${runId}`);
-}
-
-async function loadBackendArchitectPage() {
-  await loadExecutionFormData();
-  state.backendArchitectRuns = await loadRunsByRequirement(
-    "backend-architect",
-    state.requirements,
-  );
-}
-
-async function loadBackendArchitectDetail(runId) {
-  state.selectedBackendArchitectRun = await api(`/v1/agents/backend-architect/runs/${runId}`);
-}
-
-async function loadBackendV1Page() {
-  await loadExecutionFormData();
-  state.backendV1Runs = await loadRunsByRequirement("backend-v1", state.requirements);
-}
-
-async function loadBackendV1Detail(runId) {
-  state.selectedBackendV1Run = await api(`/v1/agents/backend-v1/runs/${runId}`);
-}
-
-async function loadBackendV2Page() {
-  await loadExecutionFormData();
-  state.backendV2Runs = await loadRunsByRequirement("backend-v2", state.requirements);
-}
-
-async function loadBackendV2Detail(runId) {
-  state.selectedBackendV2Run = await api(`/v1/agents/backend-v2/runs/${runId}`);
-}
-
-async function loadUiuxPage() {
-  await loadExecutionFormData();
-  state.uiuxRuns = await loadRunsByRequirement("uiux", state.requirements);
-}
-
-async function loadUiuxDetail(runId) {
-  state.selectedUiuxRun = await api(`/v1/agents/uiux/runs/${runId}`);
-}
-
-async function loadFrontendArchitectPage() {
-  await loadExecutionFormData();
-  state.frontendArchitectRuns = await loadRunsByRequirement(
-    "frontend-architect",
-    state.requirements,
-  );
-}
-
-async function loadFrontendArchitectDetail(runId) {
-  state.selectedFrontendArchitectRun = await api(`/v1/agents/frontend-architect/runs/${runId}`);
-}
-
-async function loadFrontendV1Page() {
-  await loadExecutionFormData();
-  state.frontendV1Runs = await loadRunsByRequirement("frontend-v1", state.requirements);
-}
-
-async function loadFrontendV1Detail(runId) {
-  state.selectedFrontendV1Run = await api(`/v1/agents/frontend-v1/runs/${runId}`);
-}
-
-async function loadFrontendV2Page() {
-  await loadExecutionFormData();
-  state.frontendV2Runs = await loadRunsByRequirement("frontend-v2", state.requirements);
-}
-
-async function loadFrontendV2Detail(runId) {
-  state.selectedFrontendV2Run = await api(`/v1/agents/frontend-v2/runs/${runId}`);
-}
-
-async function loadFrontendV3Page() {
-  await loadExecutionFormData();
-  state.frontendV3Runs = await loadRunsByRequirement("frontend-v3", state.requirements);
-}
-
-async function loadFrontendV3Detail(runId) {
-  state.selectedFrontendV3Run = await api(`/v1/agents/frontend-v3/runs/${runId}`);
-}
-
-async function loadBackendV3Page() {
-  await loadExecutionFormData();
-  state.backendV3Runs = await loadRunsByRequirement("backend-v3", state.requirements);
-}
-
-async function loadBackendV3Detail(runId) {
-  state.selectedBackendV3Run = await api(`/v1/agents/backend-v3/runs/${runId}`);
-}
-
-async function loadBackendCodeReviewPage() {
-  await loadExecutionFormData();
-  state.backendCodeReviewRuns = await loadRunsByRequirement(
-    "backend-code-review",
-    state.requirements,
-  );
-}
-
-async function loadBackendCodeReviewDetail(runId) {
-  state.selectedBackendCodeReviewRun = await api(
-    `/v1/agents/backend-code-review/runs/${runId}`,
-  );
-}
-
-async function loadBackendExecutionPage() {
-  await loadExecutionFormData();
-  state.backendExecutionRuns = await loadRunsByRequirement(
-    "backend-execution",
-    state.requirements,
-  );
-}
-
-async function loadBackendExecutionDetail(runId) {
-  state.selectedBackendExecutionRun = await api(
-    `/v1/agents/backend-execution/runs/${runId}`,
-  );
-}
-
-async function loadFrontendCodeReviewPage() {
-  await loadExecutionFormData();
-  state.frontendCodeReviewRuns = await loadRunsByRequirement(
-    "frontend-code-review",
-    state.requirements,
-  );
-}
-
-async function loadFrontendCodeReviewDetail(runId) {
-  state.selectedFrontendCodeReviewRun = await api(
-    `/v1/agents/frontend-code-review/runs/${runId}`,
-  );
-}
-
-async function loadFrontendExecutionPage() {
-  await loadExecutionFormData();
-  state.frontendExecutionRuns = await loadRunsByRequirement(
-    "frontend-execution",
-    state.requirements,
-  );
-}
-
-async function loadFrontendExecutionDetail(runId) {
-  state.selectedFrontendExecutionRun = await api(
-    `/v1/agents/frontend-execution/runs/${runId}`,
-  );
-}
-
-async function loadQAArchitectPage() {
-  await loadExecutionFormData();
-  state.qaArchitectRuns = await loadRunsByRequirement("qa-architect", state.requirements);
-}
-
-async function loadQAArchitectDetail(runId) {
-  state.selectedQAArchitectRun = await api(`/v1/agents/qa-architect/runs/${runId}`);
-}
-
-async function loadUnitTestsPage() {
-  await loadExecutionFormData();
-  state.unitTestRuns = await loadRunsByRequirement("unit-tests", state.requirements);
-}
-
-async function loadUnitTestsDetail(runId) {
-  state.selectedUnitTestRun = await api(`/v1/agents/unit-tests/runs/${runId}`);
-}
-
-async function loadIntegrationTestsPage() {
-  await loadExecutionFormData();
-  state.integrationTestRuns = await loadRunsByRequirement("integration-tests", state.requirements);
-}
-
-async function loadIntegrationTestsDetail(runId) {
-  state.selectedIntegrationTestRun = await api(`/v1/agents/integration-tests/runs/${runId}`);
-}
-
-async function loadSecurityTestsPage() {
-  await loadExecutionFormData();
-  state.securityTestRuns = await loadRunsByRequirement("security-tests", state.requirements);
-}
-
-async function loadSecurityTestsDetail(runId) {
-  state.selectedSecurityTestRun = await api(`/v1/agents/security-tests/runs/${runId}`);
-}
-
-async function loadPerformanceTestsPage() {
-  await loadExecutionFormData();
-  state.performanceTestRuns = await loadRunsByRequirement("performance-tests", state.requirements);
-}
-
-async function loadPerformanceTestsDetail(runId) {
-  state.selectedPerformanceTestRun = await api(`/v1/agents/performance-tests/runs/${runId}`);
-}
-
-async function loadQAApprovalsPage() {
-  await loadExecutionFormData();
-  state.qaApprovalRuns = await loadRunsByRequirement("qa-approvals", state.requirements);
-}
-
-async function loadQAApprovalsDetail(runId) {
-  state.selectedQAApprovalRun = await api(`/v1/agents/qa-approvals/runs/${runId}`);
-}
-
-async function loadInfrastructureArchitectPage() {
-  await loadExecutionFormData();
-  state.infrastructureArchitectRuns = await loadRunsByRequirement(
-    "infrastructure-architect",
-    state.requirements,
-  );
-}
-
-async function loadInfrastructureArchitectDetail(runId) {
-  state.selectedInfrastructureArchitectRun = await api(
-    `/v1/agents/infrastructure-architect/runs/${runId}`,
-  );
-}
-
-async function loadDockerAgentPage() {
-  await loadExecutionFormData();
-  state.dockerAgentRuns = await loadRunsByRequirement("docker-agent", state.requirements);
-}
-
-async function loadDockerAgentDetail(runId) {
-  state.selectedDockerAgentRun = await api(`/v1/agents/docker-agent/runs/${runId}`);
-}
-
-async function loadCicdPage() {
-  await loadExecutionFormData();
-  state.cicdRuns = await loadRunsByRequirement("cicd", state.requirements);
-}
-
-async function loadCicdDetail(runId) {
-  state.selectedCicdRun = await api(`/v1/agents/cicd/runs/${runId}`);
-}
-
-async function loadKubernetesPage() {
-  await loadExecutionFormData();
-  state.kubernetesRuns = await loadRunsByRequirement("kubernetes", state.requirements);
-}
-
-async function loadKubernetesDetail(runId) {
-  state.selectedKubernetesRun = await api(`/v1/agents/kubernetes/runs/${runId}`);
-}
-
-async function loadObservabilityPage() {
-  await loadExecutionFormData();
-  state.observabilityRuns = await loadRunsByRequirement("observability", state.requirements);
-}
-
-async function loadObservabilityDetail(runId) {
-  state.selectedObservabilityRun = await api(`/v1/agents/observability/runs/${runId}`);
-}
-
-async function loadSreApprovalsPage() {
-  await loadExecutionFormData();
-  state.sreApprovalRuns = await loadRunsByRequirement("sre-approval", state.requirements);
-}
-
-async function loadSreApprovalsDetail(runId) {
-  state.selectedSreApprovalRun = await api(`/v1/agents/sre-approval/runs/${runId}`);
-}
-
-async function loadFullstackAssemblyPage() {
-  await loadExecutionFormData();
-  state.fullstackAssemblyRuns = await loadRunsByRequirement(
-    "fullstack-assembly",
-    state.requirements,
-  );
-}
-
-async function loadFullstackAssemblyDetail(runId) {
-  state.selectedFullstackAssemblyRun = await api(
-    `/v1/agents/fullstack-assembly/runs/${runId}`,
-  );
-}
-
-async function loadApplicationsPage() {
-  await loadExecutionFormData();
-  state.customerApplications = loadCustomerApplications();
-  if (!state.selectedProjectId) {
-    state.lifecycleVersions = [];
-    return;
-  }
-  state.lifecycleVersions = await api(
-    `/v1/application-versions?project_id=${state.selectedProjectId}`,
-  );
-}
-
-async function loadApplicationDetail(versionId) {
-  await loadApplicationsPage();
-  await Promise.all([
-    loadWorkflowExecutions(),
-    loadDeploymentsPage(),
-    loadReleasesPage(),
-    loadChangeRequestsPage(),
-  ]);
-  state.selectedLifecycleVersion = (state.lifecycleVersions || []).find((v) => v.id === versionId) || null;
-  state.selectedCustomerApplication = (state.customerApplications || []).find((app) => app.id === versionId) || null;
-}
-
-async function loadApplicationCreatePage() {
-  await Promise.all([
-    loadExecutionFormData(),
-    loadTeams(),
-    loadWorkflows(),
-  ]);
-  state.customerApplications = loadCustomerApplications();
-}
-
-async function loadChangeRequestsPage() {
-  await loadExecutionFormData();
-  if (!state.requirements.length) {
-    state.lifecycleChangeRequests = [];
-    return;
-  }
-  const reqId = state.requirements[0].id;
-  const data = await api(`/v1/change-requests?requirement_id=${reqId}`);
-  state.lifecycleChangeRequests = data.items || [];
-}
-
-async function loadChangeRequestDetail(runId) {
-  state.selectedLifecycleChangeRequest = await api(`/v1/change-requests/${runId}`);
-}
-
-async function loadReleasesPage() {
-  await loadExecutionFormData();
-  if (!state.selectedProjectId) {
-    state.lifecycleReleases = [];
-    return;
-  }
-  const data = await api(`/v1/releases?project_id=${state.selectedProjectId}`);
-  state.lifecycleReleases = data.items || [];
-}
-
-async function loadApprovalsPage() {
-  await loadExecutionFormData();
-  state.approvalRuns = await loadRunsByRequirement("approval", state.requirements);
-}
-
-async function loadApprovalDetail(runId) {
-  state.selectedApprovalRun = await api(`/v1/agents/approval/runs/${runId}`);
-}
-
-async function loadProductOwnerPage() {
-  await loadExecutionFormData();
-  const data = await api("/v1/agents/runs?limit=100");
-  const titleByRequirement = Object.fromEntries(
-    state.requirements.map((req) => [req.id, req.title]),
-  );
-  state.productOwnerRuns = data.items
-    .filter((run) => String(run.agent_type).toLowerCase() === "product_owner")
-    .map((run) => ({
-      ...run,
-      requirement_title: titleByRequirement[run.requirement_id] || run.requirement_id.slice(0, 8),
-    }))
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-}
-
-async function loadProductOwnerDetail(runId) {
-  state.selectedProductOwnerRun = await api(`/v1/agents/runs/${runId}`);
-}
-
-async function loadDeploymentsPage() {
-  await loadExecutionFormData();
-  const data = await api("/v1/deployments");
-  state.deploymentRuns = (data.items || []).sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-  );
-  state.deploymentRisk = await api("/v1/deployment-risk").catch(() => null);
-}
-
-async function loadDeploymentDetail(deploymentId) {
-  state.selectedDeploymentRun = await api(`/v1/deployments/${deploymentId}`);
-  const logs = await api(`/v1/deployments/${deploymentId}/logs`);
-  state.selectedDeploymentLogs = logs.items || [];
-}
-
-async function loadExecutionFormData() {
-  const [workspaces, projects] = await Promise.all([
-    api("/v1/workspaces"),
-    api("/v1/projects"),
-  ]);
-  state.workspaces = workspaces.items;
-  state.projects = projects.items;
-  if (!state.selectedWorkspaceId && state.workspaces[0]) {
-    state.selectedWorkspaceId = state.workspaces[0].id;
-  }
-  const workspaceProjects = state.projects.filter(
-    (project) => project.workspace_id === state.selectedWorkspaceId,
-  );
-  if (!state.selectedProjectId && workspaceProjects[0]) {
-    state.selectedProjectId = workspaceProjects[0].id;
-  }
-  if (state.selectedProjectId) {
-    const requirements = await api(
-      `/v1/requirements?project_id=${state.selectedProjectId}`,
-    );
-    state.requirements = requirements.items;
-  } else {
-    state.requirements = [];
-  }
-}
-
-async function loadAiAgents() {
-  const data = await api("/v1/ai-agents");
-  state.aiAgents = data.items;
-}
-
-async function loadAiAgentDetail(agentId) {
-  state.selectedAgent = await api(`/v1/ai-agents/${agentId}`);
-  if (state.selectedAgentTab === "execution" && state.selectedAgent.workflow_assignments?.[0]) {
-    const stageId = state.selectedAgent.workflow_assignments[0].workflow_stage_id;
-    state.agentStageResolution = await api(`/v1/ai-agents/stages/${stageId}/resolution`);
-  }
-  if (state.selectedAgentTab === "audit") {
-    await loadAiAgentAudit(agentId);
-  }
-}
-
-async function loadAiAgentAudit(agentId) {
-  const data = await api(`/v1/ai-agents/${agentId}/audit`);
-  state.agentAuditLogs = data.items;
-}
-
-async function loadAiAgentTemplates() {
-  const data = await api("/v1/ai-agent-templates");
-  state.aiAgentTemplates = data.items;
-}
-
-async function loadWorkflowTemplates() {
-  const data = await api("/v1/workflow-templates");
-  state.workflowTemplates = data.items;
-}
-
-async function loadTeamTemplates() {
-  const data = await api("/v1/team-templates");
-  state.teamTemplates = data.items;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 async function loadDashboard() {
   state.error = null;
   if (!DEVELOPMENT_UI_ENABLED) {
-    await loadOpsDashboardSignals();
+    await loadOpsCommandCenterUiChunk();
+    if (typeof loadOpsDashboardSignals === "function") await loadOpsDashboardSignals();
     return;
   }
   await loadDevelopmentUiChunk();
-
-  const [workspaces, projects, agentRuns, teams, workflowExecutions, deployments] = await Promise.all([
-    api("/v1/workspaces"),
-    api("/v1/projects"),
-    api("/v1/agents/runs"),
-    api("/v1/teams"),
-    api("/v1/workflow-executions"),
-    api("/v1/deployments"),
-  ]);
-
-  state.workspaces = workspaces.items;
-  state.projects = projects.items;
-  state.agentRuns = agentRuns.items;
-  state.teams = teams.items;
-  state.workflowExecutions = workflowExecutions.items || [];
-  state.deploymentRuns = (deployments.items || []).sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-  );
-  state.customerApplications = loadCustomerApplications();
-
-  if (!state.selectedWorkspaceId && state.workspaces[0]) {
-    state.selectedWorkspaceId = state.workspaces[0].id;
-  }
-
-  const workspaceProjects = state.projects.filter(
-    (project) => project.workspace_id === state.selectedWorkspaceId,
-  );
-  if (!state.selectedProjectId && workspaceProjects[0]) {
-    state.selectedProjectId = workspaceProjects[0].id;
-  }
-
-  if (state.selectedProjectId) {
-    const [requirements, versions, releases] = await Promise.all([
-      api(`/v1/requirements?project_id=${state.selectedProjectId}`),
-      api(`/v1/application-versions?project_id=${state.selectedProjectId}`),
-      api(`/v1/releases?project_id=${state.selectedProjectId}`),
-    ]);
-    state.requirements = requirements.items;
-    state.lifecycleVersions = versions;
-    state.lifecycleReleases = releases.items || [];
-    if (state.requirements.length > 0) {
-      const changes = await api(`/v1/change-requests?requirement_id=${state.requirements[0].id}`);
-      state.lifecycleChangeRequests = changes.items || [];
-    } else {
-      state.lifecycleChangeRequests = [];
-    }
-  } else {
-    state.requirements = [];
-    state.lifecycleVersions = [];
-    state.lifecycleReleases = [];
-    state.lifecycleChangeRequests = [];
-  }
+  if (typeof loadDevelopmentDashboard === "function") await loadDevelopmentDashboard();
 }
 
 async function loadRouteData() {
   if (state.route.page === "dashboard") {
     await loadDashboard();
   } else if (state.route.page === "builds") {
-    await loadWorkflowExecutions();
+    await loadDevelopmentUiChunk();
+    if (typeof loadWorkflowExecutions === "function") await loadWorkflowExecutions();
   } else if (state.route.page === "organizations" || state.route.page === "organizations-create") {
     await loadOrganizations();
   } else if (state.route.page === "organization") {
     await loadOrganizations();
   } else if (state.route.page === "organization-sso") {
-    await loadOrganizationSso();
+    await loadSettingsOrgUiChunk();
+    if (typeof loadOrganizationSso === "function") await loadOrganizationSso();
   } else if (state.route.page === "organization-audit") {
-    await loadAuditLogs();
+    await loadSettingsOrgUiChunk();
+    if (typeof loadAuditLogs === "function") await loadAuditLogs();
   } else if (state.route.page === "operations-jobs") {
-    await loadJobsList();
+    await loadSettingsOrgUiChunk();
+    if (typeof loadJobsList === "function") await loadJobsList();
   } else if (
     state.route.page === "billing"
     || state.route.page === "billing-subscription"
@@ -2459,12 +1786,14 @@ async function loadRouteData() {
     if (typeof loadSecretsHubData === "function") await loadSecretsHubData();
   } else if (state.route.page === "settings") {
     state.settingsTab = state.route.settingsTab || "profile";
-    await loadSettingsTabData(state.settingsTab);
+    await loadSettingsOrgUiChunk();
+    if (typeof loadSettingsTabData === "function") await loadSettingsTabData(state.settingsTab);
   } else if (state.route.page === "ai-teams") {
     state.selectedAiTeam = null;
     state.aiTeamFormOpen = false;
     state.aiTeamEditId = null;
-    await loadAiTeams();
+    await loadDevelopmentUiChunk();
+    if (typeof loadAiTeams === "function") await loadAiTeams();
   } else if (state.route.page === "ai-team-detail") {
     state.aiAgentFormOpen = false;
     state.aiAgentEditId = null;
@@ -2492,7 +1821,8 @@ async function loadRouteData() {
     state.aiTeamRunDetail = null;
     state.aiTeamDocuments = [];
     state.aiDocUploadBusy = false;
-    await loadAiTeamDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadAiTeamDetail === "function") await loadAiTeamDetail(state.route.id);
   } else if (state.route.page === "ai-tools") {
     state.aiToolFormOpen = false;
     state.aiToolFormDraft = null;
@@ -2500,7 +1830,8 @@ async function loadRouteData() {
     state.aiToolConnStatus = null;
     state.aiToolVerifyResult = null;
     state.aiToolConnSelectId = "";
-    await loadAiTools();
+    await loadDevelopmentUiChunk();
+    if (typeof loadAiTools === "function") await loadAiTools();
   } else if (
     state.route.page === "incidents"
     || state.route.page === "incident-detail"
@@ -2618,10 +1949,12 @@ async function loadRouteData() {
     if (typeof loadHelpData === "function") await loadHelpData();
   } else if (state.route.page === "ai-team-workflows") {
     state.selectedAiWorkflow = null;
-    await loadAiWorkflows();
+    await loadDevelopmentUiChunk();
+    if (typeof loadAiWorkflows === "function") await loadAiWorkflows();
   } else if (state.route.page === "ai-team-workflow-create") {
     state.aiWorkflowFormDraft = null;
-    await loadAiTeams();
+    await loadDevelopmentUiChunk();
+    if (typeof loadAiTeams === "function") await loadAiTeams();
   } else if (state.route.page === "ai-team-workflow-detail") {
     state.aiWorkflowEditOpen = false;
     state.aiWorkflowRunBusy = false;
@@ -2633,18 +1966,24 @@ async function loadRouteData() {
     state.aiScheduleFormBusy = false;
     state.aiWorkflowApprovals = [];
     state.aiApprovalBusy = "";
-    await loadAiWorkflowDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadAiWorkflowDetail === "function") await loadAiWorkflowDetail(state.route.id);
   } else if (state.route.page === "organization-detail") {
-    await loadOrganizationDetail(state.route.id);
-    if (canManageMembers()) await probeIdentityCapabilities();
+    await loadSettingsOrgUiChunk();
+    if (typeof loadOrganizationDetail === "function") await loadOrganizationDetail(state.route.id);
+    if (canManageMembers() && typeof probeIdentityCapabilities === "function") await probeIdentityCapabilities();
   } else if (state.route.page === "invitation-accept") {
-    await loadInvitationPreview(state.route.token);
+    await loadSettingsOrgUiChunk();
+    if (typeof loadInvitationPreview === "function") await loadInvitationPreview(state.route.token);
   } else if (state.route.page === "teams" || state.route.page === "teams-create") {
-    await loadTeams();
+    await loadDevelopmentUiChunk();
+    if (typeof loadTeams === "function") await loadTeams();
   } else if (state.route.page === "team-detail") {
-    await loadTeamDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadTeamDetail === "function") await loadTeamDetail(state.route.id);
   } else if (state.route.page === "team-templates") {
-    await loadTeamTemplates();
+    await loadDevelopmentUiChunk();
+    if (typeof loadTeamTemplates === "function") await loadTeamTemplates();
   } else if (
     state.route.page === "workflows" ||
     state.route.page === "workflows-create"
@@ -2653,149 +1992,219 @@ async function loadRouteData() {
   } else if (state.route.page === "workflow-detail") {
     await Promise.all([loadWorkflowDetail(state.route.id), loadTeams(), loadExecutionFormData()]);
   } else if (state.route.page === "workflow-templates") {
-    await loadWorkflowTemplates();
+    await loadDevelopmentUiChunk();
+    if (typeof loadWorkflowTemplates === "function") await loadWorkflowTemplates();
   } else if (state.route.page === "workflow-executions") {
-    await loadWorkflowExecutions();
+    await loadDevelopmentUiChunk();
+    if (typeof loadWorkflowExecutions === "function") await loadWorkflowExecutions();
   } else if (state.route.page === "workflow-execution-detail") {
-    await loadWorkflowExecutionDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadWorkflowExecutionDetail === "function") await loadWorkflowExecutionDetail(state.route.id);
   } else if (state.route.page === "product-owner") {
-    await loadProductOwnerPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadProductOwnerPage === "function") await loadProductOwnerPage();
   } else if (state.route.page === "product-owner-detail") {
-    await loadProductOwnerDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadProductOwnerDetail === "function") await loadProductOwnerDetail(state.route.id);
   } else if (state.route.page === "business-analyst") {
-    await loadBusinessAnalystPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadBusinessAnalystPage === "function") await loadBusinessAnalystPage();
   } else if (state.route.page === "business-analyst-detail") {
-    await loadBusinessAnalystDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadBusinessAnalystDetail === "function") await loadBusinessAnalystDetail(state.route.id);
   } else if (state.route.page === "backend-architect") {
-    await loadBackendArchitectPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadBackendArchitectPage === "function") await loadBackendArchitectPage();
   } else if (state.route.page === "backend-architect-detail") {
-    await loadBackendArchitectDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadBackendArchitectDetail === "function") await loadBackendArchitectDetail(state.route.id);
   } else if (state.route.page === "backend-v1") {
-    await loadBackendV1Page();
+    await loadDevelopmentUiChunk();
+    if (typeof loadBackendV1Page === "function") await loadBackendV1Page();
   } else if (state.route.page === "backend-v1-detail") {
-    await loadBackendV1Detail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadBackendV1Detail === "function") await loadBackendV1Detail(state.route.id);
   } else if (state.route.page === "backend-v2") {
-    await loadBackendV2Page();
+    await loadDevelopmentUiChunk();
+    if (typeof loadBackendV2Page === "function") await loadBackendV2Page();
   } else if (state.route.page === "backend-v2-detail") {
-    await loadBackendV2Detail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadBackendV2Detail === "function") await loadBackendV2Detail(state.route.id);
   } else if (state.route.page === "uiux") {
-    await loadUiuxPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadUiuxPage === "function") await loadUiuxPage();
   } else if (state.route.page === "uiux-detail") {
-    await loadUiuxDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadUiuxDetail === "function") await loadUiuxDetail(state.route.id);
   } else if (state.route.page === "frontend-architect") {
-    await loadFrontendArchitectPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadFrontendArchitectPage === "function") await loadFrontendArchitectPage();
   } else if (state.route.page === "frontend-architect-detail") {
-    await loadFrontendArchitectDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadFrontendArchitectDetail === "function") await loadFrontendArchitectDetail(state.route.id);
   } else if (state.route.page === "frontend-v1") {
-    await loadFrontendV1Page();
+    await loadDevelopmentUiChunk();
+    if (typeof loadFrontendV1Page === "function") await loadFrontendV1Page();
   } else if (state.route.page === "frontend-v1-detail") {
-    await loadFrontendV1Detail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadFrontendV1Detail === "function") await loadFrontendV1Detail(state.route.id);
   } else if (state.route.page === "frontend-v2") {
-    await loadFrontendV2Page();
+    await loadDevelopmentUiChunk();
+    if (typeof loadFrontendV2Page === "function") await loadFrontendV2Page();
   } else if (state.route.page === "frontend-v2-detail") {
-    await loadFrontendV2Detail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadFrontendV2Detail === "function") await loadFrontendV2Detail(state.route.id);
   } else if (state.route.page === "frontend-v3") {
-    await loadFrontendV3Page();
+    await loadDevelopmentUiChunk();
+    if (typeof loadFrontendV3Page === "function") await loadFrontendV3Page();
   } else if (state.route.page === "frontend-v3-detail") {
-    await loadFrontendV3Detail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadFrontendV3Detail === "function") await loadFrontendV3Detail(state.route.id);
   } else if (state.route.page === "backend-v3") {
-    await loadBackendV3Page();
+    await loadDevelopmentUiChunk();
+    if (typeof loadBackendV3Page === "function") await loadBackendV3Page();
   } else if (state.route.page === "backend-v3-detail") {
-    await loadBackendV3Detail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadBackendV3Detail === "function") await loadBackendV3Detail(state.route.id);
   } else if (state.route.page === "backend-code-review") {
-    await loadBackendCodeReviewPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadBackendCodeReviewPage === "function") await loadBackendCodeReviewPage();
   } else if (state.route.page === "backend-code-review-detail") {
-    await loadBackendCodeReviewDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadBackendCodeReviewDetail === "function") await loadBackendCodeReviewDetail(state.route.id);
   } else if (state.route.page === "backend-execution") {
-    await loadBackendExecutionPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadBackendExecutionPage === "function") await loadBackendExecutionPage();
   } else if (state.route.page === "backend-execution-detail") {
-    await loadBackendExecutionDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadBackendExecutionDetail === "function") await loadBackendExecutionDetail(state.route.id);
   } else if (state.route.page === "frontend-code-review") {
-    await loadFrontendCodeReviewPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadFrontendCodeReviewPage === "function") await loadFrontendCodeReviewPage();
   } else if (state.route.page === "frontend-code-review-detail") {
-    await loadFrontendCodeReviewDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadFrontendCodeReviewDetail === "function") await loadFrontendCodeReviewDetail(state.route.id);
   } else if (state.route.page === "frontend-execution") {
-    await loadFrontendExecutionPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadFrontendExecutionPage === "function") await loadFrontendExecutionPage();
   } else if (state.route.page === "frontend-execution-detail") {
-    await loadFrontendExecutionDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadFrontendExecutionDetail === "function") await loadFrontendExecutionDetail(state.route.id);
   } else if (state.route.page === "qa-architect") {
-    await loadQAArchitectPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadQAArchitectPage === "function") await loadQAArchitectPage();
   } else if (state.route.page === "qa-architect-detail") {
-    await loadQAArchitectDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadQAArchitectDetail === "function") await loadQAArchitectDetail(state.route.id);
   } else if (state.route.page === "unit-tests") {
-    await loadUnitTestsPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadUnitTestsPage === "function") await loadUnitTestsPage();
   } else if (state.route.page === "unit-tests-detail") {
-    await loadUnitTestsDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadUnitTestsDetail === "function") await loadUnitTestsDetail(state.route.id);
   } else if (state.route.page === "integration-tests") {
-    await loadIntegrationTestsPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadIntegrationTestsPage === "function") await loadIntegrationTestsPage();
   } else if (state.route.page === "integration-tests-detail") {
-    await loadIntegrationTestsDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadIntegrationTestsDetail === "function") await loadIntegrationTestsDetail(state.route.id);
   } else if (state.route.page === "security-tests") {
-    await loadSecurityTestsPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadSecurityTestsPage === "function") await loadSecurityTestsPage();
   } else if (state.route.page === "security-tests-detail") {
-    await loadSecurityTestsDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadSecurityTestsDetail === "function") await loadSecurityTestsDetail(state.route.id);
   } else if (state.route.page === "performance-tests") {
-    await loadPerformanceTestsPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadPerformanceTestsPage === "function") await loadPerformanceTestsPage();
   } else if (state.route.page === "performance-tests-detail") {
-    await loadPerformanceTestsDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadPerformanceTestsDetail === "function") await loadPerformanceTestsDetail(state.route.id);
   } else if (state.route.page === "qa-approvals") {
-    await loadQAApprovalsPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadQAApprovalsPage === "function") await loadQAApprovalsPage();
   } else if (state.route.page === "qa-approvals-detail") {
-    await loadQAApprovalsDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadQAApprovalsDetail === "function") await loadQAApprovalsDetail(state.route.id);
   } else if (state.route.page === "infrastructure-architect") {
-    await loadInfrastructureArchitectPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadInfrastructureArchitectPage === "function") await loadInfrastructureArchitectPage();
   } else if (state.route.page === "infrastructure-architect-detail") {
-    await loadInfrastructureArchitectDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadInfrastructureArchitectDetail === "function") await loadInfrastructureArchitectDetail(state.route.id);
   } else if (state.route.page === "docker-agent") {
-    await loadDockerAgentPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadDockerAgentPage === "function") await loadDockerAgentPage();
   } else if (state.route.page === "docker-agent-detail") {
-    await loadDockerAgentDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadDockerAgentDetail === "function") await loadDockerAgentDetail(state.route.id);
   } else if (state.route.page === "cicd") {
-    await loadCicdPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadCicdPage === "function") await loadCicdPage();
   } else if (state.route.page === "cicd-detail") {
-    await loadCicdDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadCicdDetail === "function") await loadCicdDetail(state.route.id);
   } else if (state.route.page === "kubernetes") {
-    await loadKubernetesPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadKubernetesPage === "function") await loadKubernetesPage();
   } else if (state.route.page === "kubernetes-detail") {
-    await loadKubernetesDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadKubernetesDetail === "function") await loadKubernetesDetail(state.route.id);
   } else if (state.route.page === "observability") {
-    await loadObservabilityPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadObservabilityPage === "function") await loadObservabilityPage();
   } else if (state.route.page === "observability-detail") {
-    await loadObservabilityDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadObservabilityDetail === "function") await loadObservabilityDetail(state.route.id);
   } else if (state.route.page === "sre-approvals") {
-    await loadSreApprovalsPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadSreApprovalsPage === "function") await loadSreApprovalsPage();
   } else if (state.route.page === "sre-approvals-detail") {
-    await loadSreApprovalsDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadSreApprovalsDetail === "function") await loadSreApprovalsDetail(state.route.id);
   } else if (state.route.page === "fullstack-assembly") {
-    await loadFullstackAssemblyPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadFullstackAssemblyPage === "function") await loadFullstackAssemblyPage();
   } else if (state.route.page === "fullstack-assembly-detail") {
-    await loadFullstackAssemblyDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadFullstackAssemblyDetail === "function") await loadFullstackAssemblyDetail(state.route.id);
   } else if (state.route.page === "applications") {
-    await loadApplicationsPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadApplicationsPage === "function") await loadApplicationsPage();
   } else if (state.route.page === "applications-create") {
-    await loadApplicationCreatePage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadApplicationCreatePage === "function") await loadApplicationCreatePage();
   } else if (state.route.page === "application-detail") {
-    await loadApplicationDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadApplicationDetail === "function") await loadApplicationDetail(state.route.id);
   } else if (state.route.page === "change-requests") {
-    await loadChangeRequestsPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadChangeRequestsPage === "function") await loadChangeRequestsPage();
   } else if (state.route.page === "change-requests-detail") {
-    await loadChangeRequestDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadChangeRequestDetail === "function") await loadChangeRequestDetail(state.route.id);
   } else if (state.route.page === "releases") {
-    await loadReleasesPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadReleasesPage === "function") await loadReleasesPage();
   } else if (state.route.page === "approvals") {
-    await loadApprovalsPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadApprovalsPage === "function") await loadApprovalsPage();
   } else if (state.route.page === "approval-detail") {
-    await loadApprovalDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadApprovalDetail === "function") await loadApprovalDetail(state.route.id);
   } else if (state.route.page === "deployments") {
-    await loadDeploymentsPage();
+    await loadDevelopmentUiChunk();
+    if (typeof loadDeploymentsPage === "function") await loadDeploymentsPage();
   } else if (state.route.page === "deployment-detail") {
-    await loadDeploymentDetail(state.route.id);
+    await loadDevelopmentUiChunk();
+    if (typeof loadDeploymentDetail === "function") await loadDeploymentDetail(state.route.id);
   } else if (state.route.page === "agents" || state.route.page === "agents-create") {
     await Promise.all([loadAiAgents(), loadWorkflows()]);
   } else if (state.route.page === "agent-detail") {
     await Promise.all([loadAiAgentDetail(state.route.id), loadWorkflows()]);
   } else if (state.route.page === "agent-templates") {
-    await loadAiAgentTemplates();
+    await loadDevelopmentUiChunk();
+    if (typeof loadAiAgentTemplates === "function") await loadAiAgentTemplates();
   }
 }
 
@@ -3658,6 +3067,96 @@ function lazyCopilotRunbooksView(name) {
   });
   return renderSkeleton("page");
 }
+/* ---------------------------------------------------------------------- *
+ * Lazy chunk loader for Ops Command Center dashboard
+ * ---------------------------------------------------------------------- */
+let __opsCommandCenterUiChunkPromise = null;
+function opsCommandCenterUiChunkReady() {
+  return typeof renderOpsCommandCenterDashboard === "function";
+}
+function opsCommandCenterUiChunkUrl() {
+  try {
+    const assets = typeof window !== "undefined" ? window.__ASSETS__ : null;
+    if (assets && assets["ops-command-center-ui.js"]) return assets["ops-command-center-ui.js"];
+  } catch (_e) { /* ignore */ }
+  return "/ops-command-center-ui.js";
+}
+function loadOpsCommandCenterUiChunk() {
+  if (opsCommandCenterUiChunkReady()) return Promise.resolve();
+  if (__opsCommandCenterUiChunkPromise) return __opsCommandCenterUiChunkPromise;
+  if (typeof document === "undefined" || typeof document.createElement !== "function" || !document.head) {
+    return Promise.resolve();
+  }
+  __opsCommandCenterUiChunkPromise = new Promise((resolve) => {
+    try {
+      const script = document.createElement("script");
+      script.src = opsCommandCenterUiChunkUrl();
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => { __opsCommandCenterUiChunkPromise = null; resolve(); };
+      document.head.appendChild(script);
+    } catch (_e) {
+      __opsCommandCenterUiChunkPromise = null;
+      resolve();
+    }
+  });
+  return __opsCommandCenterUiChunkPromise;
+}
+function lazyOpsCommandCenterView(name) {
+  const fn = typeof window !== "undefined" ? window[name] : undefined;
+  if (typeof fn === "function") return fn();
+  loadOpsCommandCenterUiChunk().then(() => {
+    if (opsCommandCenterUiChunkReady()) render();
+  });
+  return renderSkeleton("page");
+}
+/* ---------------------------------------------------------------------- *
+ * Lazy chunk loader for Settings / Organization admin UI
+ * ---------------------------------------------------------------------- */
+let __settingsOrgUiChunkPromise = null;
+function settingsOrgUiChunkReady() {
+  return typeof renderSettings === "function";
+}
+function settingsOrgUiChunkUrl() {
+  try {
+    const assets = typeof window !== "undefined" ? window.__ASSETS__ : null;
+    if (assets && assets["settings-org-ui.js"]) return assets["settings-org-ui.js"];
+  } catch (_e) { /* ignore */ }
+  return "/settings-org-ui.js";
+}
+function loadSettingsOrgUiChunk() {
+  if (settingsOrgUiChunkReady()) return Promise.resolve();
+  if (__settingsOrgUiChunkPromise) return __settingsOrgUiChunkPromise;
+  if (typeof document === "undefined" || typeof document.createElement !== "function" || !document.head) {
+    return Promise.resolve();
+  }
+  __settingsOrgUiChunkPromise = new Promise((resolve) => {
+    try {
+      const script = document.createElement("script");
+      script.src = settingsOrgUiChunkUrl();
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => { __settingsOrgUiChunkPromise = null; resolve(); };
+      document.head.appendChild(script);
+    } catch (_e) {
+      __settingsOrgUiChunkPromise = null;
+      resolve();
+    }
+  });
+  return __settingsOrgUiChunkPromise;
+}
+function lazySettingsOrgView(name) {
+  const fn = typeof window !== "undefined" ? window[name] : undefined;
+  if (typeof fn === "function") return fn();
+  loadSettingsOrgUiChunk().then(() => {
+    if (settingsOrgUiChunkReady()) render();
+  });
+  return renderSkeleton("page");
+}
+
+
+
+
 
 
 
@@ -4003,8 +3502,9 @@ async function loadProductCapabilities() {
     state.productCapabilitiesLoaded = false;
     return;
   }
+  await loadSettingsOrgUiChunk();
   await Promise.all([
-    probeIdentityCapabilities(),
+    typeof probeIdentityCapabilities === "function" ? probeIdentityCapabilities() : Promise.resolve(),
     probeOperationsCapabilities(),
     probeBillingEnabled(),
     probePilotMode(),
@@ -4030,1082 +3530,49 @@ function resetProductCapabilities() {
   state.productCapabilitiesLoaded = false;
 }
 
-async function probeIdentityCapabilities() {
-  if (state.identityCapabilitiesProbed) return state.identityCapabilities;
-  const sessions = await probeApiRouteAvailable("/v1/sessions");
-  const caps = {
-    identity: sessions,
-    sessions,
-    mfa: false,
-    apiKeys: false,
-    serviceAccounts: false,
-    sso: false,
-  };
-  if (sessions) {
-    caps.mfa = await probeApiRouteAvailable("/v1/auth/mfa/status");
-    caps.apiKeys = await probeApiRouteAvailable("/v1/api-keys/organization");
-    caps.serviceAccounts = await probeApiRouteAvailable("/v1/service-accounts");
-    if (isOrgAdminRole()) {
-      caps.sso = await probeApiRouteAvailable("/v1/auth/sso/connections");
-    }
-  }
-  state.identityCapabilities = caps;
-  state.identityCapabilitiesProbed = true;
-  return caps;
-}
 
-async function loadMfaStatus() {
-  const caps = await probeIdentityCapabilities();
-  if (!caps.mfa) {
-    state.mfaStatus = null;
-    return;
-  }
-  try {
-    state.mfaStatus = await api("/v1/auth/mfa/status");
-  } catch {
-    state.mfaStatus = null;
-  }
-}
 
-async function loadUserSessions() {
-  const caps = await probeIdentityCapabilities();
-  if (!caps.sessions) {
-    state.userSessions = [];
-    return;
-  }
-  try {
-    const data = await api("/v1/sessions");
-    state.userSessions = data.items || [];
-  } catch {
-    state.userSessions = [];
-  }
-}
 
-async function loadPersonalApiKeys() {
-  const caps = await probeIdentityCapabilities();
-  if (!caps.apiKeys) {
-    state.personalApiKeys = [];
-    return;
-  }
-  try {
-    const data = await api("/v1/api-keys/personal");
-    state.personalApiKeys = data.items || [];
-  } catch {
-    state.personalApiKeys = [];
-  }
-}
 
-async function loadOrgApiKeys() {
-  if (!isOrgAdminRole()) {
-    state.orgApiKeys = [];
-    return;
-  }
-  const caps = await probeIdentityCapabilities();
-  if (!caps.apiKeys) {
-    state.orgApiKeys = [];
-    return;
-  }
-  try {
-    const data = await api("/v1/api-keys/organization");
-    state.orgApiKeys = data.items || [];
-  } catch {
-    state.orgApiKeys = [];
-  }
-}
 
-async function loadServiceAccounts() {
-  if (!isOrgAdminRole()) {
-    state.serviceAccounts = [];
-    return;
-  }
-  const caps = await probeIdentityCapabilities();
-  if (!caps.serviceAccounts) {
-    state.serviceAccounts = [];
-    return;
-  }
-  try {
-    const data = await api("/v1/service-accounts");
-    state.serviceAccounts = data.items || [];
-  } catch {
-    state.serviceAccounts = [];
-  }
-}
 
-async function loadServiceAccountKeys(saId) {
-  if (!saId || !isOrgAdminRole()) return;
-  try {
-    const data = await api(`/v1/service-accounts/${saId}/keys`);
-    state.serviceAccountKeysById = {
-      ...state.serviceAccountKeysById,
-      [saId]: data.items || [],
-    };
-  } catch {
-    state.serviceAccountKeysById = { ...state.serviceAccountKeysById, [saId]: [] };
-  }
-}
 
-async function loadSsoProviders() {
-  try {
-    const data = await api("/v1/auth/sso/providers");
-    state.ssoProviders = data.providers || [];
-  } catch {
-    state.ssoProviders = [];
-  }
-}
 
-async function loadSsoConnections() {
-  if (!isOrgAdminRole()) {
-    state.ssoConnections = [];
-    return;
-  }
-  const caps = await probeIdentityCapabilities();
-  if (!caps.sso) {
-    state.ssoConnections = [];
-    return;
-  }
-  state.ssoLoading = true;
-  try {
-    const data = await api("/v1/auth/sso/connections");
-    state.ssoConnections = data.connections || [];
-    state.ssoSaveError = null;
-  } catch (error) {
-    state.ssoConnections = [];
-    if (error instanceof ApiError && error.status === 403) {
-      state.ssoSaveError = null;
-    } else {
-      state.ssoSaveError = error.message;
-    }
-  } finally {
-    state.ssoLoading = false;
-  }
-}
 
-async function loadOrganizationSso() {
-  await loadOrganizations();
-  await loadSsoConnections();
-}
 
-function buildAuditQuery() {
-  const f = state.auditFilters || {};
-  const params = new URLSearchParams();
-  params.set("offset", String(state.auditOffset || 0));
-  params.set("limit", String(state.auditLimit || 50));
-  if (f.action) params.set("action", f.action);
-  if (f.user_id) params.set("user_id", f.user_id);
-  if (f.status) params.set("status", f.status);
-  if (f.start) params.set("start", f.start);
-  if (f.end) params.set("end", f.end);
-  return params.toString();
-}
 
-async function loadAuditLogs() {
-  if (!isOrgAdminRole()) {
-    state.auditLogs = [];
-    state.auditUnavailable = false;
-    return;
-  }
-  const caps = await probeOperationsCapabilities();
-  if (!caps.audit) {
-    state.auditLogs = [];
-    state.auditUnavailable = true;
-    return;
-  }
-  state.auditLoading = true;
-  state.auditUnavailable = false;
-  try {
-    const data = await api(`/v1/audit/logs?${buildAuditQuery()}`);
-    state.auditLogs = (data.items || []).map(sanitizeAuditEntry);
-    state.auditTotal = data.total || 0;
-  } catch (error) {
-    state.auditLogs = [];
-    state.auditTotal = 0;
-    state.auditUnavailable = error instanceof ApiError && (error.status === 404 || error.status === 503);
-  } finally {
-    state.auditLoading = false;
-  }
-}
 
-function buildJobsQuery() {
-  const f = state.jobsFilters || {};
-  const params = new URLSearchParams();
-  params.set("offset", String(state.jobsOffset || 0));
-  params.set("limit", String(state.jobsLimit || 50));
-  if (f.status) params.set("status", f.status);
-  if (f.job_type) params.set("job_type", f.job_type);
-  return params.toString();
-}
 
-function filterJobsByDateRange(items) {
-  const f = state.jobsFilters || {};
-  if (!f.start && !f.end) return items;
-  const startMs = f.start ? new Date(f.start).getTime() : null;
-  const endMs = f.end ? new Date(f.end).getTime() + 86400000 - 1 : null;
-  return items.filter((job) => {
-    const created = job.created_at ? new Date(job.created_at).getTime() : 0;
-    if (startMs != null && created < startMs) return false;
-    if (endMs != null && created > endMs) return false;
-    return true;
-  });
-}
 
-async function loadJobsList() {
-  if (!isOrgAdminRole()) {
-    state.jobsList = [];
-    state.jobsUnavailable = false;
-    return;
-  }
-  const caps = await probeOperationsCapabilities();
-  if (!caps.jobs) {
-    state.jobsList = [];
-    state.jobsUnavailable = true;
-    return;
-  }
-  state.jobsLoading = true;
-  state.jobsUnavailable = false;
-  try {
-    if (state.jobsTab === "dead-letter") {
-      const data = await api(`/v1/jobs/dead-letter?offset=${state.jobsOffset || 0}&limit=${state.jobsLimit || 50}`);
-      const items = filterJobsByDateRange(data.items || []);
-      state.jobsDeadLetterList = items;
-      state.jobsDeadLetterTotal = data.total || items.length;
-      state.jobsList = items;
-      state.jobsTotal = state.jobsDeadLetterTotal;
-    } else {
-      const data = await api(`/v1/jobs?${buildJobsQuery()}`);
-      const items = filterJobsByDateRange(data.items || []);
-      state.jobsList = items;
-      state.jobsTotal = data.total || items.length;
-    }
-  } catch (error) {
-    state.jobsList = [];
-    state.jobsTotal = 0;
-    state.jobsUnavailable = error instanceof ApiError && (error.status === 404 || error.status === 503);
-  } finally {
-    state.jobsLoading = false;
-  }
-}
 
-async function loadJobDetail(jobId) {
-  if (!jobId) {
-    state.selectedJobDetail = null;
-    return;
-  }
-  state.jobsDetailLoading = true;
-  try {
-    state.selectedJobDetail = await api(`/v1/jobs/${jobId}`);
-    state.selectedJobId = jobId;
-  } catch {
-    state.selectedJobDetail = null;
-  } finally {
-    state.jobsDetailLoading = false;
-  }
-}
 
-function buildAuditExportUrl(format) {
-  const params = new URLSearchParams(buildAuditQuery());
-  params.set("format", format);
-  return apiUrl(`/v1/audit/logs/export?${params.toString()}`);
-}
 
-async function loadSettingsTabData(tab) {
-  const activeTab = tab || state.route.settingsTab || state.settingsTab || "profile";
-  state.settingsTab = activeTab;
-  if (activeTab === "profile") {
-    state.credentialValidation = null;
-    await Promise.all([loadOrganizations(), loadCredentials()]);
-    await probeIdentityCapabilities();
-    await probeOperationsCapabilities();
-    return;
-  }
-  await loadOrganizations();
-  const caps = await probeIdentityCapabilities();
-  await probeOperationsCapabilities();
-  if (activeTab === "security") {
-    if (caps.mfa) await loadMfaStatus();
-    return;
-  }
-  if (activeTab === "sessions" && caps.sessions) {
-    await loadUserSessions();
-    return;
-  }
-  if (activeTab === "api-keys" && caps.apiKeys) {
-    await Promise.all([loadOrgApiKeys(), loadPersonalApiKeys()]);
-    return;
-  }
-  if (activeTab === "service-accounts" && caps.serviceAccounts) {
-    await loadServiceAccounts();
-    return;
-  }
-  if (activeTab === "audit") {
-    await probeOperationsCapabilities();
-    if (state.operationsCapabilities?.audit) await loadAuditLogs();
-    return;
-  }
-  if (activeTab === "notifications") {
-    try {
-      state.notificationChannels = await api("/v1/incidents/notification-channels");
-    } catch {
-      state.notificationChannels = null;
-    }
-  }
-}
 
-function settingsTabHref(tab) {
-  return tab === "profile" ? "/settings" : `/settings?tab=${encodeURIComponent(tab)}`;
-}
 
-function settingsTabsForCapabilities() {
-  const caps = state.identityCapabilities || {};
-  const tabs = [{ id: "profile", label: "Profile" }];
-  if (caps.identity) {
-    tabs.push({ id: "security", label: "Security" });
-    if (caps.sessions) tabs.push({ id: "sessions", label: "Sessions" });
-    if (caps.apiKeys) tabs.push({ id: "api-keys", label: "API Keys" });
-    if (caps.serviceAccounts && isOrgAdminRole()) tabs.push({ id: "service-accounts", label: "Service Accounts" });
-    if (state.operationsCapabilities?.audit && isOrgAdminRole()) tabs.push({ id: "audit", label: "Audit trail" });
-    if (isOrgAdminRole()) tabs.push({ id: "notifications", label: "Notifications" });
-  }
-  return tabs;
-}
 
-function renderSettingsTabs() {
-  const tabs = settingsTabsForCapabilities();
-  const active = state.settingsTab || state.route.settingsTab || "profile";
-  const validActive = tabs.some((t) => t.id === active) ? active : "profile";
-  return `<div class="tabs" style="margin-bottom:16px;">
-    ${tabs.map((t) => `
-      <a class="btn tab ${validActive === t.id ? "active" : ""}" href="${settingsTabHref(t.id)}" data-nav="${settingsTabHref(t.id)}">${escapeHtml(t.label)}</a>
-    `).join("")}
-  </div>`;
-}
 
-function renderIdentityUnavailableCard(title, detail) {
-  return `<section class="card">
-    <h2>${escapeHtml(title)}</h2>
-    <p class="muted">${escapeHtml(detail)}</p>
-  </section>`;
-}
 
-function renderSettingsNotificationsTab() {
-  const canWrite = canWriteResources();
-  const ch = state.notificationChannels || {};
-  const defaultChannels = (ch.default_channels || ["slack", "email"]).join(", ");
-  return `
-    <section class="card">
-      <h2>Incident notifications</h2>
-      <p class="muted" style="font-size:13px;">Per-organization outbound webhooks for auto-incidents, on-call paging, and escalations. Env vars (<code>SLACK_WEBHOOK_URL</code>, <code>TEAMS_WEBHOOK_URL</code>) are used only when org values are unset.</p>
-      ${canWrite ? `<form data-notification-channels style="margin-top:12px;display:grid;gap:10px;max-width:560px;">
-        <label>Slack webhook URL<input class="form-input" name="slack_webhook_url" type="url" placeholder="${ch.slack_webhook_configured ? "Configured — leave blank to keep" : "https://hooks.slack.com/..."}" /></label>
-        <label>Teams webhook URL<input class="form-input" name="teams_webhook_url" type="url" placeholder="${ch.teams_webhook_configured ? "Configured — leave blank to keep" : "https://..."}" /></label>
-        <label>PagerDuty routing key<input class="form-input" name="pagerduty_routing_key" placeholder="${ch.pagerduty_routing_configured ? "Configured — leave blank to keep" : "Events API v2 routing key"}" /></label>
-        <label>Default channels (comma-separated)<input class="form-input" name="default_channels" value="${escapeHtml(defaultChannels)}" placeholder="slack, email, pagerduty" /></label>
-        <div class="actions" style="gap:8px;flex-wrap:wrap;">
-          <button type="submit" class="btn btn-primary btn-sm">Save channels</button>
-          <button type="button" class="btn btn-secondary btn-sm" data-settings-notify-test="slack">Test Slack</button>
-          <button type="button" class="btn btn-secondary btn-sm" data-settings-notify-test="teams">Test Teams</button>
-        </div>
-      </form>` : `<p class="muted">View only — ask an admin to configure notification channels.</p>`}
-      <ul class="muted" style="font-size:12px;line-height:1.6;margin-top:12px;">
-        <li>Slack: ${ch.slack_webhook_configured ? `configured (${escapeHtml(ch.slack_webhook_preview || "")})` : "not configured"}</li>
-        <li>Teams: ${ch.teams_webhook_configured ? `configured (${escapeHtml(ch.teams_webhook_preview || "")})` : "not configured"}</li>
-        <li>PagerDuty: ${ch.pagerduty_routing_configured ? "routing key configured" : "not configured"}</li>
-        <li><strong>Escalation channels</strong> — per policy on <a href="/incidents/on-call" data-nav="/incidents/on-call">On-call</a> (add <code>pagerduty</code> to page externally).</li>
-      </ul>
-    </section>`;
-}
 
-function renderSettingsProfileTab() {
-  const activeOrg = state.organizations.find((org) => org.id === state.activeOrganization);
-  const creds = state.credentials || [];
-  const canWrite = canWriteResources();
-  return `
-    <section class="grid grid-2">
-      <div class="card">
-        <h2>Profile</h2>
-        <p><strong>${escapeHtml(state.user?.full_name || state.user?.username || "User")}</strong></p>
-        <p class="muted">${escapeHtml(state.user?.email || "")}</p>
-      </div>
-      <div class="card">
-        <h2>Organization</h2>
-        <p><strong>${escapeHtml(activeOrg?.name || "No organization selected")}</strong></p>
-        <p class="muted">Role: ${escapeHtml(state.activeRole || "member")}</p>
-        <div class="actions" style="margin-top:12px;">
-          <a class="btn btn-secondary" href="/organization" data-nav="/organization">Current organization</a>
-          <a class="btn btn-secondary" href="/organizations" data-nav="/organizations">All organizations</a>
-        </div>
-      </div>
-    </section>
-    <section class="card" id="infrastructure-credentials">
-      <h2>Infrastructure Credentials</h2>
-      <p class="muted">Connect your own infrastructure. Credentials are encrypted at rest and used only when a deployment runs — secrets are never displayed after saving.</p>
-      ${state.credentialValidation ? renderCredentialGuidance(state.credentialValidation) : ""}
-      ${creds.length === 0
-        ? `<p class="muted">No infrastructure connected yet. Add a target below to get started.</p>`
-        : `
-        <div class="table-grid">
-          <div class="table-row table-head"><div>Provider</div><div>Name</div><div>Status</div><div>Readiness</div><div>Last Verified</div><div></div></div>
-          ${creds.map((c) => `
-            <div class="table-row">
-              <div><span class="badge">${escapeHtml(c.provider)}</span></div>
-              <div>${escapeHtml(c.name)}</div>
-              <div>${infrastructureStatusBadge(c)}</div>
-              <div>${renderReadinessBar(c.readiness_score || 0)}</div>
-              <div>${c.last_verified_at ? formatDate(c.last_verified_at) : "Never"}</div>
-              <div>
-                ${canWrite ? `<button class="btn btn-secondary" data-verify-credential="${c.id}">Verify</button>` : ""}
-                ${canWrite ? `<button class="btn btn-secondary" data-delete-credential="${c.id}">Remove</button>` : ""}
-              </div>
-            </div>
-          `).join("")}
-        </div>
-      `}
-      ${canWrite ? `
-        <div class="credential-add" style="margin-top:16px;">
-          <h3>Add Infrastructure Credential</h3>
-          <div class="field">
-            <label>Provider</label>
-            <select id="credential-provider-select">
-              ${Object.keys(CREDENTIAL_PROVIDERS).map((p) => `<option value="${p}">${escapeHtml(CREDENTIAL_PROVIDERS[p].label)}</option>`).join("")}
-            </select>
-          </div>
-          <div id="credential-form-host">
-            ${renderCredentialForm("AZURE")}
-          </div>
-        </div>
-      ` : `<p class="muted">You need write access to manage infrastructure credentials.</p>`}
-    </section>
-  `;
-}
 
-function renderSettingsSecurityTab() {
-  const caps = state.identityCapabilities || {};
-  if (!caps.identity) {
-    return renderIdentityUnavailableCard(
-      "Security features unavailable",
-      "Identity and security management is not enabled on this deployment. No security API calls were made.",
-    );
-  }
-  const mfa = state.mfaStatus;
-  const enroll = state.mfaEnrollDraft;
-  const recovery = state.mfaRecoveryCodes;
-  let mfaBlock = "";
-  if (!caps.mfa) {
-    mfaBlock = `<p class="muted">Multi-factor authentication is not available on this deployment.</p>`;
-  } else if (mfa?.enabled) {
-    mfaBlock = `
-      <p><span class="badge status-success">MFA enabled</span></p>
-      <p class="muted">Recovery codes remaining: ${mfa.recovery_codes_remaining ?? "—"}</p>
-      ${recovery ? `<div class="alert" style="margin-top:12px;"><strong>Save these recovery codes now.</strong> They will not be shown again.<pre>${recovery.map(escapeHtml).join("\n")}</pre></div>` : ""}
-      <div class="actions" style="margin-top:12px;">
-        <button type="button" class="btn btn-secondary" data-mfa-regen-codes>Regenerate recovery codes</button>
-        <button type="button" class="btn btn-secondary" data-mfa-disable>Disable MFA</button>
-      </div>`;
-  } else if (enroll) {
-    mfaBlock = `
-      <p class="muted">Scan this secret in your authenticator app, then enter the 6-digit code to confirm.</p>
-      <div class="alert"><strong>One-time setup secret</strong> — copy now; it will not be shown again after you leave this page.</div>
-      <p><code>${escapeHtml(enroll.secret)}</code></p>
-      <p class="muted" style="font-size:12px;word-break:break-all;">${escapeHtml(enroll.otpauth_uri || "")}</p>
-      <form id="mfa-confirm-form" class="inline-form" style="margin-top:12px;">
-        <input class="form-input" name="code" required pattern="[0-9]{6}" placeholder="6-digit code" />
-        <button class="btn btn-primary" type="submit">Confirm MFA</button>
-        <button type="button" class="btn btn-secondary" data-mfa-cancel-enroll>Cancel</button>
-      </form>`;
-  } else {
-    mfaBlock = `
-      <p class="muted">Protect your account with a TOTP authenticator app.</p>
-      <button type="button" class="btn btn-primary" data-mfa-start-enroll>Enable MFA</button>`;
-  }
-  const ssoCard = caps.sso && isOrgAdminRole() ? `
-    <section class="card" style="margin-top:16px;">
-      <h2>Organization SSO</h2>
-      <p class="muted">Configure OIDC or SAML identity providers for your organization.</p>
-      <a class="btn btn-primary" href="/organization/settings/sso" data-nav="/organization/settings/sso">Manage SSO</a>
-    </section>` : caps.sso ? `
-    <section class="card" style="margin-top:16px;">
-      <h2>Organization SSO</h2>
-      <p class="muted">Only organization owners and admins can configure SSO.</p>
-    </section>` : "";
-  return `
-    <section class="card">
-      <h2>Multi-factor authentication</h2>
-      ${mfaBlock}
-    </section>
-    ${ssoCard}
-  `;
-}
 
-function renderSettingsSessionsTab() {
-  const caps = state.identityCapabilities || {};
-  if (!caps.sessions) {
-    return renderIdentityUnavailableCard("Sessions unavailable", "Session management is not enabled on this deployment.");
-  }
-  const sessions = state.userSessions || [];
-  return `
-    <section class="card">
-      <h2>Active sessions</h2>
-      <p class="muted">Devices and browsers signed in to your account. Revoking a session signs that device out.</p>
-      ${sessions.length === 0 ? `<p class="muted">No active sessions found.</p>` : `
-        <div class="table-grid">
-          <div class="table-row table-head"><div>Device</div><div>IP</div><div>Last seen</div><div></div></div>
-          ${sessions.map((s) => `
-            <div class="table-row">
-              <div>${escapeHtml(s.device_label || s.user_agent || "Unknown device")}${s.current ? ' <span class="badge">Current</span>' : ""}</div>
-              <div>${escapeHtml(s.ip_address || "—")}</div>
-              <div>${formatDate(s.last_seen_at || s.created_at)}</div>
-              <div>${s.current ? "" : `<button type="button" class="btn btn-secondary" data-revoke-session="${escapeHtml(s.id)}">Revoke</button>`}</div>
-            </div>
-          `).join("")}
-        </div>
-      `}
-    </section>`;
-}
 
-function renderSettingsApiKeysTab() {
-  const caps = state.identityCapabilities || {};
-  if (!caps.apiKeys) {
-    return renderIdentityUnavailableCard("API keys unavailable", "API key management is not enabled on this deployment.");
-  }
-  const personal = state.personalApiKeys || [];
-  const personalReveal = state.personalApiKeyReveal;
-  const personalBlock = `
-    <section class="card" style="margin-bottom:16px;">
-      <h2>Personal API keys</h2>
-      <p class="muted">Keys tied to your user account for scripts and local tooling.</p>
-      ${personalReveal ? `
-        <div class="alert" style="margin-bottom:16px;">
-          <strong>Copy this personal API key now.</strong>
-          <pre style="margin-top:8px;">${escapeHtml(personalReveal)}</pre>
-          <button type="button" class="btn btn-secondary" data-dismiss-personal-api-key-reveal>Dismiss</button>
-        </div>` : ""}
-      <form id="personal-api-key-create-form" class="inline-form" style="margin-bottom:16px;">
-        <input class="form-input" name="name" required placeholder="Key name (e.g. Local CLI)" />
-        <button class="btn btn-primary" type="submit">Create personal key</button>
-      </form>
-      ${personal.length === 0 ? `<p class="muted">No personal API keys yet.</p>` : `
-        <div class="table-grid">
-          <div class="table-row table-head"><div>Name</div><div>Prefix</div><div>Created</div><div>Status</div><div></div></div>
-          ${personal.map((k) => `
-            <div class="table-row">
-              <div>${escapeHtml(k.name)}</div>
-              <div><code>${escapeHtml(k.prefix)}</code></div>
-              <div>${formatDate(k.created_at)}</div>
-              <div>${k.revoked_at ? '<span class="badge">Revoked</span>' : '<span class="badge status-success">Active</span>'}</div>
-              <div>${k.revoked_at ? "" : `
-                <button type="button" class="btn btn-secondary" data-rotate-personal-api-key="${escapeHtml(k.id)}">Rotate</button>
-                <button type="button" class="btn btn-secondary" data-revoke-personal-api-key="${escapeHtml(k.id)}">Revoke</button>`}</div>
-            </div>
-          `).join("")}
-        </div>
-      `}
-    </section>`;
-  if (!isOrgAdminRole()) {
-    return `<div>${personalBlock}</div>`;
-  }
-  const keys = state.orgApiKeys || [];
-  const reveal = state.apiKeyReveal;
-  const orgBlock = `
-    <section class="card">
-      <h2>Organization API keys</h2>
-      <p class="muted">Keys authenticate automation against this organization. Secrets are shown exactly once at creation.</p>
-      ${reveal ? `
-        <div class="alert" style="margin-bottom:16px;">
-          <strong>Copy this API key now.</strong> It cannot be retrieved after you leave this page.
-          <pre style="margin-top:8px;">${escapeHtml(reveal)}</pre>
-          <button type="button" class="btn btn-secondary" data-dismiss-api-key-reveal>Dismiss</button>
-        </div>` : ""}
-      <form id="api-key-create-form" class="inline-form" style="margin-bottom:16px;">
-        <input class="form-input" name="name" required placeholder="Key name (e.g. CI deploy)" />
-        <button class="btn btn-primary" type="submit">Create organization key</button>
-      </form>
-      ${keys.length === 0 ? `<p class="muted">No organization API keys yet.</p>` : `
-        <div class="table-grid">
-          <div class="table-row table-head"><div>Name</div><div>Prefix</div><div>Created</div><div>Last used</div><div>Status</div><div></div></div>
-          ${keys.map((k) => `
-            <div class="table-row">
-              <div>${escapeHtml(k.name)}</div>
-              <div><code>${escapeHtml(k.prefix)}</code></div>
-              <div>${formatDate(k.created_at)}</div>
-              <div>${k.last_used_at ? formatDate(k.last_used_at) : "Never"}</div>
-              <div>${k.revoked_at ? '<span class="badge">Revoked</span>' : '<span class="badge status-success">Active</span>'}</div>
-              <div>${k.revoked_at ? "" : `
-                <button type="button" class="btn btn-secondary" data-rotate-api-key="${escapeHtml(k.id)}">Rotate</button>
-                <button type="button" class="btn btn-secondary" data-revoke-api-key="${escapeHtml(k.id)}">Revoke</button>`}</div>
-            </div>
-          `).join("")}
-        </div>
-      `}
-    </section>`;
-  return `${personalBlock}${orgBlock}`;
-}
 
-function renderServiceAccountKeysPanel(sa) {
-  const keys = (state.serviceAccountKeysById && state.serviceAccountKeysById[sa.id]) || [];
-  const reveal = state.serviceAccountKeyReveal?.saId === sa.id ? state.serviceAccountKeyReveal.key : null;
-  return `
-    <div class="service-account-keys-panel">
-      ${reveal ? `
-        <div class="alert" style="margin-bottom:12px;">
-          <strong>Copy this service account key now.</strong>
-          <pre style="margin-top:8px;">${escapeHtml(reveal)}</pre>
-          <button type="button" class="btn btn-secondary" data-dismiss-sa-key-reveal>Dismiss</button>
-        </div>` : ""}
-      <form class="inline-form" data-sa-key-create="${escapeHtml(sa.id)}" style="margin-bottom:12px;">
-        <input class="form-input" name="name" required placeholder="Key name" />
-        <button class="btn btn-primary" type="submit">Issue key</button>
-      </form>
-      ${keys.length === 0 ? `<p class="muted">No keys issued for this account.</p>` : `
-        <div class="table-grid">
-          <div class="table-row table-head"><div>Name</div><div>Prefix</div><div>Created</div><div>Status</div><div></div></div>
-          ${keys.map((k) => `
-            <div class="table-row">
-              <div>${escapeHtml(k.name)}</div>
-              <div><code>${escapeHtml(k.prefix)}</code></div>
-              <div>${formatDate(k.created_at)}</div>
-              <div>${k.revoked_at ? '<span class="badge">Revoked</span>' : '<span class="badge status-success">Active</span>'}</div>
-              <div>${k.revoked_at ? "" : `<button type="button" class="btn btn-secondary" data-revoke-sa-key="${escapeHtml(sa.id)}" data-key-id="${escapeHtml(k.id)}">Revoke</button>`}</div>
-            </div>
-          `).join("")}
-        </div>
-      `}
-    </div>`;
-}
 
-function renderSettingsServiceAccountsTab() {
-  if (!isOrgAdminRole()) {
-    return renderIdentityUnavailableCard("Service accounts", "Only organization owners and admins can manage service accounts.");
-  }
-  const caps = state.identityCapabilities || {};
-  if (!caps.serviceAccounts) {
-    return renderIdentityUnavailableCard("Service accounts unavailable", "Service account management is not enabled on this deployment.");
-  }
-  const accounts = state.serviceAccounts || [];
-  return `
-    <section class="card">
-      <h2>Service accounts</h2>
-      <p class="muted">Machine principals for automation. Issue API keys per account — secrets are shown exactly once.</p>
-      <form id="service-account-create-form" class="inline-form" style="margin-bottom:16px;">
-        <input class="form-input" name="name" required placeholder="Account name" />
-        <select class="form-input" name="role">
-          <option value="VIEWER">Viewer</option>
-          <option value="DEVELOPER">Developer</option>
-          <option value="PROJECT_MANAGER">Project Manager</option>
-          <option value="ADMIN">Admin</option>
-        </select>
-        <button class="btn btn-primary" type="submit">Create service account</button>
-      </form>
-      ${accounts.length === 0 ? `<p class="muted">No service accounts yet.</p>` : `
-        <div class="service-accounts-list">
-          ${accounts.map((a) => `
-            <div class="service-account-row card" style="margin-bottom:12px;padding:16px;">
-              <div class="list-item-header" style="margin-bottom:8px;">
-                <div>
-                  <h3 style="margin:0;">${escapeHtml(a.name)}</h3>
-                  <p class="muted">${escapeHtml(a.role)} · ${a.disabled ? "Disabled" : "Active"} · Last used ${a.last_used_at ? formatDate(a.last_used_at) : "never"}</p>
-                </div>
-                <div class="actions">
-                  ${a.disabled ? "" : `<button type="button" class="btn btn-secondary" data-expand-service-account="${escapeHtml(a.id)}">${state.serviceAccountExpandedId === a.id ? "Hide keys" : "Manage keys"}</button>`}
-                  ${a.disabled ? "" : `<button type="button" class="btn btn-secondary" data-disable-service-account="${escapeHtml(a.id)}">Disable</button>`}
-                </div>
-              </div>
-              ${state.serviceAccountExpandedId === a.id && !a.disabled ? renderServiceAccountKeysPanel(a) : ""}
-            </div>
-          `).join("")}
-        </div>
-      `}
-    </section>`;
-}
 
-function renderAuditFiltersForm() {
-  const f = state.auditFilters || {};
-  return `
-    <form id="audit-filters-form" class="inline-form" style="flex-wrap:wrap;gap:8px;margin-bottom:16px;">
-      <input class="form-input" type="date" name="start" value="${escapeHtml(f.start || "")}" title="Start date" />
-      <input class="form-input" type="date" name="end" value="${escapeHtml(f.end || "")}" title="End date" />
-      <input class="form-input" name="user_id" placeholder="Actor user ID" value="${escapeHtml(f.user_id || "")}" />
-      <input class="form-input" name="action" placeholder="Action" value="${escapeHtml(f.action || "")}" />
-      <select class="form-input" name="status">
-        <option value="">Any outcome</option>
-        <option value="success" ${f.status === "success" ? "selected" : ""}>Success</option>
-        <option value="failure" ${f.status === "failure" ? "selected" : ""}>Failure</option>
-      </select>
-      <button class="btn btn-primary" type="submit">Apply filters</button>
-      <button class="btn btn-secondary" type="button" data-audit-reset-filters>Reset</button>
-    </form>`;
-}
 
-function renderAuditPagination() {
-  const total = state.auditTotal || 0;
-  const limit = state.auditLimit || 50;
-  const offset = state.auditOffset || 0;
-  if (total <= limit) return "";
-  const page = Math.floor(offset / limit) + 1;
-  const pages = Math.ceil(total / limit);
-  return `
-    <div class="actions" style="margin-top:12px;">
-      <button type="button" class="btn btn-secondary" data-audit-page="prev" ${offset <= 0 ? "disabled" : ""}>Previous</button>
-      <span class="muted">Page ${page} of ${pages} (${total} entries)</span>
-      <button type="button" class="btn btn-secondary" data-audit-page="next" ${offset + limit >= total ? "disabled" : ""}>Next</button>
-    </div>`;
-}
 
-function renderSettingsAuditTab() {
-  if (!isOrgAdminRole()) {
-    return renderIdentityUnavailableCard("Audit trail", "Only organization owners and admins can view audit logs.");
-  }
-  if (state.auditUnavailable) {
-    return renderIdentityUnavailableCard(
-      "Audit trail unavailable",
-      "Audit logging is not enabled on this deployment. No audit API calls were made beyond the capability probe.",
-    );
-  }
-  if (state.auditLoading) {
-    return `<section class="card"><p class="muted">Loading audit entries…</p></section>`;
-  }
-  const logs = state.auditLogs || [];
-  const activeOrg = state.organizations.find((o) => o.id === state.activeOrganization);
-  return `
-    <section class="card">
-      <div class="section-heading">
-        <div>
-          <h2>Audit trail</h2>
-          <p class="muted">Organization-scoped activity for <strong>${escapeHtml(activeOrg?.name || "current organization")}</strong>. Sensitive payloads are never shown.</p>
-        </div>
-        <div class="actions" style="gap:8px;">
-          <a class="btn btn-secondary" href="${escapeHtml(buildAuditExportUrl("csv"))}" target="_blank" rel="noopener noreferrer">Export CSV</a>
-          <a class="btn btn-secondary" href="${escapeHtml(buildAuditExportUrl("json"))}" target="_blank" rel="noopener noreferrer">Export JSON</a>
-        </div>
-      </div>
-      ${renderAuditFiltersForm()}
-      ${logs.length === 0 ? `<p class="muted">No audit entries match your filters.</p>` : `
-        <div class="table-grid" style="grid-template-columns:repeat(8,minmax(0,1fr));">
-          <div class="table-row table-head">
-            <div>Time</div><div>Actor</div><div>Organization</div><div>Action</div>
-            <div>Resource</div><div>ID</div><div>Outcome</div><div>Correlation</div>
-          </div>
-          ${logs.map((entry) => `
-            <div class="table-row">
-              <div>${formatDate(entry.created_at)}</div>
-              <div><code style="font-size:11px;">${escapeHtml(entry.user_id || "—")}</code></div>
-              <div><code style="font-size:11px;">${escapeHtml(entry.organization_id || "—")}</code></div>
-              <div>${escapeHtml(entry.action)}</div>
-              <div>${escapeHtml(entry.resource_type)}</div>
-              <div><code style="font-size:11px;">${escapeHtml(entry.resource_id || "—")}</code></div>
-              <div><span class="badge ${entry.status === "success" ? "status-success" : "status-pending"}">${escapeHtml(entry.status)}</span></div>
-              <div><code style="font-size:11px;">${escapeHtml(entry.correlation_id || "—")}</code></div>
-            </div>
-          `).join("")}
-        </div>
-        ${renderAuditPagination()}
-      `}
-    </section>`;
-}
 
-function renderOrganizationAuditPage() {
-  if (!isOrgAdminRole()) {
-    return renderAccessDeniedPage("Audit trail", "Only organization owners and admins can view audit logs.");
-  }
-  const caps = state.operationsCapabilities || {};
-  if (!caps.audit) {
-    return renderFeatureUnavailablePage(
-      "Audit trail",
-      "Audit logging is not enabled on this deployment.",
-    );
-  }
-  return `
-    <div class="container">
-      ${renderHeader("Audit trail", "Organization activity log")}
-      ${renderAlerts()}
-      ${renderSettingsAuditTab()}
-    </div>`;
-}
 
-function renderSsoConnectionForm(conn) {
-  const editing = Boolean(conn);
-  const protocol = conn?.protocol || "OIDC";
-  const secretPlaceholder = editing && conn?.has_client_secret ? "••••••••  (saved — leave blank to keep)" : "Client secret (write-only)";
-  return `
-    <form id="sso-connection-form" class="card" style="margin-top:16px;">
-      <h3>${editing ? "Edit connection" : "New SSO connection"}</h3>
-      ${!editing ? `
-        <label class="form-label">Slug <span class="muted">(URL-safe, lowercase)</span></label>
-        <input class="form-input" name="slug" required pattern="[a-z0-9][a-z0-9-]*" placeholder="acme-okta" />
-      ` : `<input type="hidden" name="connection_id" value="${escapeHtml(conn.id)}" />`}
-      <label class="form-label">Protocol</label>
-      <select class="form-input" name="protocol">
-        <option value="OIDC" ${protocol === "OIDC" ? "selected" : ""}>OIDC / OAuth2</option>
-        <option value="SAML" ${protocol === "SAML" ? "selected" : ""}>SAML 2.0</option>
-      </select>
-      <label class="form-label">Display name</label>
-      <input class="form-input" name="display_name" required value="${escapeHtml(conn?.display_name || "")}" />
-      <label class="form-label">Provider</label>
-      <select class="form-input" name="provider">
-        ${["OKTA", "ENTRA", "GOOGLE", "GENERIC_OIDC", "AUTH0", "KEYCLOAK", "GENERIC_SAML"].map((p) => `
-          <option value="${p}" ${conn?.provider === p ? "selected" : ""}>${p}</option>
-        `).join("")}
-      </select>
-      <p class="muted" style="font-size:12px;margin:12px 0 8px;"><strong>OIDC settings</strong></p>
-      <label class="form-label">Issuer</label>
-      <input class="form-input" name="issuer" value="${escapeHtml(conn?.issuer || "")}" placeholder="https://idp.example.com" />
-      <label class="form-label">Discovery URL <span class="muted">(optional)</span></label>
-      <input class="form-input" name="discovery_url" value="${escapeHtml(conn?.discovery_url || "")}" />
-      <label class="form-label">Client ID</label>
-      <input class="form-input" name="client_id" value="${escapeHtml(conn?.client_id || "")}" />
-      <label class="form-label">Client secret</label>
-      <input class="form-input" name="client_secret" type="password" autocomplete="new-password" placeholder="${escapeHtml(secretPlaceholder)}" />
-      <label class="form-label">Authorization endpoint</label>
-      <input class="form-input" name="authorization_endpoint" value="${escapeHtml(conn?.authorization_endpoint || "")}" />
-      <label class="form-label">Token endpoint</label>
-      <input class="form-input" name="token_endpoint" value="${escapeHtml(conn?.token_endpoint || "")}" />
-      <label class="form-label">JWKS URI</label>
-      <input class="form-input" name="jwks_uri" value="${escapeHtml(conn?.jwks_uri || "")}" />
-      <p class="muted" style="font-size:12px;margin:12px 0 8px;"><strong>SAML settings</strong> (or import metadata after save)</p>
-      <label class="form-label">IdP entity ID</label>
-      <input class="form-input" name="idp_entity_id" value="${escapeHtml(conn?.idp_entity_id || "")}" />
-      <label class="form-label">IdP SSO URL</label>
-      <input class="form-input" name="idp_sso_url" value="${escapeHtml(conn?.idp_sso_url || "")}" />
-      <label class="form-label">IdP X.509 certificate</label>
-      <textarea class="form-input" name="idp_x509_cert" rows="3" placeholder="-----BEGIN CERTIFICATE-----">${escapeHtml(conn?.idp_x509_cert || "")}</textarea>
-      <label class="form-label">Default role for new users</label>
-      <select class="form-input" name="default_role">
-        ${["VIEWER", "DEVELOPER", "PROJECT_MANAGER", "ADMIN"].map((r) => `
-          <option value="${r}" ${(conn?.default_role || "VIEWER") === r ? "selected" : ""}>${r}</option>
-        `).join("")}
-      </select>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;">
-        <input type="checkbox" name="enabled" ${conn?.enabled !== false ? "checked" : ""} />
-        <span>Enabled (allow sign-in via this connection)</span>
-      </label>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-        <input type="checkbox" name="auto_provision" ${conn?.auto_provision !== false ? "checked" : ""} />
-        <span>Auto-provision users on first login</span>
-      </label>
-      <div class="actions" style="margin-top:16px;">
-        <button class="btn btn-primary" type="submit">${editing ? "Save changes" : "Create connection"}</button>
-        <button type="button" class="btn btn-secondary" data-sso-cancel-form>Cancel</button>
-      </div>
-    </form>
-    ${editing && conn?.protocol === "SAML" ? `
-      <form id="sso-saml-import-form" class="card" style="margin-top:12px;">
-        <h3>Import IdP metadata</h3>
-        <input type="hidden" name="connection_id" value="${escapeHtml(conn.id)}" />
-        <label class="form-label">Metadata URL</label>
-        <input class="form-input" name="metadata_url" placeholder="https://idp.example.com/metadata.xml" />
-        <label class="form-label">Or paste metadata XML</label>
-        <textarea class="form-input" name="metadata_xml" rows="5" placeholder="&lt;EntityDescriptor ...&gt;"></textarea>
-        <button class="btn btn-secondary" type="submit" style="margin-top:12px;">Import metadata</button>
-      </form>` : ""}`;
-}
 
-function renderOrganizationSsoPage() {
-  if (!isOrgAdminRole()) {
-    return renderAccessDeniedPage("Organization SSO", "Only organization owners and admins can configure SSO.");
-  }
-  const caps = state.identityCapabilities || {};
-  if (!caps.sso) {
-    return renderFeatureUnavailablePage(
-      "Organization SSO",
-      "SSO administration is not enabled on this deployment.",
-    );
-  }
-  const connections = state.ssoConnections || [];
-  const editing = state.ssoFormOpen
-    ? (state.ssoEditId ? connections.find((c) => c.id === state.ssoEditId) : null)
-    : null;
-  const overallStatus = connections.length === 0
-    ? { label: "Not configured", cls: "status-pending" }
-    : ssoConnectionStatusBadge(connections[0]);
-  return `
-    <div class="container">
-      ${renderHeader("Organization SSO", "Configure identity provider connections")}
-      ${renderAlerts()}
-      <section class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-          <div>
-            <h2>SSO connections</h2>
-            <p class="muted">OIDC and SAML connections for your organization. Client secrets are write-only and never displayed after save.</p>
-          </div>
-          <span class="badge ${overallStatus.cls}">${escapeHtml(overallStatus.label)}</span>
-        </div>
-        ${state.ssoLoading ? `<p class="muted">Loading…</p>` : ""}
-        ${connections.length === 0 && !state.ssoFormOpen ? `
-          <p class="muted">No SSO connections configured yet.</p>
-          <button type="button" class="btn btn-primary" data-sso-new-connection>Add connection</button>
-        ` : `
-          <div class="table-grid" style="margin-top:16px;">
-            <div class="table-row table-head"><div>Name</div><div>Slug</div><div>Protocol</div><div>Provider</div><div>Status</div><div>Secret</div><div></div></div>
-            ${connections.map((conn) => {
-              const st = ssoConnectionStatusBadge(conn);
-              const metaUrl = conn.protocol === "SAML" ? apiUrl(`/v1/auth/sso/${conn.slug}/metadata`) : null;
-              return `
-              <div class="table-row">
-                <div>${escapeHtml(conn.display_name)}</div>
-                <div><code>${escapeHtml(conn.slug)}</code></div>
-                <div>${escapeHtml(conn.protocol || "OIDC")}</div>
-                <div>${escapeHtml(conn.provider)}</div>
-                <div><span class="badge ${st.cls}">${escapeHtml(st.label)}</span></div>
-                <div>${conn.has_client_secret ? '<span class="muted">Configured</span>' : conn.protocol === "SAML" ? '<span class="muted">SAML</span>' : '<span class="muted">Not set</span>'}</div>
-                <div style="display:flex;gap:4px;flex-wrap:wrap;">
-                  <button type="button" class="btn btn-secondary" data-sso-edit="${escapeHtml(conn.id)}">Edit</button>
-                  ${metaUrl ? `<a class="btn btn-secondary" href="${escapeHtml(metaUrl)}" target="_blank" rel="noopener noreferrer">SP metadata</a>` : ""}
-                  <button type="button" class="btn btn-secondary" data-sso-toggle="${escapeHtml(conn.id)}" data-enabled="${conn.enabled ? "0" : "1"}">${conn.enabled ? "Disable" : "Enable"}</button>
-                  <button type="button" class="btn btn-secondary" data-sso-delete="${escapeHtml(conn.id)}">Delete</button>
-                </div>
-              </div>`;
-            }).join("")}
-          </div>
-          ${!state.ssoFormOpen ? `<button type="button" class="btn btn-primary" style="margin-top:12px;" data-sso-new-connection>Add connection</button>` : ""}
-        `}
-        ${state.ssoFormOpen ? renderSsoConnectionForm(editing) : ""}
-      </section>
-      <p class="muted" style="font-size:12px;margin-top:12px;">
-        <a href="/settings?tab=security" data-nav="/settings?tab=security">← Back to Security settings</a>
-      </p>
-    </div>`;
-}
 
-function renderJobsFiltersForm() {
-  const f = state.jobsFilters || {};
-  return `
-    <form id="jobs-filters-form" class="inline-form" style="flex-wrap:wrap;gap:8px;margin-bottom:16px;">
-      <select class="form-input" name="status">
-        <option value="">Any status</option>
-        ${["pending", "running", "completed", "failed", "cancelled"].map((s) => `
-          <option value="${s}" ${f.status === s ? "selected" : ""}>${s}</option>
-        `).join("")}
-      </select>
-      <input class="form-input" name="job_type" placeholder="Job type" value="${escapeHtml(f.job_type || "")}" />
-      <input class="form-input" type="date" name="start" value="${escapeHtml(f.start || "")}" title="Created after" />
-      <input class="form-input" type="date" name="end" value="${escapeHtml(f.end || "")}" title="Created before" />
-      <button class="btn btn-primary" type="submit">Apply filters</button>
-      <button class="btn btn-secondary" type="button" data-jobs-reset-filters>Reset</button>
-    </form>`;
-}
 
-function renderJobsPagination() {
-  const total = state.jobsTotal || 0;
-  const limit = state.jobsLimit || 50;
-  const offset = state.jobsOffset || 0;
-  if (total <= limit) return "";
-  const page = Math.floor(offset / limit) + 1;
-  const pages = Math.ceil(total / limit);
-  return `
-    <div class="actions" style="margin-top:12px;">
-      <button type="button" class="btn btn-secondary" data-jobs-page="prev" ${offset <= 0 ? "disabled" : ""}>Previous</button>
-      <span class="muted">Page ${page} of ${pages} (${total} jobs)</span>
-      <button type="button" class="btn btn-secondary" data-jobs-page="next" ${offset + limit >= total ? "disabled" : ""}>Next</button>
-    </div>`;
-}
 
-function renderJobDetailPanel() {
-  const job = state.selectedJobDetail;
-  if (!job && !state.jobsDetailLoading) return "";
-  if (state.jobsDetailLoading) return `<section class="card" style="margin-top:16px;"><p class="muted">Loading job detail…</p></section>`;
-  return `
-    <section class="card" style="margin-top:16px;">
-      <div class="section-heading">
-        <div><h2>Job detail</h2><p class="muted"><code>${escapeHtml(job.id)}</code></p></div>
-        <button type="button" class="btn btn-secondary" data-job-detail-close>Close</button>
-      </div>
-      <div class="ops-stats" style="margin-bottom:12px;">
-        <div class="ops-stat"><span class="ops-stat-value">${escapeHtml(job.status)}</span><span class="ops-stat-label">Status</span></div>
-        <div class="ops-stat"><span class="ops-stat-value">${escapeHtml(String(job.attempts ?? 0))}</span><span class="ops-stat-label">Attempts</span></div>
-        <div class="ops-stat"><span class="ops-stat-value">${escapeHtml(job.job_type || "—")}</span><span class="ops-stat-label">Type</span></div>
-      </div>
-      <p><strong>Created:</strong> ${formatDate(job.created_at)} · <strong>Started:</strong> ${formatDate(job.started_at)} · <strong>Finished:</strong> ${formatDate(job.finished_at)}</p>
-      ${job.error ? `<pre class="muted" style="white-space:pre-wrap;margin-top:12px;">${escapeHtml(sanitizeJobError(job.error))}</pre>` : ""}
-      ${job.result ? `<pre style="white-space:pre-wrap;margin-top:12px;max-height:240px;overflow:auto;">${escapeHtml(JSON.stringify(job.result, null, 2))}</pre>` : ""}
-    </section>`;
-}
 
-function renderOperationsJobsPage() {
-  if (!isOrgAdminRole()) {
-    return renderAccessDeniedPage("Jobs observability", "Only organization owners and admins can view the job queue.");
-  }
-  const caps = state.operationsCapabilities || {};
-  if (!caps.jobs) {
-    return renderFeatureUnavailablePage(
-      "Jobs observability",
-      "Background job monitoring is not enabled on this deployment.",
-    );
-  }
-  const jobs = state.jobsList || [];
-  const tab = state.jobsTab || "active";
-  return `
-    <div class="container">
-      ${renderHeader("Jobs", "Background job observability")}
-      ${renderAlerts()}
-      <section class="card">
-        <div class="tabs" style="margin-bottom:16px;">
-          <button type="button" class="btn tab ${tab === "active" ? "active" : ""}" data-jobs-tab="active">Active queue</button>
-          <button type="button" class="btn tab ${tab === "dead-letter" ? "active" : ""}" data-jobs-tab="dead-letter">Dead letter</button>
-        </div>
-        <p class="muted">Organization-scoped jobs. Read-only view — administrative requeue actions are API-only on this deployment.</p>
-        ${tab === "active" ? renderJobsFiltersForm() : ""}
-        ${state.jobsLoading ? `<p class="muted">Loading jobs…</p>` : jobs.length === 0 ? `<p class="muted">No jobs match your filters.</p>` : `
-          <div class="table-grid" style="grid-template-columns:repeat(9,minmax(0,1fr));">
-            <div class="table-row table-head">
-              <div>Type</div><div>Status</div><div>Created</div><div>Started</div>
-              <div>Finished</div><div>Attempts</div><div>Worker</div><div>Organization</div><div>Error</div>
-            </div>
-            ${jobs.map((job) => `
-              <div class="table-row job-row-clickable" data-job-detail="${escapeHtml(job.id)}" style="cursor:pointer;">
-                <div>${escapeHtml(job.job_type)}</div>
-                <div><span class="badge">${escapeHtml(job.status)}</span></div>
-                <div>${formatDate(job.created_at)}</div>
-                <div>${formatDate(job.started_at)}</div>
-                <div>${formatDate(job.finished_at)}</div>
-                <div>${escapeHtml(String(job.attempts ?? 0))}</div>
-                <div><code style="font-size:11px;">${escapeHtml(job.arq_job_id || "—")}</code></div>
-                <div><code style="font-size:11px;">${escapeHtml(job.organization_id || "—")}</code></div>
-                <div class="muted" style="font-size:12px;">${escapeHtml(sanitizeJobError(job.error))}</div>
-              </div>
-            `).join("")}
-          </div>
-          ${renderJobsPagination()}
-        `}
-        ${renderJobDetailPanel()}
-      </section>
-    </div>`;
-}
 
-function slugifyOrganizationName(name) {
-  return String(name || "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
-}
 
-function renderOrganizationDemoNextStep(orgName) {
-  return `<section class="card" style="border-left:4px solid #1d4ed8;background:#eff6ff;margin-bottom:24px;">
-    <h2>Set up internal demo pilot (optional)</h2>
-    <p class="muted"><strong>${escapeHtml(orgName || "Your organization")}</strong> was created successfully. Pilot enrollment, non-production environments, and integrations must be configured separately — nothing is enabled automatically.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-      <a class="btn btn-secondary" href="/pilot" data-nav="/pilot">Open Pilot Center</a>
-      <a class="btn btn-secondary" href="/customer-onboarding" data-nav="/customer-onboarding">Connect integrations</a>
-      <button type="button" class="btn btn-secondary" data-dismiss-org-next-step>Dismiss</button>
-    </div>
-    <p class="muted" style="font-size:11px;margin-top:8px;">Navigation only — no pilot enrollment or provider mutations occur from this card.</p>
-  </section>`;
-}
 
-function canAssignOwner() {
-  return state.user?.is_superuser || state.activeRole === "OWNER";
-}
 
-function assignableMemberRoles() {
-  const roles = ["ADMIN", "PROJECT_MANAGER", "DEVELOPER", "VIEWER"];
-  if (canAssignOwner()) {
-    roles.unshift("OWNER");
-  }
-  return roles;
-}
 
-function invitationAcceptLink(token) {
-  return `/invitations/accept?token=${encodeURIComponent(token)}`;
-}
 
 function formatDate(value) {
   if (!value) return "—";
@@ -5427,105 +3894,6 @@ const PLATFORM_MODULES = [
 ];
 
 // SRE / DevOps operational flow — single source for dashboard lanes and guidance.
-const OPS_OPERATIONAL_FLOWS = [
-  {
-    id: "respond",
-    order: 1,
-    title: "Respond",
-    summary: "AI investigates alerts, finds root cause, suggests fixes.",
-    when: "Something broke — alert fired, build failed, or customers impacted.",
-    lookFor: "Root cause, ranked fix suggestions, linked alerts.",
-    outcome: "You know why it broke and what to do next — without opening 5 dashboards.",
-    href: "/incidents",
-    icon: "incident",
-    links: [
-      { label: "Incidents", href: "/incidents" },
-      { label: "Alerts", href: "/alerts" },
-      { label: "On-call", href: "/incidents/on-call" },
-      { label: "AI Copilot", href: "/copilot" },
-    ],
-  },
-  {
-    id: "connect",
-    order: 2,
-    title: "Connect",
-    summary: "Wire Jenkins, Datadog, K8s — Nexora reads them for you.",
-    when: "First setup or adding a new tool to your estate.",
-    lookFor: "Verified integrations with live data sync.",
-    outcome: "AI can investigate across your real infrastructure.",
-    href: "/integrations",
-    icon: "plug",
-    links: [
-      { label: "Integrations", href: "/integrations" },
-      { label: "Connections", href: "/connections-secrets" },
-    ],
-  },
-  {
-    id: "observe",
-    order: 3,
-    title: "Observe",
-    summary: "Alerts, service health, and logs in one place.",
-    when: "Proactive monitoring — catch degradation before customers do.",
-    lookFor: "Firing alerts, SLO burn, services at risk.",
-    outcome: "Problems surface here before you check native tool UIs.",
-    href: "/alerts",
-    icon: "monitor",
-    links: [
-      { label: "Alerts", href: "/alerts" },
-      { label: "Service Health", href: "/services" },
-      { label: "Logs", href: "/logs" },
-      { label: "Metrics", href: "/metrics" },
-    ],
-  },
-  {
-    id: "deliver",
-    order: 4,
-    title: "Deliver",
-    summary: "Ship changes with approvals and pipeline visibility.",
-    when: "Releasing code or reviewing CI/CD health.",
-    lookFor: "Failed pipelines, pending approvals, DORA trends.",
-    outcome: "Delivery risk visible alongside incident context.",
-    href: "/delivery",
-    icon: "upload",
-    links: [
-      { label: "Delivery", href: "/delivery" },
-      { label: "Pipelines", href: "/delivery/pipelines" },
-      { label: "Approvals", href: "/delivery/approvals" },
-    ],
-  },
-  {
-    id: "improve",
-    order: 5,
-    title: "Improve",
-    summary: "Postmortems, runbooks — prevent repeat incidents.",
-    when: "After resolving — capture lessons and automate recovery.",
-    lookFor: "Postmortem drafts, runbook gaps.",
-    outcome: "Same incident does not happen twice.",
-    href: "/incident-response/postmortems",
-    icon: "book",
-    links: [
-      { label: "Postmortems", href: "/incident-response/postmortems" },
-      { label: "Runbooks", href: "/runbooks" },
-    ],
-  },
-];
-
-const OPS_DASHBOARD_SECTIONS = [
-  { anchor: "ops-guide", title: "How to read this page", hint: "Your shift workflow in plain language" },
-  { anchor: "ops-priority", title: "Recommended next step", hint: "One action based on live signals" },
-  { anchor: "ops-signals", title: "Live signals", hint: "Click a number to jump to that area" },
-  { anchor: "ops-workflow", title: "Operational workflow", hint: "5-step SRE path with links" },
-  { anchor: "ops-attention", title: "Needs attention", hint: "Specific items waiting for you" },
-];
-
-const OPS_SIGNAL_HELP = [
-  { key: "openIncidents", label: "Open Incidents", help: "Unresolved customer-impacting events" },
-  { key: "firingAlerts", label: "Firing Alerts", help: "Monitoring rules currently in alert state" },
-  { key: "servicesAtRisk", label: "Services at Risk", help: "SLO burn or health score degraded" },
-  { key: "queueTotal", label: "Queue Items", help: "Prioritized work in your ops queue" },
-  { key: "pendingApprovals", label: "Pending Approvals", help: "Delivery operations awaiting sign-off" },
-  { key: "pendingChanges", label: "Change Requests", help: "Changes submitted but not decided" },
-];
 
 const DASHBOARD_GUIDE_STORAGE_KEY = "nexora_dashboard_guide_dismissed";
 
@@ -6346,19 +4714,7 @@ function estimatedTimeRemainingLabel(execution) {
   return "~1 hour";
 }
 
-function countOpenIncidents(incidents) {
-  return (incidents || []).filter(
-    (i) => !["RESOLVED", "CLOSED"].includes(String(i.status || "").toUpperCase()),
-  ).length;
-}
 
-function countCriticalIncidents(incidents) {
-  return (incidents || []).filter((i) => {
-    const status = String(i.status || "").toUpperCase();
-    const sev = String(i.severity || "").toUpperCase();
-    return !["RESOLVED", "CLOSED"].includes(status) && /CRITICAL|SEV1|SEV_1|P1/.test(sev);
-  }).length;
-}
 
 function loadDashboardGuideDismissed() {
   try {
@@ -6376,497 +4732,31 @@ function saveDashboardGuideDismissed(dismissed) {
   }
 }
 
-function isDashboardQuiet(snapshot) {
-  if (!snapshot) return true;
-  return snapshot.openIncidents === 0
-    && snapshot.firingAlerts === 0
-    && snapshot.servicesAtRisk === 0
-    && snapshot.queueTotal === 0
-    && snapshot.pendingApprovals === 0
-    && snapshot.pendingChanges === 0;
-}
 
-function dashboardGreetingName() {
-  return state.user?.full_name || state.user?.username || state.user?.email || "there";
-}
 
-function activeOrgLabel() {
-  const org = state.organizations.find((o) => o.id === state.activeOrganization);
-  return org?.name || "your organization";
-}
 
-function renderOpsDashboardSectionNav() {
-  return `
-    <nav class="ops-section-nav" aria-label="Dashboard sections">
-      ${OPS_DASHBOARD_SECTIONS.map((section, idx) => `
-        <a class="ops-section-pill" href="#${escapeHtml(section.anchor)}" data-scroll-to="${escapeHtml(section.anchor)}">
-          <span class="ops-section-pill-num">${idx + 1}</span>
-          <span class="ops-section-pill-text">
-            <strong>${escapeHtml(section.title)}</strong>
-            <span class="muted">${escapeHtml(section.hint)}</span>
-          </span>
-        </a>`).join("")}
-    </nav>`;
-}
 
-function renderOpsDashboardSetupStrip() {
-  return `
-    <section class="ops-dashboard-setup" aria-label="Get started">
-      <div class="ops-dashboard-setup-copy">
-        <h2>Connect your estate</h2>
-        <p class="muted">No live signals yet. Add integrations and credentials so incidents, health, and delivery data appear here.</p>
-      </div>
-      <div class="ops-dashboard-setup-actions">
-        <a class="btn btn-primary" href="/customer-onboarding" data-nav="/customer-onboarding">Start onboarding</a>
-        <a class="btn btn-secondary" href="/connections-secrets" data-nav="/connections-secrets">Connections & secrets</a>
-        <a class="btn btn-secondary" href="/integrations/onboarding" data-nav="/integrations/onboarding">Connect integrations</a>
-      </div>
-    </section>`;
-}
 
-function renderOpsDashboardWelcome(snapshot) {
-  const showExpanded = !state.dashboardGuideDismissed;
-  if (!showExpanded) {
-    return `
-      <section class="card ops-guide-compact" id="ops-guide">
-        <div class="ops-guide-compact-inner">
-          <p class="muted">Welcome back, <strong>${escapeHtml(dashboardGreetingName())}</strong> · ${escapeHtml(activeOrgLabel())}</p>
-          <button type="button" class="btn btn-secondary btn-sm" data-show-dashboard-guide>Show dashboard guide</button>
-        </div>
-      </section>`;
-  }
-  return `
-    <section class="card ops-guide-card" id="ops-guide">
-      <div class="section-heading">
-        <div>
-          <p class="ops-guide-eyebrow">Welcome, ${escapeHtml(dashboardGreetingName())}</p>
-          <h2>How to use this dashboard</h2>
-          <p class="muted">You are operating <strong>${escapeHtml(activeOrgLabel())}</strong>. Follow one path every shift: <strong>Connect</strong> tools → <strong>Respond</strong> to alerts & incidents → <strong>Observe</strong> health → <strong>Deliver</strong> changes → <strong>Improve</strong> with postmortems.</p>
-        </div>
-        <button type="button" class="btn btn-secondary" data-dismiss-dashboard-guide aria-label="Dismiss dashboard guide">Got it</button>
-      </div>
-      <div class="ops-guide-flow-strip" aria-label="Shift workflow">
-        ${OPS_OPERATIONAL_FLOWS.map((flow, idx) => `
-          <div class="ops-guide-flow-step">
-            <span class="ops-guide-flow-num">${flow.order}</span>
-            <strong>${escapeHtml(flow.title)}</strong>
-            <span class="muted">${escapeHtml(flow.when)}</span>
-            ${idx < OPS_OPERATIONAL_FLOWS.length - 1 ? '<span class="ops-guide-flow-arrow" aria-hidden="true">→</span>' : ""}
-          </div>`).join("")}
-      </div>
-      <div class="ops-guide-read-order">
-        <h3>Read this page top to bottom</h3>
-        <ol>
-          <li><strong>Recommended next step</strong> — the one action Nexora suggests right now.</li>
-          <li><strong>Live signals</strong> — click any number to jump to incidents, health, delivery, etc.</li>
-          <li><strong>Operational workflow</strong> — the 5 lanes with links for each type of work.</li>
-          <li><strong>Needs attention</strong> — specific incidents, approvals, and at-risk services.</li>
-        </ol>
-      </div>
-      ${renderOpsDashboardSectionNav()}
-    </section>`;
-}
 
-function buildOpsDashboardSnapshot(stateObj) {
-  const openIncidents = countOpenIncidents(stateObj.incidents);
-  const criticalIncidents = countCriticalIncidents(stateObj.incidents);
-  const services = (stateObj.serviceOverview?.services) || stateObj.serviceHealth || [];
-  const servicesTracked = services.length;
-  const servicesAtRisk = stateObj.serviceOverview?.services_at_risk
-    ?? services.filter((s) => /WARNING|CRITICAL/i.test(String(s.burn_status || ""))).length;
-  const dash = stateObj.opsDashboard || {};
-  const integrations = Array.isArray(stateObj.integrationConnections)
-    ? stateObj.integrationConnections
-    : (stateObj.integrationConnections?.items || []);
-  const credentials = Array.isArray(stateObj.credentials)
-    ? stateObj.credentials
-    : (stateObj.credentials?.items || []);
-  return {
-    openIncidents,
-    criticalIncidents,
-    servicesTracked,
-    servicesAtRisk,
-    runbooks: (stateObj.runbooks || []).length,
-    integrations: integrations.length,
-    integrationsVerified: integrations.filter((c) => /VERIFIED/i.test(String(c.status || ""))).length,
-    integrationsLive: integrations.filter((c) => c.last_sync_at).length,
-    integrationsHealthy: integrations.filter((c) => /HEALTHY/i.test(String(c.health || ""))).length,
-    infrastructure: credentials.length,
-    attentionItems: dash.attentionItems || 0,
-    queueTotal: dash.queueTotal || 0,
-    firingAlerts: (dash.firingAlerts || []).length,
-    pendingChanges: (dash.pendingChanges || []).length,
-    pendingApprovals: (dash.pendingApprovals || []).length,
-  };
-}
 
-function computeOpsRecommendedAction(snapshot) {
-  if (!snapshot) return null;
-  if (snapshot.criticalIncidents > 0) {
-    return {
-      title: "Triage critical incidents",
-      description: `${snapshot.criticalIncidents} critical incident(s) need immediate response.`,
-      href: "/incidents",
-      cta: "Open Incidents",
-      priority: "critical",
-    };
-  }
-  if (snapshot.openIncidents > 0) {
-    return {
-      title: "Review open incidents",
-      description: `${snapshot.openIncidents} incident(s) are still open.`,
-      href: "/incidents",
-      cta: "View Incidents",
-      priority: "high",
-    };
-  }
-  if (snapshot.firingAlerts > 0) {
-    return {
-      title: "Investigate firing alerts",
-      description: `${snapshot.firingAlerts} alert(s) are active in monitoring.`,
-      href: "/alerts",
-      cta: "Open Alerts",
-      priority: "high",
-    };
-  }
-  if (snapshot.servicesAtRisk > 0) {
-    return {
-      title: "Review services at risk",
-      description: `${snapshot.servicesAtRisk} service(s) have elevated SLO burn or degraded health.`,
-      href: "/services",
-      cta: "Service Health",
-      priority: "medium",
-    };
-  }
-  if (snapshot.pendingApprovals > 0) {
-    return {
-      title: "Approve pending delivery operations",
-      description: `${snapshot.pendingApprovals} delivery operation(s) await approval.`,
-      href: "/delivery/approvals",
-      cta: "Review Approvals",
-      priority: "medium",
-    };
-  }
-  if (snapshot.pendingChanges > 0) {
-    return {
-      title: "Review change requests",
-      description: `${snapshot.pendingChanges} change request(s) need a decision.`,
-      href: "/delivery/changes",
-      cta: "Open Changes",
-      priority: "medium",
-    };
-  }
-  if (snapshot.queueTotal > 0 || snapshot.attentionItems > 0) {
-    const n = Math.max(snapshot.queueTotal, snapshot.attentionItems);
-    return {
-      title: "Triage open incidents and alerts",
-      description: `${n} item(s) need attention — investigate root cause and fixes.`,
-      href: "/incidents",
-      cta: "Open Incidents",
-      priority: "low",
-    };
-  }
-  return {
-    title: "All clear — strengthen reliability posture",
-    description: "No urgent signals. Connect tools or review service health.",
-    href: "/integrations",
-    cta: "Connect Tools",
-    priority: "clear",
-  };
-}
 
-function opsFlowLaneCount(flowId, snapshot) {
-  const map = {
-    respond: snapshot.openIncidents + snapshot.firingAlerts,
-    connect: Math.max(0, 3 - snapshot.integrationsVerified),
-    observe: snapshot.servicesAtRisk + snapshot.firingAlerts,
-    deliver: snapshot.pendingApprovals + snapshot.pendingChanges,
-    improve: snapshot.runbooks,
-  };
-  return map[flowId] ?? 0;
-}
 
-function renderOpsEstateStatCard(label, value, href, opts = {}) {
-  const warn = opts.warn ? " ops-estate-stat-warn" : "";
-  return `<a class="ops-estate-stat${warn}" href="${escapeHtml(href)}" data-nav="${escapeHtml(href)}" style="--estate-accent:${opts.color || "#2563eb"}">
-    <span class="ops-estate-stat-icon" aria-hidden="true">${opts.icon || "•"}</span>
-    <span class="ops-estate-stat-value">${value}</span>
-    <span class="ops-estate-stat-label">${escapeHtml(label)}</span>
-  </a>`;
-}
 
-function renderOpsEstateOverview(snapshot) {
-  const needsConnect = snapshot.integrations === 0 && snapshot.infrastructure === 0;
-  const connectBanner = needsConnect ? `
-    <div class="ops-connect-banner">
-      <span class="muted">No connectors yet.</span>
-      <a href="/connections-secrets" data-nav="/connections-secrets">Add connections</a>
-      <span class="muted">·</span>
-      <a href="/integrations/onboarding" data-nav="/integrations/onboarding">Connect integrations</a>
-    </div>` : "";
-  return `
-    <section class="ops-estate-overview" aria-label="Estate overview">
-      ${connectBanner}
-      <div class="ops-estate-grid">
-        ${renderOpsEstateStatCard("Integrations", snapshot.integrations, "/integrations", { icon: "🔌", color: "#7c3aed" })}
-        ${renderOpsEstateStatCard("Infrastructure", snapshot.infrastructure, "/connections-secrets", { icon: "☁️", color: "#0891b2" })}
-        ${renderOpsEstateStatCard("Services", snapshot.servicesTracked, "/services", { icon: "💚", color: "#2563eb" })}
-        ${renderOpsEstateStatCard("Runbooks", snapshot.runbooks, "/runbooks", { icon: "📖", color: "#059669" })}
-        ${renderOpsEstateStatCard("Open incidents", snapshot.openIncidents, "/incidents", { icon: "🚨", color: "#dc2626", warn: snapshot.openIncidents > 0 })}
-        ${renderOpsEstateStatCard("Firing alerts", snapshot.firingAlerts, "/alerts", { icon: "⚡", color: "#ea580c", warn: snapshot.firingAlerts > 0 })}
-      </div>
-    </section>`;
-}
 
-function renderOpsAlertStrip(snapshot) {
-  const action = computeOpsRecommendedAction(snapshot);
-  if (!action || !["critical", "high"].includes(action.priority)) return "";
-  const cls = action.priority === "critical" ? "ops-alert-critical" : "ops-alert-high";
-  return `
-    <section class="ops-alert-strip ${cls}" aria-label="Urgent action">
-      <span class="ops-alert-strip-text"><strong>${escapeHtml(action.title)}</strong> — ${escapeHtml(action.description)}</span>
-      <a class="btn btn-sm" href="${escapeHtml(action.href)}" data-nav="${escapeHtml(action.href)}">${escapeHtml(action.cta)}</a>
-    </section>`;
-}
 
-function renderOpsPriorityCard(snapshot) {
-  const action = computeOpsRecommendedAction(snapshot);
-  if (!action) return "";
-  const cls = action.priority === "critical" ? "ops-priority-critical"
-    : action.priority === "high" ? "ops-priority-high"
-      : action.priority === "medium" ? "ops-priority-medium"
-        : action.priority === "clear" ? "ops-priority-clear" : "";
-  return `
-    <section class="card ops-priority-card ${cls}" id="ops-priority" aria-label="Recommended next action">
-      <div class="ops-priority-inner">
-        <div>
-          <p class="ops-priority-eyebrow">① Recommended next step</p>
-          <h2 class="ops-priority-title">${escapeHtml(action.title)}</h2>
-          <p class="muted">${escapeHtml(action.description)}</p>
-          <p class="ops-priority-why muted">Why here? Nexora ranks open incidents and alerts first, then service risk, then delivery approvals, then your queue.</p>
-        </div>
-        <a class="btn" href="${escapeHtml(action.href)}" data-nav="${escapeHtml(action.href)}">${escapeHtml(action.cta)}</a>
-      </div>
-    </section>`;
-}
 
-function renderOpsSignalsBar(snapshot) {
-  const signals = [
-    { key: "openIncidents", label: "Open Incidents", value: snapshot.openIncidents, href: "/incidents", warn: snapshot.openIncidents > 0 },
-    { key: "firingAlerts", label: "Firing Alerts", value: snapshot.firingAlerts, href: "/alerts", warn: snapshot.firingAlerts > 0 },
-    { key: "servicesAtRisk", label: "Services at Risk", value: snapshot.servicesAtRisk, href: "/services", warn: snapshot.servicesAtRisk > 0 },
-    { key: "queueTotal", label: "Needs Triage", value: snapshot.queueTotal, href: "/incidents", warn: snapshot.queueTotal > 0 },
-    { key: "pendingApprovals", label: "Pending Approvals", value: snapshot.pendingApprovals, href: "/delivery/approvals", warn: snapshot.pendingApprovals > 0 },
-    { key: "pendingChanges", label: "Change Requests", value: snapshot.pendingChanges, href: "/delivery/changes", warn: snapshot.pendingChanges > 0 },
-  ];
-  const helpByKey = Object.fromEntries(OPS_SIGNAL_HELP.map((h) => [h.key, h.help]));
-  return `
-    <section class="card" id="ops-signals" aria-label="Live operational signals">
-      <h2 class="ops-panel-title">Live signals</h2>
-      <div class="ops-signals-bar">
-        ${signals.map((s) => `
-          <a class="ops-signal${s.warn ? " ops-signal-warn" : ""}" href="${escapeHtml(s.href)}" data-nav="${escapeHtml(s.href)}" title="${escapeHtml(helpByKey[s.key] || "")}">
-            <span class="ops-signal-value">${s.value}</span>
-            <span class="ops-signal-label">${escapeHtml(s.label)}</span>
-          </a>`).join("")}
-      </div>
-    </section>`;
-}
 
-function renderOpsModuleStats(snapshot) {
-  const areas = [
-    {
-      title: "Respond",
-      summary: "Incidents and paging",
-      href: "/incidents",
-      icon: "incident",
-      color: "#dc2626",
-      metrics: [
-        { value: snapshot.openIncidents, label: "open incidents", warn: true },
-        { value: snapshot.firingAlerts, label: "firing alerts", warn: true },
-        { value: snapshot.criticalIncidents, label: "critical", warn: true },
-      ],
-    },
-    {
-      title: "Observe",
-      summary: "Health and reliability",
-      href: "/services",
-      icon: "monitor",
-      color: "#2563eb",
-      metrics: [
-        { value: snapshot.servicesTracked, label: "services" },
-        { value: snapshot.servicesAtRisk, label: "at risk", warn: true },
-        { value: snapshot.runbooks, label: "runbooks" },
-      ],
-    },
-    {
-      title: "Deliver",
-      summary: "Changes and releases",
-      href: "/delivery",
-      icon: "upload",
-      color: "#7c3aed",
-      metrics: [
-        { value: snapshot.pendingApprovals, label: "approvals", warn: true },
-        { value: snapshot.pendingChanges, label: "changes", warn: true },
-        { value: snapshot.queueTotal, label: "queue items", warn: true },
-      ],
-    },
-    {
-      title: "Connect",
-      summary: "Integrations health board & credentials",
-      href: "/integrations",
-      icon: "plug",
-      color: "#0891b2",
-      metrics: [
-        { value: snapshot.integrations, label: "integrations" },
-        { value: snapshot.integrationsVerified, label: "verified" },
-        { value: snapshot.integrationsLive, label: "live data" },
-        { value: snapshot.infrastructure, label: "credentials" },
-      ],
-    },
-  ];
-  const metricHtml = (m) => {
-    const warn = m.warn && m.value > 0 ? " is-warn" : "";
-    return `<span class="ops-area-metric${warn}"><strong>${m.value}</strong> ${escapeHtml(m.label)}</span>`;
-  };
-  const rowAttention = (area) => area.metrics.some((m) => m.warn && m.value > 0);
-  return `
-    <section class="card ops-areas-panel" id="ops-modules" aria-label="Operations areas">
-      <h2 class="ops-panel-title">Operations areas</h2>
-      <div class="ops-area-list">
-        ${areas.map((area) => `
-          <a class="ops-area-row${rowAttention(area) ? " has-attention" : ""}" href="${escapeHtml(area.href)}" data-nav="${escapeHtml(area.href)}" style="--area-accent:${area.color}">
-            <div class="ops-area-brand">
-              <span class="ops-area-icon" aria-hidden="true">${navIcon(area.icon)}</span>
-              <div class="ops-area-copy">
-                <span class="ops-area-title">${escapeHtml(area.title)}</span>
-                <span class="ops-area-summary">${escapeHtml(area.summary)}</span>
-              </div>
-            </div>
-            <div class="ops-area-metrics">
-              ${area.metrics.map((m, idx) => `${idx ? '<span class="ops-area-sep" aria-hidden="true">·</span>' : ""}${metricHtml(m)}`).join("")}
-            </div>
-            <span class="ops-area-arrow" aria-hidden="true">→</span>
-          </a>`).join("")}
-      </div>
-    </section>`;
-}
 
-function renderOpsFlowLanes(snapshot) {
-  const lanes = OPS_OPERATIONAL_FLOWS.map((flow) => {
-    const count = opsFlowLaneCount(flow.id, snapshot);
-    const links = flow.links.map((l) => `
-      <a class="ops-flow-link" href="${escapeHtml(l.href)}" data-nav="${escapeHtml(l.href)}">${escapeHtml(l.label)}</a>`).join("");
-    return `
-      <article class="ops-flow-lane">
-        <div class="ops-flow-lane-head">
-          <span class="ops-flow-order">${flow.order}</span>
-          <div class="ops-flow-lane-icon">${navIcon(flow.icon)}</div>
-          <div class="ops-flow-lane-meta">
-            <h3><a href="${escapeHtml(flow.href)}" data-nav="${escapeHtml(flow.href)}">${escapeHtml(flow.title)}</a></h3>
-            <p class="muted">${escapeHtml(flow.summary)}</p>
-          </div>
-          ${count > 0 ? `<span class="ops-flow-count" title="Items needing attention">${count}</span>` : ""}
-        </div>
-        <div class="ops-flow-guide">
-          <p><span class="ops-flow-guide-label">When</span> ${escapeHtml(flow.when)}</p>
-          <p><span class="ops-flow-guide-label">Look for</span> ${escapeHtml(flow.lookFor)}</p>
-          <p><span class="ops-flow-guide-label">Outcome</span> ${escapeHtml(flow.outcome)}</p>
-        </div>
-        <div class="ops-flow-links">${links}</div>
-      </article>`;
-  }).join("");
-  return `
-    <section class="card ops-flow-section" id="ops-workflow" aria-label="Operational workflow">
-      <div class="section-heading">
-        <div>
-          <h2>③ Your operational workflow</h2>
-          <p class="muted">Five lanes — same order every shift. Expand the left sidebar sections for deeper links.</p>
-        </div>
-        <a class="btn btn-secondary" href="/help/getting-started" data-nav="/help/getting-started">Full guide</a>
-      </div>
-      <div class="ops-flow-grid">${lanes}</div>
-    </section>`;
-}
 
-function renderOpsAttentionList(stateObj, snapshot) {
-  const rows = [];
-  const open = (stateObj.incidents || []).filter(
-    (i) => !["RESOLVED", "CLOSED"].includes(String(i.status || "").toUpperCase()),
-  ).slice(0, 4);
-  open.forEach((inc) => {
-    rows.push({
-      kind: "Incident",
-      title: inc.title || inc.id,
-      meta: `${inc.severity || "—"} · ${inc.status || "—"}`,
-      href: `/incidents/${inc.id}`,
-      priority: /CRITICAL|SEV1|P1/i.test(String(inc.severity || "")) ? "high" : "normal",
-    });
-  });
-  (stateObj.opsDashboard?.pendingApprovals || []).slice(0, 3).forEach((op) => {
-    rows.push({
-      kind: "Approval",
-      title: op.name || op.operation_type || op.id,
-      meta: "Pending delivery approval",
-      href: "/delivery/approvals",
-      priority: "medium",
-    });
-  });
-  const atRisk = ((stateObj.serviceOverview?.services) || []).filter(
-    (s) => /WARNING|CRITICAL/i.test(String(s.burn_status || "")),
-  ).slice(0, 3);
-  atRisk.forEach((svc) => {
-    rows.push({
-      kind: "Service",
-      title: svc.name,
-      meta: `Burn: ${svc.burn_status || "—"}`,
-      href: `/services/${svc.service_id}`,
-      priority: "medium",
-    });
-  });
-  if (!rows.length) {
-    return `
-      <section class="card" id="ops-attention">
-        <h2 class="ops-panel-title">Needs attention</h2>
-        <p class="muted">No urgent incidents, approvals, or at-risk services.</p>
-      </section>`;
-  }
-  return `
-    <section class="card" id="ops-attention">
-      <h2 class="ops-panel-title">Needs attention</h2>
-      <div class="ops-attention-list">
-        ${rows.map((r) => `
-          <a class="ops-attention-row ops-attention-${r.priority}" href="${escapeHtml(r.href)}" data-nav="${escapeHtml(r.href)}">
-            <span class="ops-attention-kind">${escapeHtml(r.kind)}</span>
-            <span class="ops-attention-title">${escapeHtml(r.title)}</span>
-            <span class="ops-attention-meta muted">${escapeHtml(r.meta)}</span>
-          </a>`).join("")}
-      </div>
-    </section>`;
-}
 
-function renderOpsCommandCenterDashboard() {
-  const snapshot = buildOpsDashboardSnapshot(state);
-  const needsConnect = snapshot.integrations === 0 && snapshot.infrastructure === 0;
-  return `
-    <div class="container ops-command-center">
-      ${renderHeader("AI Ops Command Center", "Detect → investigate → fix — across all your tools")}
-      ${renderAlerts()}
-      ${renderOpsDashboardWelcome(snapshot)}
-      ${renderOpsPriorityCard(snapshot)}
-      ${renderOpsSignalsBar(snapshot)}
-      ${needsConnect ? renderOpsDashboardSetupStrip() : ""}
-      <div id="ops-workflow">${renderOpsFlowLanes(snapshot)}</div>
-      <div class="ops-dashboard-grid">
-        ${renderOpsModuleStats(snapshot)}
-        ${renderOpsAttentionList(state, snapshot)}
-      </div>
-    </div>`;
-}
 
 
 function renderDashboard() {
   if (!DEVELOPMENT_UI_ENABLED) {
+    if (typeof renderOpsCommandCenterDashboard !== "function") {
+      loadOpsCommandCenterUiChunk().then(() => render());
+      return renderSkeleton("page");
+    }
     return renderOpsCommandCenterDashboard();
   }
   if (typeof renderDashboardHero !== "function") {
@@ -6934,258 +4824,9 @@ function renderDashboard() {
   `;
 }
 
-function renderCustomerOrganization() {
-  const activeOrg = state.organizations.find((org) => org.id === state.activeOrganization)
-    || state.organizations[0]
-    || null;
-  const canManage = canManageMembers();
-  const canCreate = canCreateOrganization();
-  const justCreated = state.organizationJustCreated;
-  if (!activeOrg) {
-    return `
-      <div class="container">
-        ${renderHeader("Organization", "Your company account")}
-        ${renderAlerts()}
-        ${justCreated ? renderOrganizationDemoNextStep(justCreated.name) : ""}
-        <section class="card">
-          <div class="empty-state">
-            <h3>No organization selected</h3>
-            <p class="muted">Your organization groups your applications, members, and billing.</p>
-            ${canCreate ? `<a class="btn btn-primary" href="/organizations/create" data-nav="/organizations/create" style="margin-top:12px;">Create organization</a>` : ""}
-          </div>
-        </section>
-      </div>
-    `;
-  }
-  return `
-    <div class="container">
-      ${renderHeader("Organization", "Your company account")}
-      ${renderAlerts()}
-      ${justCreated ? renderOrganizationDemoNextStep(justCreated.name) : ""}
-      <section class="card" style="margin-bottom: 24px">
-        <div class="section-heading">
-          <div>
-            <h2>${escapeHtml(activeOrg.name)}</h2>
-            <p class="muted">${escapeHtml(activeOrg.slug || "")}</p>
-          </div>
-          <span class="role-chip">${escapeHtml(state.activeRole || "member")}</span>
-        </div>
-        ${activeOrg.description ? `<p>${escapeHtml(activeOrg.description)}</p>` : `<p class="muted">No description set.</p>`}
-        <div class="actions" style="margin-top: 12px">
-          <a class="btn btn-secondary" href="/organizations" data-nav="/organizations">All organizations</a>
-          ${canCreate ? `<a class="btn btn-primary" href="/organizations/create" data-nav="/organizations/create">Create organization</a>` : ""}
-          ${canManage ? `<a class="btn btn-secondary" href="/organizations/${activeOrg.id}" data-nav="/organizations/${activeOrg.id}">Manage members & settings</a>` : ""}
-        </div>
-      </section>
-      <section class="grid grid-2">
-        <div class="card">
-          <h2>Members</h2>
-          <p class="muted">Invite teammates and manage their roles.</p>
-          ${canManage
-            ? `<a class="btn btn-secondary" href="/organizations/${activeOrg.id}" data-nav="/organizations/${activeOrg.id}">Open member management</a>`
-            : `<p class="muted">Ask an organization owner or admin to manage members.</p>`}
-        </div>
-        <div class="card">
-          <h2>Switch organization</h2>
-          <p class="muted">Use the organization selector in the top bar to switch between organizations you belong to.</p>
-        </div>
-      </section>
-    </div>
-  `;
-}
 
-function renderOrganizations() {
-  const canCreate = canCreateOrganization();
-  const rows = state.organizations.map((org) => {
-    const isActive = org.id === state.activeOrganization;
-    const role = organizationRoleFor(org) || "member";
-    const canManage = canManageOrgRecord(org);
-    return `
-      <div class="list-item" data-org-card="${escapeHtml(org.id)}">
-        <div class="list-item-header">
-          <div>
-            <h3>${escapeHtml(org.name)} ${isActive ? '<span class="badge status-success">Active</span>' : ""}</h3>
-            <p class="muted">${escapeHtml(org.slug || "")}</p>
-            <p class="muted">Your role: <span class="role-chip">${escapeHtml(role)}</span></p>
-            ${org.description ? `<p class="muted">${escapeHtml(org.description)}</p>` : ""}
-          </div>
-          <div class="actions" style="flex-wrap:wrap;">
-            ${!isActive ? `<button type="button" class="btn btn-primary" data-switch-org="${escapeHtml(org.id)}">Switch</button>` : ""}
-            ${isActive
-              ? `<a class="btn btn-secondary" href="/organization" data-nav="/organization">View organization</a>`
-              : `<a class="btn btn-secondary" href="/organizations/${escapeHtml(org.id)}" data-nav="/organizations/${escapeHtml(org.id)}">View organization</a>`}
-            ${canManage ? `<a class="btn btn-secondary" href="/organizations/${escapeHtml(org.id)}" data-nav="/organizations/${escapeHtml(org.id)}">Manage members</a>` : ""}
-          </div>
-        </div>
-      </div>`;
-  }).join("");
-  return `
-    <div class="container">
-      ${renderHeader("Organizations", "Organizations you belong to")}
-      ${renderAlerts()}
-      <div class="actions" style="margin-bottom: 16px">
-        ${canCreate ? `<a class="btn btn-primary" href="/organizations/create" data-nav="/organizations/create">Create organization</a>` : ""}
-        <a class="btn btn-secondary" href="/organization" data-nav="/organization">Current organization</a>
-      </div>
-      <section class="card">
-        <h2>Your organizations</h2>
-        ${state.organizations.length === 0
-          ? `<div class="empty-state"><p class="muted">No organizations yet.</p>${canCreate ? `<a class="btn btn-primary" href="/organizations/create" data-nav="/organizations/create" style="margin-top:12px;">Create organization</a>` : ""}</div>`
-          : rows}
-      </section>
-    </div>
-  `;
-}
 
-function renderOrganizationCreate() {
-  return `
-    <div class="container">
-      ${renderHeader("Create organization", "Add a new organization to your account")}
-      ${renderAlerts()}
-      <section class="card">
-        <form id="organization-form" novalidate>
-          <div class="field">
-            <label class="form-label">Organization name <span class="muted">(required)</span></label>
-            <input class="form-input" name="name" required minlength="1" maxlength="255" placeholder="Nexora Demo Pilot" />
-          </div>
-          <div class="field">
-            <label class="form-label">Slug / identifier <span class="muted">(optional)</span></label>
-            <input class="form-input" name="slug" placeholder="nexora-demo-pilot" pattern="[a-z0-9-]*" />
-            <p class="muted" style="font-size:12px;margin-top:4px;">Leave blank to generate safely from the name (e.g. nexora-demo-pilot).</p>
-          </div>
-          <div class="field">
-            <label class="form-label">Description <span class="muted">(optional)</span></label>
-            <textarea class="form-input" name="description" rows="3" placeholder="Internal demo tenant for pilot walkthroughs"></textarea>
-          </div>
-          <div class="actions">
-            <button class="btn btn-primary" type="submit">Create organization</button>
-            <a class="btn btn-secondary" href="/organization" data-nav="/organization">Cancel</a>
-          </div>
-        </form>
-      </section>
-    </div>
-  `;
-}
 
-function renderOrganizationDetail() {
-  const organization = state.organizations.find((org) => org.id === state.selectedOrganizationId);
-  if (!organization) {
-    return `
-      <div class="container">
-        ${renderHeader("Organization", "Details")}
-        ${renderAlerts()}
-        <p class="muted">${state.error ? detailPendingMessage("organization") : "Organization not found."}</p>
-      </div>
-    `;
-  }
-
-  const viewingActiveOrg = organization.id === state.activeOrganization;
-  const orgRole = organizationRoleFor(organization) || (viewingActiveOrg ? state.activeRole : null) || "member";
-  const ssoCard = canManageMembers() && state.identityCapabilities?.sso ? `
-        <section class="card" style="margin-bottom: 24px">
-          <h2>Organization SSO</h2>
-          <p class="muted">Configure OIDC or SAML identity providers for single sign-on.</p>
-          <a class="btn btn-primary" href="/organization/settings/sso" data-nav="/organization/settings/sso">Manage SSO connections</a>
-        </section>` : "";
-  const memberRows = state.organizationMembers.map((member) => {
-    const isSelf = member.user_id === state.user?.id;
-    const canRemove = canManageMembers() && !(member.role === "OWNER" && state.organizationMembers.filter((item) => item.role === "OWNER").length <= 1);
-    return `
-      <div class="list-item">
-        <div class="list-item-header">
-          <div>
-            <h3>${escapeHtml(member.user_id.slice(0, 8))}...${isSelf ? " (you)" : ""}</h3>
-            <span class="badge">${escapeHtml(member.role)}</span>
-            <p class="muted">Joined ${escapeHtml(formatDate(member.created_at))}</p>
-          </div>
-          <div class="actions">
-            ${canRemove ? `<button class="btn btn-secondary" data-remove-member="${member.id}">Remove</button>` : ""}
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("");
-
-  const invitationRows = state.organizationInvitations.map((invitation) => `
-    <div class="list-item">
-      <div class="list-item-header">
-        <div>
-          <h3>${escapeHtml(invitation.email)}</h3>
-          <span class="badge">${escapeHtml(invitation.role)}</span>
-          <p class="muted">Expires ${escapeHtml(formatDate(invitation.expires_at))}</p>
-          <p class="muted">Accept link: <code>${escapeHtml(invitationAcceptLink(invitation.token))}</code></p>
-        </div>
-        <div class="actions">
-          ${canManageMembers() ? `<button class="btn btn-secondary" data-resend-invitation="${invitation.id}">Resend</button>` : ""}
-          ${canManageMembers() ? `<button class="btn btn-secondary" data-revoke-invitation="${invitation.id}">Revoke</button>` : ""}
-        </div>
-      </div>
-    </div>
-  `).join("");
-
-  return `
-    <div class="container">
-      ${renderHeader(organization.name, organization.slug)}
-      ${renderAlerts()}
-      <section class="grid grid-2" style="margin-bottom: 24px">
-        <div class="card">
-          <h2>Organization detail</h2>
-          <p><strong>Name:</strong> ${escapeHtml(organization.name)}</p>
-          <p><strong>Slug:</strong> ${escapeHtml(organization.slug)}</p>
-          <p><strong>Description:</strong> ${escapeHtml(organization.description || "—")}</p>
-          <p><strong>Your role:</strong> ${escapeHtml(orgRole)}</p>
-          <p><strong>Active context:</strong> ${viewingActiveOrg ? "This organization" : "Another organization is active in your session"}</p>
-        </div>
-        <div class="card">
-          <h2>Actions</h2>
-          <div class="actions">
-            ${!viewingActiveOrg ? `<button class="btn" data-switch-org="${organization.id}">Switch to this organization</button>` : `<span class="badge">Currently active</span>`}
-            <a class="btn btn-secondary" href="/organizations" data-nav="/organizations">Back to list</a>
-          </div>
-        </div>
-      </section>
-
-      <section class="card" style="margin-bottom: 24px">
-        <h2>Members (${state.organizationMembers.length})</h2>
-        ${state.organizationMembers.length === 0 ? `<p class="muted">No members found.</p>` : memberRows}
-      </section>
-
-      ${canManageMembers() ? `
-        <section class="card" style="margin-bottom: 24px">
-          <h2>Invite user</h2>
-          <form id="invite-member-form">
-            <input type="hidden" name="organization_id" value="${escapeHtml(organization.id)}" />
-            <div class="grid grid-2">
-              <div class="field">
-                <label>Email</label>
-                <input name="email" type="email" required placeholder="colleague@example.com" />
-              </div>
-              <div class="field">
-                <label>Role</label>
-                <select name="role">
-                  ${assignableMemberRoles().map((role) => `<option value="${role}">${role}</option>`).join("")}
-                </select>
-              </div>
-            </div>
-            <div class="actions">
-              <button class="btn" type="submit">Send invitation</button>
-            </div>
-          </form>
-        </section>
-
-        <section class="card">
-          <h2>Pending invitations (${state.organizationInvitations.length})</h2>
-          ${state.organizationInvitations.length === 0 ? `<p class="muted">No pending invitations.</p>` : invitationRows}
-        </section>
-      ` : `
-        <section class="card">
-          <p class="muted">Only organization owners and admins can invite members or manage pending invitations.</p>
-        </section>
-      `}
-      ${ssoCard}
-    </div>
-  `;
-}
 
 function renderInvitationAccept() {
   const preview = state.invitationPreview;
@@ -7838,13 +5479,13 @@ function renderPage() {
   if (!state.user && state.route.page !== "invitation-accept") return renderAuth();
   switch (state.route.page) {
     case "organization":
-      return renderCustomerOrganization();
+      return lazySettingsOrgView("renderCustomerOrganization");
     case "organizations":
-      return renderOrganizations();
+      return lazySettingsOrgView("renderOrganizations");
     case "organizations-create":
-      return renderOrganizationCreate();
+      return lazySettingsOrgView("renderOrganizationCreate");
     case "organization-detail":
-      return renderOrganizationDetail();
+      return lazySettingsOrgView("renderOrganizationDetail");
     case "invitation-accept":
       return renderInvitationAccept();
     case "teams":
@@ -8213,13 +5854,13 @@ function renderPage() {
     case "help-tours":
       return lazyHelpView("renderHelpTours");
     case "settings":
-      return renderSettings();
+      return lazySettingsOrgView("renderSettings");
     case "organization-sso":
-      return renderOrganizationSsoPage();
+      return lazySettingsOrgView("renderOrganizationSsoPage");
     case "organization-audit":
-      return renderOrganizationAuditPage();
+      return lazySettingsOrgView("renderOrganizationAuditPage");
     case "operations-jobs":
-      return renderOperationsJobsPage();
+      return lazySettingsOrgView("renderOperationsJobsPage");
     case "billing":
       return lazyBillingView("renderBillingHome");
     case "billing-subscription":
@@ -9299,544 +6940,13 @@ function render() {
 
 
 
-function bindSprint2Events() {
-  document.getElementById("sso-connection-form")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const data = new FormData(event.target);
-    const connectionId = data.get("connection_id");
-    const payload = {
-      display_name: data.get("display_name"),
-      protocol: data.get("protocol") || "OIDC",
-      provider: data.get("provider"),
-      issuer: data.get("issuer") || null,
-      discovery_url: data.get("discovery_url") || null,
-      client_id: data.get("client_id") || null,
-      authorization_endpoint: data.get("authorization_endpoint") || null,
-      token_endpoint: data.get("token_endpoint") || null,
-      jwks_uri: data.get("jwks_uri") || null,
-      idp_entity_id: data.get("idp_entity_id") || null,
-      idp_sso_url: data.get("idp_sso_url") || null,
-      idp_x509_cert: data.get("idp_x509_cert") || null,
-      default_role: data.get("default_role") || "VIEWER",
-      enabled: data.get("enabled") === "on",
-      auto_provision: data.get("auto_provision") === "on",
-    };
-    const secret = data.get("client_secret");
-    if (secret) payload.client_secret = secret;
-    try {
-      if (connectionId) {
-        await api(`/v1/auth/sso/connections/${connectionId}`, {
-          method: "PATCH",
-          body: JSON.stringify(payload),
-        });
-        state.message = "SSO connection updated";
-      } else {
-        payload.slug = data.get("slug");
-        await api("/v1/auth/sso/connections", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-        state.message = "SSO connection created";
-      }
-      state.ssoFormOpen = false;
-      state.ssoEditId = null;
-      state.ssoSaveError = null;
-      await loadSsoConnections();
-      state.error = null;
-      render();
-    } catch (error) {
-      state.ssoSaveError = error.message;
-      state.ssoEditId = connectionId || null;
-      state.error = error.message;
-      render();
-    }
-  });
-
-  document.querySelector("[data-sso-cancel-form]")?.addEventListener("click", () => {
-    state.ssoFormOpen = false;
-    state.ssoEditId = null;
-    render();
-  });
-
-  document.querySelector("[data-sso-new-connection]")?.addEventListener("click", () => {
-    state.ssoFormOpen = true;
-    state.ssoEditId = null;
-    render();
-  });
-
-  document.querySelectorAll("[data-sso-edit]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.ssoFormOpen = true;
-      state.ssoEditId = button.dataset.ssoEdit;
-      render();
-    });
-  });
-
-  document.querySelectorAll("[data-sso-toggle]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const connId = button.dataset.ssoToggle;
-      const enabling = button.dataset.enabled === "1";
-      const verb = enabling ? "enable" : "disable";
-      if (!window.confirm(`${enabling ? "Enable" : "Disable"} this SSO connection?`)) return;
-      try {
-        await api(`/v1/auth/sso/connections/${connId}`, {
-          method: "PATCH",
-          body: JSON.stringify({ enabled: enabling }),
-        });
-        state.message = `SSO connection ${verb}d`;
-        await loadSsoConnections();
-        state.error = null;
-        render();
-      } catch (error) {
-        state.error = error.message;
-        render();
-      }
-    });
-  });
-
-  document.querySelectorAll("[data-sso-delete]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const connId = button.dataset.ssoDelete;
-      if (!window.confirm("Delete this SSO connection? Users will no longer be able to sign in with it.")) return;
-      try {
-        await api(`/v1/auth/sso/connections/${connId}`, { method: "DELETE" });
-        state.message = "SSO connection deleted";
-        state.ssoFormOpen = false;
-        state.ssoEditId = null;
-        await loadSsoConnections();
-        state.error = null;
-        render();
-      } catch (error) {
-        state.error = error.message;
-        render();
-      }
-    });
-  });
-
-  document.getElementById("audit-filters-form")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const data = new FormData(event.target);
-    state.auditFilters = {
-      start: data.get("start") || "",
-      end: data.get("end") || "",
-      user_id: data.get("user_id") || "",
-      action: data.get("action") || "",
-      status: data.get("status") || "",
-    };
-    state.auditOffset = 0;
-    await loadAuditLogs();
-    render();
-  });
-
-  document.querySelector("[data-audit-reset-filters]")?.addEventListener("click", async () => {
-    state.auditFilters = { action: "", user_id: "", status: "", start: "", end: "" };
-    state.auditOffset = 0;
-    await loadAuditLogs();
-    render();
-  });
-
-  document.querySelectorAll("[data-audit-page]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const limit = state.auditLimit || 50;
-      if (button.dataset.auditPage === "prev") {
-        state.auditOffset = Math.max(0, (state.auditOffset || 0) - limit);
-      } else {
-        state.auditOffset = (state.auditOffset || 0) + limit;
-      }
-      await loadAuditLogs();
-      render();
-    });
-  });
-
-  document.getElementById("jobs-filters-form")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const data = new FormData(event.target);
-    state.jobsFilters = {
-      status: data.get("status") || "",
-      job_type: data.get("job_type") || "",
-      start: data.get("start") || "",
-      end: data.get("end") || "",
-    };
-    state.jobsOffset = 0;
-    await loadJobsList();
-    render();
-  });
-
-  document.querySelector("[data-jobs-reset-filters]")?.addEventListener("click", async () => {
-    state.jobsFilters = { status: "", job_type: "", start: "", end: "" };
-    state.jobsOffset = 0;
-    await loadJobsList();
-    render();
-  });
-
-  document.querySelectorAll("[data-jobs-page]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const limit = state.jobsLimit || 50;
-      if (button.dataset.jobsPage === "prev") {
-        state.jobsOffset = Math.max(0, (state.jobsOffset || 0) - limit);
-      } else {
-        state.jobsOffset = (state.jobsOffset || 0) + limit;
-      }
-      await loadJobsList();
-      render();
-    });
-  });
-
-  document.getElementById("sso-saml-import-form")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const data = new FormData(event.target);
-    const connectionId = data.get("connection_id");
-    const metadata_xml = data.get("metadata_xml") || null;
-    const metadata_url = data.get("metadata_url") || null;
-    if (!metadata_xml && !metadata_url) {
-      state.error = "Provide metadata XML or a metadata URL.";
-      render();
-      return;
-    }
-    try {
-      await api(`/v1/auth/sso/connections/${connectionId}/saml/import-metadata`, {
-        method: "POST",
-        body: JSON.stringify({ metadata_xml, metadata_url }),
-      });
-      state.message = "SAML metadata imported";
-      await loadSsoConnections();
-      state.error = null;
-      render();
-    } catch (error) {
-      state.error = error.message;
-      render();
-    }
-  });
-
-  document.querySelectorAll("[data-jobs-tab]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      state.jobsTab = button.dataset.jobsTab || "active";
-      state.jobsOffset = 0;
-      state.selectedJobId = null;
-      state.selectedJobDetail = null;
-      await loadJobsList();
-      render();
-    });
-  });
-
-  document.querySelectorAll("[data-job-detail]").forEach((row) => {
-    row.addEventListener("click", async () => {
-      const jobId = row.dataset.jobDetail;
-      if (!jobId) return;
-      await loadJobDetail(jobId);
-      render();
-    });
-  });
-
-  document.querySelector("[data-job-detail-close]")?.addEventListener("click", () => {
-    state.selectedJobId = null;
-    state.selectedJobDetail = null;
-    render();
-  });
-}
-
-function bindSettingsSecurityEvents() {
-  document.querySelector("[data-mfa-start-enroll]")?.addEventListener("click", async () => {
-    try {
-      const enroll = await api("/v1/auth/mfa/enroll", { method: "POST" });
-      state.mfaEnrollDraft = enroll;
-      state.mfaRecoveryCodes = null;
-      state.error = null;
-      render();
-    } catch (error) {
-      state.error = error.message;
-      render();
-    }
-  });
-
-  document.querySelector("[data-mfa-cancel-enroll]")?.addEventListener("click", () => {
-    state.mfaEnrollDraft = null;
-    render();
-  });
-
-  document.getElementById("mfa-confirm-form")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const code = new FormData(event.target).get("code");
-    try {
-      const result = await api("/v1/auth/mfa/confirm", {
-        method: "POST",
-        body: JSON.stringify({ code }),
-      });
-      state.mfaEnrollDraft = null;
-      state.mfaRecoveryCodes = result.recovery_codes || [];
-      await loadMfaStatus();
-      state.message = "MFA enabled. Save your recovery codes.";
-      state.error = null;
-      render();
-    } catch (error) {
-      state.error = error.message;
-      render();
-    }
-  });
-
-  document.querySelector("[data-mfa-regen-codes]")?.addEventListener("click", async () => {
-    if (!window.confirm("Regenerate recovery codes? Previous codes will stop working.")) return;
-    try {
-      const result = await api("/v1/auth/mfa/recovery-codes/regenerate", { method: "POST" });
-      state.mfaRecoveryCodes = result.recovery_codes || [];
-      await loadMfaStatus();
-      state.message = "New recovery codes generated.";
-      state.error = null;
-      render();
-    } catch (error) {
-      state.error = error.message;
-      render();
-    }
-  });
-
-  document.querySelector("[data-mfa-disable]")?.addEventListener("click", async () => {
-    if (!window.confirm("Disable MFA for your account?")) return;
-    try {
-      await api("/v1/auth/mfa/disable", { method: "POST" });
-      state.mfaEnrollDraft = null;
-      state.mfaRecoveryCodes = null;
-      await loadMfaStatus();
-      state.message = "MFA disabled";
-      state.error = null;
-      render();
-    } catch (error) {
-      state.error = error.message;
-      render();
-    }
-  });
-
-  document.querySelectorAll("[data-revoke-session]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const sessionId = button.dataset.revokeSession;
-      if (!window.confirm("Revoke this session?")) return;
-      try {
-        await api(`/v1/sessions/${sessionId}`, { method: "DELETE" });
-        await loadUserSessions();
-        state.message = "Session revoked";
-        state.error = null;
-        render();
-      } catch (error) {
-        state.error = error.message;
-        render();
-      }
-    });
-  });
-
-  document.getElementById("api-key-create-form")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const name = new FormData(event.target).get("name");
-    try {
-      const created = await api("/v1/api-keys/organization", {
-        method: "POST",
-        body: JSON.stringify({ name }),
-      });
-      state.apiKeyReveal = created.api_key;
-      event.target.reset();
-      await loadOrgApiKeys();
-      state.message = "API key created — copy the secret now.";
-      state.error = null;
-      render();
-    } catch (error) {
-      state.error = error.message;
-      render();
-    }
-  });
-
-  document.querySelector("[data-dismiss-api-key-reveal]")?.addEventListener("click", () => {
-    state.apiKeyReveal = null;
-    render();
-  });
-
-  document.querySelector("[data-dismiss-personal-api-key-reveal]")?.addEventListener("click", () => {
-    state.personalApiKeyReveal = null;
-    render();
-  });
-
-  document.getElementById("personal-api-key-create-form")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const name = new FormData(event.target).get("name");
-    try {
-      const created = await api("/v1/api-keys/personal", {
-        method: "POST",
-        body: JSON.stringify({ name }),
-      });
-      state.personalApiKeyReveal = created.api_key;
-      event.target.reset();
-      await loadPersonalApiKeys();
-      state.message = "Personal API key created — copy the secret now.";
-      state.error = null;
-      render();
-    } catch (error) {
-      state.error = error.message;
-      render();
-    }
-  });
-
-  document.querySelectorAll("[data-revoke-personal-api-key]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const keyId = button.dataset.revokePersonalApiKey;
-      if (!window.confirm("Revoke this personal API key?")) return;
-      try {
-        await api(`/v1/api-keys/personal/${keyId}`, { method: "DELETE" });
-        await loadPersonalApiKeys();
-        state.message = "Personal API key revoked";
-        state.error = null;
-        render();
-      } catch (error) {
-        state.error = error.message;
-        render();
-      }
-    });
-  });
-
-  document.querySelectorAll("[data-revoke-api-key]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const keyId = button.dataset.revokeApiKey;
-      if (!window.confirm("Revoke this API key? Applications using it will stop working.")) return;
-      try {
-        await api(`/v1/api-keys/organization/${keyId}`, { method: "DELETE" });
-        await loadOrgApiKeys();
-        state.message = "API key revoked";
-        state.error = null;
-        render();
-      } catch (error) {
-        state.error = error.message;
-        render();
-      }
-    });
-  });
-
-  document.querySelectorAll("[data-rotate-api-key]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const keyId = button.dataset.rotateApiKey;
-      if (!window.confirm("Rotate this organization API key? The old key stops working immediately.")) return;
-      try {
-        const rotated = await api(`/v1/api-keys/organization/${keyId}/rotate`, { method: "POST" });
-        state.apiKeyReveal = rotated.api_key;
-        await loadOrgApiKeys();
-        state.message = "API key rotated — copy the new secret now.";
-        state.error = null;
-        render();
-      } catch (error) {
-        state.error = error.message;
-        render();
-      }
-    });
-  });
-
-  document.querySelectorAll("[data-rotate-personal-api-key]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const keyId = button.dataset.rotatePersonalApiKey;
-      if (!window.confirm("Rotate this personal API key? The old key stops working immediately.")) return;
-      try {
-        const rotated = await api(`/v1/api-keys/personal/${keyId}/rotate`, { method: "POST" });
-        state.personalApiKeyReveal = rotated.api_key;
-        await loadPersonalApiKeys();
-        state.message = "Personal API key rotated — copy the new secret now.";
-        state.error = null;
-        render();
-      } catch (error) {
-        state.error = error.message;
-        render();
-      }
-    });
-  });
-
-  document.getElementById("service-account-create-form")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const form = new FormData(event.target);
-    try {
-      await api("/v1/service-accounts", {
-        method: "POST",
-        body: JSON.stringify({ name: form.get("name"), role: form.get("role") }),
-      });
-      event.target.reset();
-      await loadServiceAccounts();
-      state.message = "Service account created";
-      state.error = null;
-      render();
-    } catch (error) {
-      state.error = error.message;
-      render();
-    }
-  });
-
-  document.querySelectorAll("[data-disable-service-account]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const saId = button.dataset.disableServiceAccount;
-      if (!window.confirm("Disable this service account?")) return;
-      try {
-        await api(`/v1/service-accounts/${saId}/disable`, { method: "POST" });
-        await loadServiceAccounts();
-        state.message = "Service account disabled";
-        state.error = null;
-        render();
-      } catch (error) {
-        state.error = error.message;
-        render();
-      }
-    });
-  });
-
-  document.querySelectorAll("[data-expand-service-account]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const saId = button.dataset.expandServiceAccount;
-      if (state.serviceAccountExpandedId === saId) {
-        state.serviceAccountExpandedId = null;
-        render();
-        return;
-      }
-      state.serviceAccountExpandedId = saId;
-      await loadServiceAccountKeys(saId);
-      render();
-    });
-  });
-
-  document.querySelectorAll("[data-sa-key-create]").forEach((form) => {
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const saId = form.dataset.saKeyCreate;
-      const name = new FormData(form).get("name");
-      try {
-        const created = await api(`/v1/service-accounts/${saId}/keys`, {
-          method: "POST",
-          body: JSON.stringify({ name }),
-        });
-        state.serviceAccountKeyReveal = { saId, key: created.api_key };
-        form.reset();
-        await loadServiceAccountKeys(saId);
-        state.message = "Service account key issued — copy the secret now.";
-        state.error = null;
-        render();
-      } catch (error) {
-        state.error = error.message;
-        render();
-      }
-    });
-  });
-
-  document.querySelectorAll("[data-revoke-sa-key]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const saId = button.dataset.revokeSaKey;
-      const keyId = button.dataset.keyId;
-      if (!window.confirm("Revoke this service account key?")) return;
-      try {
-        await api(`/v1/service-accounts/${saId}/keys/${keyId}`, { method: "DELETE" });
-        await loadServiceAccountKeys(saId);
-        state.message = "Service account key revoked";
-        state.error = null;
-        render();
-      } catch (error) {
-        state.error = error.message;
-        render();
-      }
-    });
-  });
-
-  document.querySelector("[data-dismiss-sa-key-reveal]")?.addEventListener("click", () => {
-    state.serviceAccountKeyReveal = null;
-    render();
-  });
+function slugifyOrganizationName(name) {
+  return String(name || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
 }
 
 function bindEvents() {
@@ -9915,24 +7025,6 @@ function bindEvents() {
   });
   document.getElementById("nav-expand-all")?.addEventListener("click", expandAllNavGroups);
   document.getElementById("nav-collapse-all")?.addEventListener("click", collapseAllNavGroups);
-
-  document.querySelector("[data-dismiss-dashboard-guide]")?.addEventListener("click", () => {
-    state.dashboardGuideDismissed = true;
-    saveDashboardGuideDismissed(true);
-    render();
-  });
-  document.querySelector("[data-show-dashboard-guide]")?.addEventListener("click", () => {
-    state.dashboardGuideDismissed = false;
-    saveDashboardGuideDismissed(false);
-    render();
-  });
-  document.querySelectorAll("[data-scroll-to]").forEach((link) => {
-    link.addEventListener("click", (event) => {
-      event.preventDefault();
-      const target = document.getElementById(link.dataset.scrollTo);
-      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  });
 
   document.getElementById("refresh-btn")?.addEventListener("click", async () => {
     try {
@@ -10143,13 +7235,15 @@ function bindEvents() {
       (project) => project.workspace_id === state.selectedWorkspaceId,
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
-    await loadExecutionFormData();
+    await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
     render();
   });
 
   document.getElementById("po-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
-    await loadExecutionFormData();
+    await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
     render();
   });
 
@@ -10199,7 +7293,8 @@ function bindEvents() {
       });
       state.message = "Invitation sent";
       state.error = null;
-      await loadOrganizationDetail(form.get("organization_id"));
+      await loadSettingsOrgUiChunk();
+      if (typeof loadOrganizationDetail === "function") await loadOrganizationDetail(form.get("organization_id"));
       render();
     } catch (error) {
       state.error = error.message;
@@ -10215,8 +7310,7 @@ function bindEvents() {
     if (typeof bindCredentialFormHandler === "function") bindCredentialFormHandler();
   });
   if (typeof bindCredentialFormHandler === "function") bindCredentialFormHandler();
-  bindSettingsSecurityEvents();
-  bindSprint2Events();
+
   if (typeof bindBillingEvents === "function") bindBillingEvents();
   if (typeof bindProductCatalogEvents === "function") bindProductCatalogEvents();
   if (typeof bindOperationsOverviewEvents === "function") bindOperationsOverviewEvents();
@@ -10280,7 +7374,8 @@ function bindEvents() {
         });
         state.message = "Member removed";
         state.error = null;
-        await loadOrganizationDetail(organizationId);
+        await loadSettingsOrgUiChunk();
+        if (typeof loadOrganizationDetail === "function") await loadOrganizationDetail(organizationId);
         render();
       } catch (error) {
         state.error = error.message;
@@ -10295,9 +7390,10 @@ function bindEvents() {
         const invitation = await api(`/v1/invitations/${button.dataset.resendInvitation}/resend`, {
           method: "POST",
         });
-        state.message = `Invitation resent. New link: ${invitationAcceptLink(invitation.token)}`;
+        state.message = `Invitation resent. New link: ${typeof invitationAcceptLink === "function" ? invitationAcceptLink(invitation.token) : invitation.token}`;
         state.error = null;
-        await loadOrganizationDetail(state.selectedOrganizationId);
+        await loadSettingsOrgUiChunk();
+        if (typeof loadOrganizationDetail === "function") await loadOrganizationDetail(state.selectedOrganizationId);
         render();
       } catch (error) {
         state.error = error.message;
@@ -10317,7 +7413,8 @@ function bindEvents() {
         });
         state.message = "Invitation revoked";
         state.error = null;
-        await loadOrganizationDetail(state.selectedOrganizationId);
+        await loadSettingsOrgUiChunk();
+        if (typeof loadOrganizationDetail === "function") await loadOrganizationDetail(state.selectedOrganizationId);
         render();
       } catch (error) {
         state.error = error.message;
@@ -10511,7 +7608,8 @@ function bindEvents() {
         }),
       });
       state.message = "Team created";
-      await loadTeams();
+      await loadDevelopmentUiChunk();
+    if (typeof loadTeams === "function") await loadTeams();
       await navigate(`/teams/${team.id}`);
     } catch (error) {
       state.error = error.message;
@@ -10533,7 +7631,8 @@ function bindEvents() {
         }),
       });
       state.message = "Team updated";
-      await loadTeamDetail(state.selectedTeam.id);
+      await loadDevelopmentUiChunk();
+    if (typeof loadTeamDetail === "function") await loadTeamDetail(state.selectedTeam.id);
       render();
     } catch (error) {
       state.error = error.message;
@@ -10554,7 +7653,8 @@ function bindEvents() {
         }),
       });
       state.message = "Responsibility added";
-      await loadTeamDetail(state.selectedTeam.id);
+      await loadDevelopmentUiChunk();
+    if (typeof loadTeamDetail === "function") await loadTeamDetail(state.selectedTeam.id);
       render();
     } catch (error) {
       state.error = error.message;
@@ -10568,7 +7668,8 @@ function bindEvents() {
       try {
         await api(`/v1/teams/${button.dataset.deleteTeam}`, { method: "DELETE" });
         state.message = "Team deleted";
-        await loadTeams();
+        await loadDevelopmentUiChunk();
+    if (typeof loadTeams === "function") await loadTeams();
         await navigate("/teams");
       } catch (error) {
         state.error = error.message;
@@ -10583,9 +7684,11 @@ function bindEvents() {
         await api(`/v1/teams/${button.dataset.archiveTeam}/archive`, { method: "POST" });
         state.message = "Team archived";
         if (state.route.page === "team-detail") {
-          await loadTeamDetail(button.dataset.archiveTeam);
+          await loadDevelopmentUiChunk();
+    if (typeof loadTeamDetail === "function") await loadTeamDetail(button.dataset.archiveTeam);
         } else {
-          await loadTeams();
+          await loadDevelopmentUiChunk();
+    if (typeof loadTeams === "function") await loadTeams();
         }
         render();
       } catch (error) {
@@ -10600,7 +7703,8 @@ function bindEvents() {
       state.selectedTeamTab = button.dataset.teamTab;
       if (state.selectedTeamTab === "audit" && state.selectedTeam) {
         try {
-          await loadTeamAudit(state.selectedTeam.id);
+          await loadDevelopmentUiChunk();
+    if (typeof loadTeamAudit === "function") await loadTeamAudit(state.selectedTeam.id);
         } catch (error) {
           state.error = error.message;
         }
@@ -10616,7 +7720,8 @@ function bindEvents() {
           method: "POST",
         });
         state.message = "Team duplicated";
-        await loadTeams();
+        await loadDevelopmentUiChunk();
+    if (typeof loadTeams === "function") await loadTeams();
         await navigate(`/teams/${result.team.id}`);
       } catch (error) {
         state.error = error.message;
@@ -10632,7 +7737,8 @@ function bindEvents() {
           method: "DELETE",
         });
         state.message = "Responsibility deleted";
-        await loadTeamDetail(state.selectedTeam.id);
+        await loadDevelopmentUiChunk();
+    if (typeof loadTeamDetail === "function") await loadTeamDetail(state.selectedTeam.id);
         render();
       } catch (error) {
         state.error = error.message;
@@ -10654,7 +7760,8 @@ function bindEvents() {
           body: JSON.stringify({ template_slug: button.dataset.applyTemplate }),
         });
         state.message = `Applied template (${result.teams_created} teams created)`;
-        await loadTeams();
+        await loadDevelopmentUiChunk();
+    if (typeof loadTeams === "function") await loadTeams();
         await navigate("/teams");
       } catch (error) {
         state.error = error.message;
@@ -10676,7 +7783,8 @@ function bindEvents() {
         }),
       });
       state.message = "Workflow created";
-      await loadWorkflows();
+      await loadDevelopmentUiChunk();
+    if (typeof loadWorkflows === "function") await loadWorkflows();
       await navigate(`/workflows/${workflow.id}`);
     } catch (error) {
       state.error = error.message;
@@ -10697,7 +7805,8 @@ function bindEvents() {
         }),
       });
       state.message = "Workflow updated";
-      await loadWorkflowDetail(state.selectedWorkflow.id);
+      await loadDevelopmentUiChunk();
+    if (typeof loadWorkflowDetail === "function") await loadWorkflowDetail(state.selectedWorkflow.id);
       render();
     } catch (error) {
       state.error = error.message;
@@ -10719,7 +7828,8 @@ function bindEvents() {
         }),
       });
       state.message = "Stage added";
-      await loadWorkflowDetail(state.selectedWorkflow.id);
+      await loadDevelopmentUiChunk();
+    if (typeof loadWorkflowDetail === "function") await loadWorkflowDetail(state.selectedWorkflow.id);
       render();
     } catch (error) {
       state.error = error.message;
@@ -10736,7 +7846,8 @@ function bindEvents() {
         body: JSON.stringify({ rule_type: form.get("rule_type"), configuration_json: {} }),
       });
       state.message = "Rule added";
-      await loadWorkflowDetail(state.selectedWorkflow.id);
+      await loadDevelopmentUiChunk();
+    if (typeof loadWorkflowDetail === "function") await loadWorkflowDetail(state.selectedWorkflow.id);
       render();
     } catch (error) {
       state.error = error.message;
@@ -10758,7 +7869,8 @@ function bindEvents() {
           }),
         });
         state.message = "Team assigned";
-        await loadWorkflowDetail(state.selectedWorkflow.id);
+        await loadDevelopmentUiChunk();
+    if (typeof loadWorkflowDetail === "function") await loadWorkflowDetail(state.selectedWorkflow.id);
         render();
       } catch (error) {
         state.error = error.message;
@@ -10773,7 +7885,8 @@ function bindEvents() {
       try {
         await api(`/v1/stages/${stageId}/teams/${teamId}`, { method: "DELETE" });
         state.message = "Team unassigned";
-        await loadWorkflowDetail(state.selectedWorkflow.id);
+        await loadDevelopmentUiChunk();
+    if (typeof loadWorkflowDetail === "function") await loadWorkflowDetail(state.selectedWorkflow.id);
         render();
       } catch (error) {
         state.error = error.message;
@@ -10788,7 +7901,8 @@ function bindEvents() {
       try {
         await api(`/v1/stages/${button.dataset.deleteStage}`, { method: "DELETE" });
         state.message = "Stage deleted";
-        await loadWorkflowDetail(state.selectedWorkflow.id);
+        await loadDevelopmentUiChunk();
+    if (typeof loadWorkflowDetail === "function") await loadWorkflowDetail(state.selectedWorkflow.id);
         render();
       } catch (error) {
         state.error = error.message;
@@ -10802,7 +7916,8 @@ function bindEvents() {
       state.selectedWorkflowTab = button.dataset.workflowTab;
       if (state.selectedWorkflow) {
         try {
-          await loadWorkflowDetail(state.selectedWorkflow.id);
+          await loadDevelopmentUiChunk();
+    if (typeof loadWorkflowDetail === "function") await loadWorkflowDetail(state.selectedWorkflow.id);
         } catch (error) {
           state.error = error.message;
         }
@@ -10839,7 +7954,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -10850,7 +7966,8 @@ function bindEvents() {
   document.getElementById("execution-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -10882,7 +7999,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -10893,7 +8011,8 @@ function bindEvents() {
   document.getElementById("ba-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -10949,7 +8068,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -10960,7 +8080,8 @@ function bindEvents() {
   document.getElementById("bea-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11016,7 +8137,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11027,7 +8149,8 @@ function bindEvents() {
   document.getElementById("bv1-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11083,7 +8206,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11094,7 +8218,8 @@ function bindEvents() {
   document.getElementById("bv2-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11150,7 +8275,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11161,7 +8287,8 @@ function bindEvents() {
   document.getElementById("uiux-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11217,7 +8344,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11228,7 +8356,8 @@ function bindEvents() {
   document.getElementById("fa-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11284,7 +8413,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11295,7 +8425,8 @@ function bindEvents() {
   document.getElementById("fv1-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11351,7 +8482,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11362,7 +8494,8 @@ function bindEvents() {
   document.getElementById("fv2-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11418,7 +8551,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11429,7 +8563,8 @@ function bindEvents() {
   document.getElementById("fv3-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11566,7 +8701,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11577,7 +8713,8 @@ function bindEvents() {
   document.getElementById("bcr-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11633,7 +8770,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11644,7 +8782,8 @@ function bindEvents() {
   document.getElementById("fcr-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11700,7 +8839,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11711,7 +8851,8 @@ function bindEvents() {
   document.getElementById("bex-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11767,7 +8908,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11778,7 +8920,8 @@ function bindEvents() {
   document.getElementById("fex-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11832,7 +8975,8 @@ function bindEvents() {
     const workspaceProjects = state.projects.filter((p) => p.workspace_id === state.selectedWorkspaceId);
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11843,7 +8987,8 @@ function bindEvents() {
   document.getElementById("qa-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11897,7 +9042,8 @@ function bindEvents() {
     const workspaceProjects = state.projects.filter((p) => p.workspace_id === state.selectedWorkspaceId);
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11908,7 +9054,8 @@ function bindEvents() {
   document.getElementById("ut-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -11975,7 +9122,8 @@ function bindEvents() {
       const workspaceProjects = state.projects.filter((p) => p.workspace_id === state.selectedWorkspaceId);
       state.selectedProjectId = workspaceProjects[0]?.id || "";
       try {
-        await loadExecutionFormData();
+        await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
         render();
       } catch (error) {
         state.error = error.message;
@@ -11985,7 +9133,8 @@ function bindEvents() {
     document.getElementById(`${prefix}-project-select`)?.addEventListener("change", async (event) => {
       state.selectedProjectId = event.target.value;
       try {
-        await loadExecutionFormData();
+        await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
         render();
       } catch (error) {
         state.error = error.message;
@@ -12057,7 +9206,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -12068,7 +9218,8 @@ function bindEvents() {
   document.getElementById("fsa-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -12138,7 +9289,8 @@ function bindEvents() {
       state.message = "Deployment started — tracking status below.";
       state.error = null;
       state.selectedApplicationDetailTab = "deployments";
-      await loadApplicationDetail(state.route.id);
+      await loadDevelopmentUiChunk();
+    if (typeof loadApplicationDetail === "function") await loadApplicationDetail(state.route.id);
     } catch (error) {
       state.error = error.message;
     } finally {
@@ -12165,7 +9317,8 @@ function bindEvents() {
       state.message = "Release started.";
       state.error = null;
       state.selectedApplicationDetailTab = "releases";
-      await loadApplicationDetail(state.route.id);
+      await loadDevelopmentUiChunk();
+    if (typeof loadApplicationDetail === "function") await loadApplicationDetail(state.route.id);
     } catch (error) {
       state.error = error.message;
     } finally {
@@ -12193,7 +9346,8 @@ function bindEvents() {
       state.message = `Change request created${run.target_version ? ` (${run.target_version})` : ""}.`;
       state.error = null;
       state.selectedApplicationDetailTab = "change-requests";
-      await loadApplicationDetail(state.route.id);
+      await loadDevelopmentUiChunk();
+    if (typeof loadApplicationDetail === "function") await loadApplicationDetail(state.route.id);
     } catch (error) {
       state.error = error.message;
     } finally {
@@ -12214,7 +9368,8 @@ function bindEvents() {
         state.message = "Rollback complete — previous version restored.";
         state.error = null;
         state.selectedApplicationDetailTab = "deployments";
-        await loadApplicationDetail(state.route.id);
+        await loadDevelopmentUiChunk();
+    if (typeof loadApplicationDetail === "function") await loadApplicationDetail(state.route.id);
       } catch (error) {
         state.error = error.message;
       } finally {
@@ -12231,7 +9386,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -12242,7 +9398,8 @@ function bindEvents() {
   document.getElementById("cr-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -12274,7 +9431,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -12285,7 +9443,8 @@ function bindEvents() {
   document.getElementById("approval-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -12390,7 +9549,8 @@ function bindEvents() {
       });
       state.message = `Release ${regeneration.target_version || ""} started successfully`;
       state.error = null;
-      await loadReleasesPage();
+      await loadDevelopmentUiChunk();
+    if (typeof loadReleasesPage === "function") await loadReleasesPage();
       render();
     } catch (error) {
       state.error = error.message;
@@ -12405,7 +9565,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -12416,7 +9577,8 @@ function bindEvents() {
   document.getElementById("release-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -12431,7 +9593,8 @@ function bindEvents() {
     );
     state.selectedProjectId = workspaceProjects[0]?.id || "";
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -12442,7 +9605,8 @@ function bindEvents() {
   document.getElementById("deployment-project-select")?.addEventListener("change", async (event) => {
     state.selectedProjectId = event.target.value;
     try {
-      await loadExecutionFormData();
+      await loadDevelopmentUiChunk();
+    if (typeof loadExecutionFormData === "function") await loadExecutionFormData();
       render();
     } catch (error) {
       state.error = error.message;
@@ -12482,7 +9646,8 @@ function bindEvents() {
       state.selectedDeploymentRun = updated;
       state.message = `Rollback complete — ${updated.live_url || "previous version restored"}`;
       state.error = null;
-      await loadDeploymentDetail(run.id);
+      await loadDevelopmentUiChunk();
+    if (typeof loadDeploymentDetail === "function") await loadDeploymentDetail(run.id);
       render();
     } catch (error) {
       state.error = error.message;
@@ -12511,7 +9676,8 @@ function bindEvents() {
           method: "POST",
         });
         state.message = "Workflow duplicated";
-        await loadWorkflows();
+        await loadDevelopmentUiChunk();
+    if (typeof loadWorkflows === "function") await loadWorkflows();
         await navigate(`/workflows/${result.workflow.id}`);
       } catch (error) {
         state.error = error.message;
@@ -12526,9 +9692,11 @@ function bindEvents() {
         await api(`/v1/workflows/${button.dataset.archiveWorkflow}/archive`, { method: "POST" });
         state.message = "Workflow archived";
         if (state.route.page === "workflow-detail") {
-          await loadWorkflowDetail(button.dataset.archiveWorkflow);
+          await loadDevelopmentUiChunk();
+    if (typeof loadWorkflowDetail === "function") await loadWorkflowDetail(button.dataset.archiveWorkflow);
         } else {
-          await loadWorkflows();
+          await loadDevelopmentUiChunk();
+    if (typeof loadWorkflows === "function") await loadWorkflows();
         }
         render();
       } catch (error) {
@@ -12544,7 +9712,8 @@ function bindEvents() {
       try {
         await api(`/v1/workflows/${button.dataset.deleteWorkflow}`, { method: "DELETE" });
         state.message = "Workflow deleted";
-        await loadWorkflows();
+        await loadDevelopmentUiChunk();
+    if (typeof loadWorkflows === "function") await loadWorkflows();
         await navigate("/workflows");
       } catch (error) {
         state.error = error.message;
@@ -12566,7 +9735,8 @@ function bindEvents() {
           body: JSON.stringify({ template_slug: button.dataset.applyWorkflowTemplate }),
         });
         state.message = "Workflow template applied";
-        await loadWorkflows();
+        await loadDevelopmentUiChunk();
+    if (typeof loadWorkflows === "function") await loadWorkflows();
         await navigate(`/workflows/${result.workflow.id}`);
       } catch (error) {
         state.error = error.message;
@@ -12590,7 +9760,8 @@ function bindEvents() {
         }),
       });
       state.message = "Agent created";
-      await loadAiAgents();
+      await loadDevelopmentUiChunk();
+    if (typeof loadAiAgents === "function") await loadAiAgents();
       await navigate(`/agents/${agent.id}`);
     } catch (error) {
       state.error = error.message;
@@ -12613,7 +9784,8 @@ function bindEvents() {
         }),
       });
       state.message = "Agent updated";
-      await loadAiAgentDetail(state.selectedAgent.id);
+      await loadDevelopmentUiChunk();
+    if (typeof loadAiAgentDetail === "function") await loadAiAgentDetail(state.selectedAgent.id);
       render();
     } catch (error) {
       state.error = error.message;
@@ -12634,7 +9806,8 @@ function bindEvents() {
         }),
       });
       state.message = "Input added";
-      await loadAiAgentDetail(state.selectedAgent.id);
+      await loadDevelopmentUiChunk();
+    if (typeof loadAiAgentDetail === "function") await loadAiAgentDetail(state.selectedAgent.id);
       render();
     } catch (error) {
       state.error = error.message;
@@ -12654,7 +9827,8 @@ function bindEvents() {
         }),
       });
       state.message = "Output added";
-      await loadAiAgentDetail(state.selectedAgent.id);
+      await loadDevelopmentUiChunk();
+    if (typeof loadAiAgentDetail === "function") await loadAiAgentDetail(state.selectedAgent.id);
       render();
     } catch (error) {
       state.error = error.message;
@@ -12671,7 +9845,8 @@ function bindEvents() {
         body: JSON.stringify({ title: form.get("title"), priority: form.get("priority") }),
       });
       state.message = "Responsibility added";
-      await loadAiAgentDetail(state.selectedAgent.id);
+      await loadDevelopmentUiChunk();
+    if (typeof loadAiAgentDetail === "function") await loadAiAgentDetail(state.selectedAgent.id);
       render();
     } catch (error) {
       state.error = error.message;
@@ -12691,7 +9866,8 @@ function bindEvents() {
         }),
       });
       state.message = "Agent assigned";
-      await loadAiAgentDetail(state.selectedAgent.id);
+      await loadDevelopmentUiChunk();
+    if (typeof loadAiAgentDetail === "function") await loadAiAgentDetail(state.selectedAgent.id);
       render();
     } catch (error) {
       state.error = error.message;
@@ -12703,7 +9879,8 @@ function bindEvents() {
     button.addEventListener("click", async () => {
       state.selectedAgentTab = button.dataset.agentTab;
       if (state.selectedAgent) {
-        try { await loadAiAgentDetail(state.selectedAgent.id); } catch (error) { state.error = error.message; }
+        try { await loadDevelopmentUiChunk();
+    if (typeof loadAiAgentDetail === "function") await loadAiAgentDetail(state.selectedAgent.id); } catch (error) { state.error = error.message; }
       }
       render();
     });
@@ -12714,7 +9891,8 @@ function bindEvents() {
       try {
         const result = await api(`/v1/ai-agents/${button.dataset.duplicateAgent}/duplicate`, { method: "POST" });
         state.message = "Agent duplicated";
-        await loadAiAgents();
+        await loadDevelopmentUiChunk();
+    if (typeof loadAiAgents === "function") await loadAiAgents();
         await navigate(`/agents/${result.agent.id}`);
       } catch (error) { state.error = error.message; render(); }
     });
@@ -12725,8 +9903,10 @@ function bindEvents() {
       try {
         await api(`/v1/ai-agents/${button.dataset.archiveAgent}/archive`, { method: "POST" });
         state.message = "Agent archived";
-        if (state.route.page === "agent-detail") await loadAiAgentDetail(button.dataset.archiveAgent);
-        else await loadAiAgents();
+        if (state.route.page === "agent-detail") await loadDevelopmentUiChunk();
+    if (typeof loadAiAgentDetail === "function") await loadAiAgentDetail(button.dataset.archiveAgent);
+        else await loadDevelopmentUiChunk();
+    if (typeof loadAiAgents === "function") await loadAiAgents();
         render();
       } catch (error) { state.error = error.message; render(); }
     });
@@ -12738,7 +9918,8 @@ function bindEvents() {
       try {
         await api(`/v1/ai-agents/${button.dataset.deleteAgent}`, { method: "DELETE" });
         state.message = "Agent deleted";
-        await loadAiAgents();
+        await loadDevelopmentUiChunk();
+    if (typeof loadAiAgents === "function") await loadAiAgents();
         await navigate("/agents");
       } catch (error) { state.error = error.message; render(); }
     });
@@ -12749,7 +9930,8 @@ function bindEvents() {
       try {
         await api(`/v1/ai-agent-inputs/${button.dataset.deleteAgentInput}`, { method: "DELETE" });
         state.message = "Input deleted";
-        await loadAiAgentDetail(state.selectedAgent.id);
+        await loadDevelopmentUiChunk();
+    if (typeof loadAiAgentDetail === "function") await loadAiAgentDetail(state.selectedAgent.id);
         render();
       } catch (error) { state.error = error.message; render(); }
     });
@@ -12760,7 +9942,8 @@ function bindEvents() {
       try {
         await api(`/v1/ai-agent-outputs/${button.dataset.deleteAgentOutput}`, { method: "DELETE" });
         state.message = "Output deleted";
-        await loadAiAgentDetail(state.selectedAgent.id);
+        await loadDevelopmentUiChunk();
+    if (typeof loadAiAgentDetail === "function") await loadAiAgentDetail(state.selectedAgent.id);
         render();
       } catch (error) { state.error = error.message; render(); }
     });
@@ -12771,7 +9954,8 @@ function bindEvents() {
       try {
         await api(`/v1/ai-agent-responsibilities/${button.dataset.deleteAgentResponsibility}`, { method: "DELETE" });
         state.message = "Responsibility deleted";
-        await loadAiAgentDetail(state.selectedAgent.id);
+        await loadDevelopmentUiChunk();
+    if (typeof loadAiAgentDetail === "function") await loadAiAgentDetail(state.selectedAgent.id);
         render();
       } catch (error) { state.error = error.message; render(); }
     });
@@ -12782,7 +9966,8 @@ function bindEvents() {
       try {
         await api(`/v1/ai-agents/${state.selectedAgent.id}/assignments/${button.dataset.unassignAgent}`, { method: "DELETE" });
         state.message = "Assignment removed";
-        await loadAiAgentDetail(state.selectedAgent.id);
+        await loadDevelopmentUiChunk();
+    if (typeof loadAiAgentDetail === "function") await loadAiAgentDetail(state.selectedAgent.id);
         render();
       } catch (error) { state.error = error.message; render(); }
     });
@@ -12797,13 +9982,16 @@ function bindEvents() {
           body: JSON.stringify({ template_slug: button.dataset.applyAgentTemplate }),
         });
         state.message = "Agent template applied";
-        await loadAiAgents();
+        await loadDevelopmentUiChunk();
+    if (typeof loadAiAgents === "function") await loadAiAgents();
         await navigate(`/agents/${result.agent.id}`);
       } catch (error) { state.error = error.message; render(); }
     });
   });
 
   if (typeof bindControlPlaneEvents === "function") bindControlPlaneEvents();
+  if (typeof bindSettingsOrgEvents === "function") bindSettingsOrgEvents();
+  if (typeof bindOpsCommandCenterEvents === "function") bindOpsCommandCenterEvents();
   if (typeof bindCopilotRunbooksEvents === "function") bindCopilotRunbooksEvents();
   if (typeof bindCustomerJourneyEvents === "function") bindCustomerJourneyEvents();
   if (typeof bindReliabilityOpsEvents === "function") bindReliabilityOpsEvents();

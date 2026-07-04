@@ -5,24 +5,25 @@ import test from "node:test";
 import { loadFrontendExports } from "./frontend.harness.mjs";
 
 const appJsPath = fileURLToPath(new URL("./app.js", import.meta.url));
+const opsChunkPath = fileURLToPath(new URL("./ops-command-center-ui.js", import.meta.url));
 
 test("ops dashboard: production mode uses command center not module grid", () => {
   const source = readFileSync(appJsPath, "utf8");
   const fn = source.slice(
     source.indexOf("function renderDashboard()"),
-    source.indexOf("function renderCustomerOrganization()"),
+    source.indexOf("function renderTeams()"),
   );
   const prodBranch = fn.slice(0, fn.indexOf("const applications = resolveApplicationViewModels()"));
-  assert.match(prodBranch, /renderOpsCommandCenterDashboard\(\)/);
-  assert.match(source, /function renderOpsCommandCenterDashboard/);
+  assert.match(prodBranch, /renderOpsCommandCenterDashboard/);
+  assert.match(readFileSync(opsChunkPath, "utf8"), /function renderOpsCommandCenterDashboard/);
   assert.doesNotMatch(prodBranch, /renderPlatformModules\(\)/);
 });
 
 test("ops dashboard: SRE flow order in guide and lanes", () => {
-  const source = readFileSync(appJsPath, "utf8");
-  assert.match(source, /renderOpsFlowLanes/);
-  assert.match(source, /renderOpsModuleStats/);
-  assert.match(source, /AI Ops Command Center/);
+  const opsSource = readFileSync(opsChunkPath, "utf8");
+  assert.match(opsSource, /renderOpsFlowLanes/);
+  assert.match(opsSource, /renderOpsModuleStats/);
+  assert.match(opsSource, /AI Ops Command Center/);
   const { OPS_OPERATIONAL_FLOWS } = loadFrontendExports();
   assert.equal(OPS_OPERATIONAL_FLOWS.length, 5);
   assert.equal(OPS_OPERATIONAL_FLOWS[0].id, "respond");
@@ -60,7 +61,7 @@ test("ops dashboard: estate snapshot includes connector counts", () => {
 });
 
 test("ops dashboard: signals load from ops workspace and delivery APIs", () => {
-  const source = readFileSync(appJsPath, "utf8");
+  const source = readFileSync(opsChunkPath, "utf8");
   assert.match(source, /function loadOpsDashboardSignals/);
   assert.match(source, /\/v1\/ops-workspace\/my-work/);
   assert.match(source, /\/v1\/ops-workspace\/queue/);
