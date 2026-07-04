@@ -3271,10 +3271,10 @@ async function bootstrap() {
 
   try {
     state.loading = true;
-    render();
     const claims = parseJwt(token);
     state.activeOrganization = claims.organization_id || null;
     state.activeRole = claims.role || null;
+    render();
     state.user = await api("/v1/auth/me");
     await loadOrganizations();
     await loadProductCapabilities();
@@ -6037,7 +6037,9 @@ function pushToast(message, type = "info", opts = {}) {
   renderToasts();
   if (toast.duration > 0) {
     try {
-      setTimeout(() => dismissToast(toast.id), toast.duration);
+      if (typeof document !== "undefined" && document.head) {
+        setTimeout(() => dismissToast(toast.id), toast.duration);
+      }
     } catch (_e) {
       /* no timers */
     }
@@ -6853,7 +6855,12 @@ function render() {
   syncAlertsToToasts();
   ensureGlobalShortcuts();
   const page = renderPage();
-  const showShell = state.user && state.route.page !== "invitation-accept";
+  const token = getToken();
+  const hasValidSession = Boolean(
+    state.user
+    || (token && isValidJwtFormat(token) && !isTokenExpired(token)),
+  );
+  const showShell = hasValidSession && state.route.page !== "invitation-accept";
   if (showShell) {
     const mainContent = state.loading ? renderSkeleton("page") : page;
     app.innerHTML = `

@@ -336,6 +336,9 @@ globalThis.__nexoraExports = {
     vm.runInContext(readFileSync(secretsHubJsPath, "utf8"), sandbox);
   }
   vm.runInContext(exportsHarness, sandbox);
+  if (options.lightweight) {
+    vm.runInContext("render = function () {};", sandbox);
+  }
   const exports = sandbox.__nexoraExports;
   exports.applicationDetailHref = sandbox.applicationDetailHref;
   exports.renderContinueWorking = sandbox.renderContinueWorking;

@@ -5902,55 +5902,6 @@ function bindAiTeamEvents() {
     });
   });
 
-  document.querySelectorAll("[data-settings-notify-test]").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      if (!canWriteResources()) return;
-      const channel = btn.getAttribute("data-settings-notify-test") || "slack";
-      btn.disabled = true;
-      state.error = null;
-      state.message = null;
-      try {
-        const r = await api("/v1/integrations/notifications/test", {
-          method: "POST",
-          body: JSON.stringify({ channel, dry_run: false }),
-        });
-        state.message = r.message || (r.simulated ? `${channel} test simulated` : `${channel} test sent`);
-        render();
-      } catch (error) {
-        state.error = error.message;
-        render();
-      } finally {
-        btn.disabled = false;
-      }
-    });
-  });
-
-  document.querySelector("[data-notification-channels]")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (!canWriteResources()) return;
-    const form = event.currentTarget;
-    const fd = new FormData(form);
-    const body = {
-      slack_webhook_url: (fd.get("slack_webhook_url") || "").trim() || null,
-      teams_webhook_url: (fd.get("teams_webhook_url") || "").trim() || null,
-      pagerduty_routing_key: (fd.get("pagerduty_routing_key") || "").trim() || null,
-      default_channels: (fd.get("default_channels") || "slack, email")
-        .split(",").map((c) => c.trim()).filter(Boolean),
-    };
-    state.error = null;
-    try {
-      state.notificationChannels = await api("/v1/incidents/notification-channels", {
-        method: "PUT",
-        body: JSON.stringify(body),
-      });
-      state.message = "Notification channels saved";
-      render();
-    } catch (error) {
-      state.error = error.message;
-      render();
-    }
-  });
-
   // -------------------------------------------------- capacity planning (43A)
   document.querySelector("[data-create-forecast]")?.addEventListener("submit", async (event) => {
     event.preventDefault();

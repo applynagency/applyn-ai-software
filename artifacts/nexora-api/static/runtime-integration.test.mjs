@@ -41,6 +41,7 @@ test("parseRoute resolves organizations and pilot deep links", () => {
 
 test("navigate does not rewrite /organizations to dashboard", async () => {
   const { navigate, state, localStorage } = loadFrontendExports({
+    lightweight: true,
     fetch: async (url) => {
       if (String(url).includes("/v1/auth/me")) {
         return { ok: true, status: 200, headers: { get: () => "application/json" }, json: async () => ({ email: "t@example.com" }) };
@@ -61,6 +62,7 @@ test("navigate does not rewrite /organizations to dashboard", async () => {
 test("switchOrganization refreshes pilot mode probe and renders", async () => {
   let pilotCalls = 0;
   const { switchOrganization, state, localStorage } = loadFrontendExports({
+    lightweight: true,
     fetch: async (url, opts = {}) => {
       const u = String(url);
       if (u.includes("/switch")) {
@@ -197,4 +199,13 @@ test("customer pilot UI still has no operator confirmation controls", () => {
   assert.ok(customerBlock);
   assert.doesNotMatch(customerBlock[0], /confirmation-token/);
   assert.doesNotMatch(customerBlock[0], /data-pilot-confirm/);
+});
+
+test("notification channel handlers are bound from settings org chunk", () => {
+  const settingsSource = readFileSync(fileURLToPath(new URL("./settings-org-ui.js", import.meta.url)), "utf8");
+  const developmentSource = readFileSync(fileURLToPath(new URL("./development-ui.js", import.meta.url)), "utf8");
+  assert.match(settingsSource, /\[data-notification-channels\][\s\S]*addEventListener\("submit"/);
+  assert.match(settingsSource, /\[data-settings-notify-test\]/);
+  assert.doesNotMatch(developmentSource, /\[data-notification-channels\]/);
+  assert.doesNotMatch(developmentSource, /\[data-settings-notify-test\]/);
 });
