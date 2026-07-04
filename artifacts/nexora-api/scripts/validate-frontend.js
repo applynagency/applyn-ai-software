@@ -26,13 +26,15 @@ const controlPlaneJsPath = path.join(root, "static", "control-plane.js");
 const incidentResponseUiJsPath = path.join(root, "static", "incident-response-ui.js");
 const discoveryUiJsPath = path.join(root, "static", "discovery-ui.js");
 const reliabilityOpsUiJsPath = path.join(root, "static", "reliability-ops-ui.js");
+const customerJourneyUiJsPath = path.join(root, "static", "customer-journey-ui.js");
+const copilotRunbooksUiJsPath = path.join(root, "static", "copilot-runbooks-ui.js");
 
 function fail(message) {
   console.error(`Frontend validation failed: ${message}`);
   process.exit(1);
 }
 
-for (const file of [appJsPath, helpJsPath, pilotOperatorJsPath, billingJsPath, productCatalogJsPath, operationsOverviewJsPath, integrationOnboardingJsPath, incidentsJsPath, deliveryJsPath, warRoomsJsPath, observabilityUiJsPath, developmentUiJsPath, securityPlatformJsPath, platformOpsUiJsPath, controlPlaneJsPath, incidentResponseUiJsPath, discoveryUiJsPath, reliabilityOpsUiJsPath]) {
+for (const file of [appJsPath, helpJsPath, pilotOperatorJsPath, billingJsPath, productCatalogJsPath, operationsOverviewJsPath, integrationOnboardingJsPath, incidentsJsPath, deliveryJsPath, warRoomsJsPath, observabilityUiJsPath, developmentUiJsPath, securityPlatformJsPath, platformOpsUiJsPath, controlPlaneJsPath, incidentResponseUiJsPath, discoveryUiJsPath, reliabilityOpsUiJsPath, customerJourneyUiJsPath, copilotRunbooksUiJsPath]) {
   try {
     execSync(`node --check "${file}"`, { stdio: "pipe" });
   } catch (error) {
@@ -281,6 +283,23 @@ if (source.includes("async function loadCapacity(")) {
   fail("loadCapacity() must live in reliability-ops-ui.js, not static/app.js");
 }
 
+if (!source.includes("function loadCustomerJourneyUiChunk(")) {
+  fail("missing loadCustomerJourneyUiChunk() lazy loader in static/app.js");
+}
+if (source.includes("function renderCustomerPilot(")) {
+  fail("renderCustomerPilot() must live in customer-journey-ui.js, not static/app.js");
+}
+
+if (!source.includes("function loadCopilotRunbooksUiChunk(")) {
+  fail("missing loadCopilotRunbooksUiChunk() lazy loader in static/app.js");
+}
+if (source.includes("function renderCopilot(")) {
+  fail("renderCopilot() must live in copilot-runbooks-ui.js, not static/app.js");
+}
+if (source.includes("async function loadRunbooks(")) {
+  fail("loadRunbooks() must live in copilot-runbooks-ui.js, not static/app.js");
+}
+
 const warRoomsSource = readFileSync(warRoomsJsPath, "utf8");
 if (!warRoomsSource.includes("function renderWarRooms(")) {
   fail("static/war-rooms.js must define war room renderers");
@@ -353,4 +372,26 @@ if (!reliabilityOpsUiSource.includes("async function loadCapacity(")) {
   fail("static/reliability-ops-ui.js must define loadCapacity()");
 }
 
-console.log("Frontend validation passed: static/app.js + help.js + pilot-operator.js + billing.js + product-catalog.js + operations-overview.js + integration-onboarding.js + incidents.js + delivery.js + war-rooms.js + observability-ui.js + development-ui.js + security-platform.js + platform-ops-ui.js + control-plane.js + incident-response-ui.js + discovery-ui.js + reliability-ops-ui.js parse successfully.");
+const customerJourneyUiSource = readFileSync(customerJourneyUiJsPath, "utf8");
+if (!customerJourneyUiSource.includes("function renderCustomerPilot(")) {
+  fail("static/customer-journey-ui.js must define customer pilot renderers");
+}
+if (!customerJourneyUiSource.includes("function bindCustomerJourneyEvents(")) {
+  fail("static/customer-journey-ui.js must define bindCustomerJourneyEvents()");
+}
+
+const copilotRunbooksUiSource = readFileSync(copilotRunbooksUiJsPath, "utf8");
+if (!copilotRunbooksUiSource.includes("function renderCopilot(")) {
+  fail("static/copilot-runbooks-ui.js must define copilot renderers");
+}
+if (!copilotRunbooksUiSource.includes("function renderRunbooks(")) {
+  fail("static/copilot-runbooks-ui.js must define runbook renderers");
+}
+if (!copilotRunbooksUiSource.includes("function bindCopilotRunbooksEvents(")) {
+  fail("static/copilot-runbooks-ui.js must define bindCopilotRunbooksEvents()");
+}
+if (!copilotRunbooksUiSource.includes("const COPILOT_SUGGESTIONS")) {
+  fail("static/copilot-runbooks-ui.js must define COPILOT_SUGGESTIONS");
+}
+
+console.log("Frontend validation passed: static/app.js + help.js + pilot-operator.js + billing.js + product-catalog.js + operations-overview.js + integration-onboarding.js + incidents.js + delivery.js + war-rooms.js + observability-ui.js + development-ui.js + security-platform.js + platform-ops-ui.js + control-plane.js + incident-response-ui.js + discovery-ui.js + reliability-ops-ui.js + customer-journey-ui.js + copilot-runbooks-ui.js parse successfully.");

@@ -723,17 +723,6 @@ function renderReliabilityDashboard() {
     </div>`;
 }
 
-const COPILOT_SUGGESTIONS = [
-  "Why did checkout fail last week?",
-  "Which service caused the most incidents this month?",
-  "Show all deployments that resulted in incidents.",
-  "What is my highest-risk service?",
-  "Which service is closest to exhausting its error budget?",
-  "What caused the largest blast radius incident?",
-  "Which deployment had the highest failure probability?",
-  "Show cost optimization opportunities for production.",
-  "Which team has the highest MTTR?",
-];
 function renderChangeFailure() {
   const dash = state.cfpDashboard;
   const list = state.cfpList || [];

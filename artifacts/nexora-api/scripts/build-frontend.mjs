@@ -63,6 +63,8 @@ const SOURCES = [
   { name: "incident-response-ui.js", loader: "js" },
   { name: "discovery-ui.js", loader: "js" },
   { name: "reliability-ops-ui.js", loader: "js" },
+  { name: "customer-journey-ui.js", loader: "js" },
+  { name: "copilot-runbooks-ui.js", loader: "js" },
   { name: "styles.css", loader: "css" },
 ];
 

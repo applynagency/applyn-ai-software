@@ -1453,109 +1453,11 @@ async function loadIncidents() {
 
 
 
-async function loadRunbooks() {
-  try {
-    const params = new URLSearchParams();
-    if (state.runbookSearch) params.set("search", state.runbookSearch);
-    if (state.runbookCategory) params.set("category", state.runbookCategory);
-    const list = await api(`/v1/runbooks?${params.toString()}`);
-    state.runbookList = (list && list.items) || [];
-    state.runbookTotal = (list && list.total) || 0;
-    if (state.selectedRunbookId) {
-      state.runbookDetail = await api(`/v1/runbooks/${state.selectedRunbookId}`).catch(() => null);
-    } else {
-      state.runbookDetail = null;
-    }
-  } catch {
-    state.runbookList = [];
-    state.runbookDetail = null;
-  }
-}
 
 
 
-async function loadOnboarding() {
-  try {
-    let sid = state.onboardingId;
-    if (!sid) {
-      const started = await api("/v1/onboarding/start", { method: "POST", body: JSON.stringify({}) });
-      state.onboardingId = started.id;
-      state.onboarding = started;
-    } else {
-      state.onboarding = await api(`/v1/onboarding/${sid}`);
-    }
-  } catch (error) {
-    state.onboarding = null;
-    state.error = error.message;
-  }
-}
 
-async function loadCustomerOnboarding() {
-  try {
-    const [providers, sessions, readiness, prerequisites] = await Promise.all([
-      api("/v1/onboarding/integrations/providers"),
-      api("/v1/onboarding/integrations/sessions"),
-      api("/v1/onboarding/integrations/readiness"),
-      api("/v1/onboarding/integrations/customer-pilot-prerequisites"),
-    ]);
-    state.customerOnboardingProviders = providers;
-    state.customerOnboardingSessions = sessions;
-    state.customerOnboardingReadiness = readiness;
-    state.customerOnboardingPrerequisites = prerequisites;
-  } catch (error) {
-    state.customerOnboardingProviders = [];
-    state.customerOnboardingSessions = [];
-    state.customerOnboardingReadiness = null;
-    state.customerOnboardingPrerequisites = null;
-    state.error = error.message;
-  }
-}
 
-async function loadCustomerPilot() {
-  try {
-    const [overview, timeline, readiness, closeout, notifications, communications, preferences] = await Promise.all([
-      api("/v1/customer-pilot/overview"),
-      api("/v1/customer-pilot/timeline").catch(() => ({ events: [], stage_summary: [] })),
-      api("/v1/customer-pilot/readiness").catch(() => null),
-      api("/v1/customer-pilot/closeout").catch(() => null),
-      api("/v1/customer-pilot/notifications").catch(() => []),
-      api("/v1/customer-pilot/communications").catch(() => []),
-      api("/v1/customer-pilot/notification-preferences").catch(() => null),
-    ]);
-    state.customerPilotOverview = overview;
-    state.customerPilotTimeline = timeline;
-    state.customerPilotReadiness = readiness;
-    state.customerPilotCloseout = closeout;
-    state.customerPilotNotifications = notifications;
-    state.customerPilotCommunications = communications;
-    state.customerPilotPreferences = preferences;
-    state.customerPilotVisible = Boolean(overview.portal_visible);
-    const opId = overview.operation_summary?.id;
-    if (opId) {
-      const [operation, approvalPkg, execution, verification, evidence] = await Promise.all([
-        api(`/v1/customer-pilot/operation/${opId}`).catch(() => null),
-        api(`/v1/customer-pilot/operation/${opId}/approval-package`).catch(() => null),
-        api(`/v1/customer-pilot/operation/${opId}/execution-status`).catch(() => null),
-        api(`/v1/customer-pilot/operation/${opId}/verification`).catch(() => null),
-        api(`/v1/customer-pilot/operation/${opId}/evidence`).catch(() => null),
-      ]);
-      state.customerPilotOperation = operation;
-      state.customerPilotApprovalPkg = approvalPkg;
-      state.customerPilotExecution = execution;
-      state.customerPilotVerification = verification;
-      state.customerPilotEvidence = evidence;
-    } else {
-      state.customerPilotOperation = null;
-      state.customerPilotApprovalPkg = null;
-      state.customerPilotExecution = null;
-      state.customerPilotVerification = null;
-      state.customerPilotEvidence = null;
-    }
-  } catch (error) {
-    state.customerPilotOverview = null;
-    state.error = error.message;
-  }
-}
 
 async function loadIntegrations() {
   await loadIntegrationOnboardingChunk();
@@ -1623,22 +1525,6 @@ async function loadPilot() {
 
 
 
-async function loadCopilot() {
-  try {
-    // Unified Copilot (/v1/copilot): conversations replace the old reliability
-    // copilot "sessions"; the response shape is compatible (id, title, messages).
-    state.copilotSessions = await api("/v1/copilot/conversations").catch(() => []);
-    if (state.copilotSessionId) {
-      const detail = await api(`/v1/copilot/conversations/${state.copilotSessionId}`).catch(() => null);
-      state.copilotMessages = (detail && detail.messages) || [];
-    } else {
-      state.copilotMessages = [];
-    }
-  } catch {
-    state.copilotSessions = [];
-    state.copilotMessages = [];
-  }
-}
 
 
 
@@ -1648,7 +1534,7 @@ async function loadOpsDashboardSignals() {
   await Promise.all([
     loadIncidents().catch(() => {}),
     loadReliabilityOpsUiChunk().then(() => { if (typeof loadServiceHealth === "function") return loadServiceHealth(); }).catch(() => {}),
-    loadRunbooks().catch(() => {}),
+    loadCopilotRunbooksUiChunk().then(() => { if (typeof loadRunbooks === "function") return loadRunbooks(); }).catch(() => {}),
     loadCredentials().catch(() => { state.credentials = []; }),
     api("/v1/integrations/connections").then((r) => { state.integrationConnections = r || []; }).catch(() => { state.integrationConnections = []; }),
   ]);
@@ -2656,9 +2542,11 @@ async function loadRouteData() {
     await loadReliabilityOpsUiChunk();
     if (typeof loadChangeFailure === "function") await loadChangeFailure();
   } else if (state.route.page === "runbooks") {
-    await loadRunbooks();
+    await loadCopilotRunbooksUiChunk();
+    if (typeof loadRunbooks === "function") await loadRunbooks();
   } else if (state.route.page === "copilot") {
-    await loadCopilot();
+    await loadCopilotRunbooksUiChunk();
+    if (typeof loadCopilot === "function") await loadCopilot();
   } else if (state.route.page === "reliability-dashboard") {
     await loadReliabilityOpsUiChunk();
     if (typeof loadReliabilityDashboard === "function") await loadReliabilityDashboard();
@@ -2702,9 +2590,11 @@ async function loadRouteData() {
     await loadSecurityPlatformChunk();
     if (typeof loadSecurityPlatform === "function") await loadSecurityPlatform();
   } else if (state.route.page === "customer-onboarding") {
-    await loadCustomerOnboarding();
+    await loadCustomerJourneyUiChunk();
+    if (typeof loadCustomerOnboarding === "function") await loadCustomerOnboarding();
   } else if (state.route.page && state.route.page.startsWith("customer-pilot")) {
-    await loadCustomerPilot();
+    await loadCustomerJourneyUiChunk();
+    if (typeof loadCustomerPilot === "function") await loadCustomerPilot();
   } else if (state.route.page === "pilot-deployment-readiness") {
     await loadPilotOperatorChunk();
     if (typeof loadPilotDeploymentReadiness === "function") await loadPilotDeploymentReadiness();
@@ -2721,7 +2611,8 @@ async function loadRouteData() {
     await loadPilot();
     await loadPilotOperatorChunk();
   } else if (state.route.page === "onboarding") {
-    await loadOnboarding();
+    await loadCustomerJourneyUiChunk();
+    if (typeof loadOnboarding === "function") await loadOnboarding();
   } else if (state.route.page && state.route.page.startsWith("help-")) {
     await loadHelpChunk();
     if (typeof loadHelpData === "function") await loadHelpData();
@@ -3681,6 +3572,96 @@ function lazyReliabilityOpsView(name) {
   });
   return renderSkeleton("page");
 }
+/* ---------------------------------------------------------------------- *
+ * Lazy chunk loader for customer onboarding / pilot portal pages.
+ * ---------------------------------------------------------------------- */
+let __customerJourneyUiChunkPromise = null;
+function customerJourneyUiChunkReady() {
+  return typeof renderCustomerPilot === "function";
+}
+function customerJourneyUiChunkUrl() {
+  try {
+    const assets = typeof window !== "undefined" ? window.__ASSETS__ : null;
+    if (assets && assets["customer-journey-ui.js"]) return assets["customer-journey-ui.js"];
+  } catch (_e) { /* ignore */ }
+  return "/customer-journey-ui.js";
+}
+function loadCustomerJourneyUiChunk() {
+  if (customerJourneyUiChunkReady()) return Promise.resolve();
+  if (__customerJourneyUiChunkPromise) return __customerJourneyUiChunkPromise;
+  if (typeof document === "undefined" || typeof document.createElement !== "function" || !document.head) {
+    return Promise.resolve();
+  }
+  __customerJourneyUiChunkPromise = new Promise((resolve) => {
+    try {
+      const script = document.createElement("script");
+      script.src = customerJourneyUiChunkUrl();
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => { __customerJourneyUiChunkPromise = null; resolve(); };
+      document.head.appendChild(script);
+    } catch (_e) {
+      __customerJourneyUiChunkPromise = null;
+      resolve();
+    }
+  });
+  return __customerJourneyUiChunkPromise;
+}
+function lazyCustomerJourneyView(name) {
+  const fn = typeof window !== "undefined" ? window[name] : undefined;
+  if (typeof fn === "function") return fn();
+  loadCustomerJourneyUiChunk().then(() => {
+    if (customerJourneyUiChunkReady()) render();
+  });
+  return renderSkeleton("page");
+}
+/* ---------------------------------------------------------------------- *
+ * Lazy chunk loader for Copilot + Runbooks UI.
+ * ---------------------------------------------------------------------- */
+let __copilotRunbooksUiChunkPromise = null;
+function copilotRunbooksUiChunkReady() {
+  return typeof renderRunbooks === "function";
+}
+function copilotRunbooksUiChunkUrl() {
+  try {
+    const assets = typeof window !== "undefined" ? window.__ASSETS__ : null;
+    if (assets && assets["copilot-runbooks-ui.js"]) return assets["copilot-runbooks-ui.js"];
+  } catch (_e) { /* ignore */ }
+  return "/copilot-runbooks-ui.js";
+}
+function loadCopilotRunbooksUiChunk() {
+  if (copilotRunbooksUiChunkReady()) return Promise.resolve();
+  if (__copilotRunbooksUiChunkPromise) return __copilotRunbooksUiChunkPromise;
+  if (typeof document === "undefined" || typeof document.createElement !== "function" || !document.head) {
+    return Promise.resolve();
+  }
+  __copilotRunbooksUiChunkPromise = new Promise((resolve) => {
+    try {
+      const script = document.createElement("script");
+      script.src = copilotRunbooksUiChunkUrl();
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => { __copilotRunbooksUiChunkPromise = null; resolve(); };
+      document.head.appendChild(script);
+    } catch (_e) {
+      __copilotRunbooksUiChunkPromise = null;
+      resolve();
+    }
+  });
+  return __copilotRunbooksUiChunkPromise;
+}
+function lazyCopilotRunbooksView(name) {
+  const fn = typeof window !== "undefined" ? window[name] : undefined;
+  if (typeof fn === "function") return fn();
+  loadCopilotRunbooksUiChunk().then(() => {
+    if (copilotRunbooksUiChunkReady()) render();
+  });
+  return renderSkeleton("page");
+}
+
+
+
+
 
 
 
@@ -7874,50 +7855,6 @@ function renderRemediationActions(ra) {
     </section>`;
 }
 
-const RUNBOOK_CATEGORIES = ["KUBERNETES", "DEPLOYMENT_FAILURE", "CRASHLOOPBACKOFF", "LATENCY_SPIKE", "ERROR_SPIKE", "CAPACITY", "GENERAL"];
-
-function renderRunbookDetail(rb) {
-  if (!rb) return "";
-  const stepList = (items) => `<ol class="runbook-steps">${(items || []).map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ol>`;
-  if (state.runbookEditing) {
-    const ta = (name, items, label) => `
-      <label class="form-label">${label}</label>
-      <textarea name="${name}" rows="${Math.max(3, (items || []).length + 1)}" style="width:100%;font-family:inherit;">${escapeHtml((items || []).join("\n"))}</textarea>`;
-    return `
-      <section class="card">
-        <div class="card-header"><div><h2>Edit Runbook</h2><p class="muted">One step per line. Saving creates a new version.</p></div>
-          <button class="btn btn-secondary" data-edit-runbook-toggle>Cancel</button></div>
-        <form data-save-runbook style="display:grid;gap:8px;margin-top:10px;">
-          <label class="form-label">Title</label>
-          <input name="title" value="${escapeHtml(rb.title)}" />
-          <label class="form-label">Summary</label>
-          <textarea name="summary" rows="2" style="width:100%;font-family:inherit;">${escapeHtml(rb.summary || "")}</textarea>
-          ${ta("investigation_steps", rb.investigation_steps, "Investigation Steps")}
-          ${ta("validation_steps", rb.validation_steps, "Validation Steps")}
-          ${ta("rollback_steps", rb.rollback_steps, "Rollback Steps")}
-          ${ta("recovery_checklist", rb.recovery_checklist, "Recovery Checklist")}
-          <button class="btn btn-primary" type="submit">Save new version</button>
-        </form>
-      </section>`;
-  }
-  return `
-    <section class="card">
-      <div class="card-header">
-        <div><h2>${escapeHtml(rb.title)}</h2>
-          <p class="muted">${impactBadge2(rb.category)} · ${escapeHtml(rb.service || "all services")} · v${rb.version} · ${escapeHtml(rb.status)} · learned from ${rb.source_incident_count} incident(s)</p></div>
-        ${canWriteResources() ? `<button class="btn btn-secondary" data-edit-runbook-toggle>Edit</button>` : ""}
-      </div>
-      <p>${escapeHtml(rb.summary || "")}</p>
-      <p class="risk-subhead">Investigation Steps</p>${stepList(rb.investigation_steps)}
-      <p class="risk-subhead">Validation Steps</p>${stepList(rb.validation_steps)}
-      <p class="risk-subhead">Rollback Steps</p>${stepList(rb.rollback_steps)}
-      <p class="risk-subhead">Recovery Checklist</p>${stepList(rb.recovery_checklist)}
-    </section>`;
-}
-
-function impactBadge2(cat) {
-  return `<span class="risk-score-badge risk-medium">${escapeHtml((cat || "").replace(/_/g, " "))}</span>`;
-}
 
 
 
@@ -7929,74 +7866,8 @@ function impactBadge2(cat) {
 
 
 
-function renderOnboarding() {
-  const ob = state.onboarding;
-  if (!ob) {
-    return `<div class="container">${renderHeader("Guided Setup Wizard", "Onboard in under 10 minutes")}${renderAlerts()}<section class="card"><p class="muted">Starting wizard…</p></section></div>`;
-  }
-  const canWrite = canWriteResources();
-  const done = ob.status === "COMPLETED";
-  const pct = ob.progress_percent;
-  const barColor = pct >= 100 ? "#16a34a" : pct >= 60 ? "#2563eb" : "#d97706";
 
-  const stepRows = (ob.steps || []).map((s) => `
-    <div class="ops-list-row" style="align-items:center;">
-      <span style="display:flex;align-items:center;gap:10px;">
-        <input type="checkbox" data-onboarding-toggle="${escapeHtml(s.key)}" ${s.completed ? "checked" : ""}
-          ${(!canWrite || s.auto_detected || s.key === "FINISH") ? "disabled" : ""} style="width:auto;" />
-        <span>
-          <strong style="${s.completed ? "color:#16a34a;" : ""}">${s.order}. ${escapeHtml(s.title)}</strong>
-          ${s.auto_detected ? `<span class="risk-score-badge" style="background:#16a34a1a;color:#16a34a;">auto-detected</span>` : ""}
-          <div class="muted" style="font-size:12px;">${escapeHtml(s.description)}</div>
-        </span>
-      </span>
-      <span>${s.completed ? `<span style="color:#16a34a;font-weight:700;">✓</span>` : `<span class="muted">pending</span>`}</span>
-    </div>`).join("");
 
-  const recs = (ob.recommendations || []).map((r) => `
-    <div class="ops-list-row" style="flex-direction:column;align-items:flex-start;gap:2px;">
-      <strong>${escapeHtml(r.title)}</strong>
-      <span class="muted" style="font-size:13px;">${escapeHtml(r.action)}</span>
-    </div>`).join("");
-
-  return `
-    <div class="container">
-      ${renderHeader("Guided Setup Wizard", "Onboard in under 10 minutes")}
-      ${renderAlerts()}
-      <section class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <h2 style="margin:0;">Progress: ${pct}%</h2>
-          <span>${done ? `<span class="risk-score-badge" style="background:#16a34a1a;color:#16a34a;font-weight:700;">COMPLETED</span>` : `<span class="risk-score-badge" style="background:#2563eb1a;color:#2563eb;">IN PROGRESS</span>`}</span>
-        </div>
-        <div style="background:#e2e8f0;border-radius:999px;height:12px;overflow:hidden;">
-          <div style="background:${barColor};height:100%;width:${pct}%;transition:width .3s;"></div>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:12px;">
-          <button class="btn btn-secondary" type="button" data-onboarding-refresh>Refresh</button>
-          ${canWrite && !done ? `<button class="btn btn-primary" type="button" data-onboarding-complete>Finish onboarding</button>` : ""}
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Setup Steps</h2>
-        <div class="ops-list">${stepRows}</div>
-      </section>
-
-      ${ob.summary ? `<section class="card"><h2>Onboarding Summary</h2><p>${escapeHtml(ob.summary)}</p></section>` : ""}
-
-      <section class="card">
-        <h2>Recommendations (${(ob.recommendations || []).length})</h2>
-        <div class="ops-list">${recs || `<p class="muted">All set — no outstanding recommendations.</p>`}</div>
-      </section>
-    </div>`;
-}
-
-const INTEGRATION_STATUS_COLORS = {
-  VERIFIED: "#16a34a", CONNECTED: "#2563eb", NEEDS_ATTENTION: "#d97706", DISCONNECTED: "#64748b",
-};
-const INTEGRATION_HEALTH_COLORS = {
-  HEALTHY: "#16a34a", DEGRADED: "#d97706", UNHEALTHY: "#dc2626", UNKNOWN: "#64748b",
-};
 
 function integrationStatusBadge(s) {
   if (!s) return `<span class="muted" style="font-size:12px;">Not connected</span>`;
@@ -8039,217 +7910,7 @@ function integrationReadinessBanner(readiness) {
   return "";
 }
 
-function renderCustomerPilot() {
-  const page = state.route.page || "customer-pilot";
-  const ov = state.customerPilotOverview;
-  const timeline = state.customerPilotTimeline?.events || [];
-  const stageSummary = state.customerPilotTimeline?.stage_summary || [];
-  const comms = state.customerPilotCommunications || [];
-  const prefs = state.customerPilotPreferences;
-  const op = state.customerPilotOperation;
-  const pkg = state.customerPilotApprovalPkg;
-  const exec = state.customerPilotExecution;
-  const ver = state.customerPilotVerification;
-  const evidence = state.customerPilotEvidence;
-  const closeout = state.customerPilotCloseout;
-  const readiness = state.customerPilotReadiness;
-  const canAdmin = isOwnerRole();
-  const approvalExpiry = pkg?.expires_at || ov?.approval_expires_at;
-  const subnav = [
-    { label: "Overview", path: "/customer-pilot", key: "customer-pilot" },
-    { label: "Timeline", path: "/customer-pilot/timeline", key: "customer-pilot-timeline" },
-    { label: "Communications", path: "/customer-pilot/communications", key: "customer-pilot-communications" },
-    { label: "Readiness", path: "/customer-pilot/readiness", key: "customer-pilot-readiness" },
-    { label: "Operation", path: "/customer-pilot/operation", key: "customer-pilot-operation" },
-    { label: "Approval", path: "/customer-pilot/approval", key: "customer-pilot-approval" },
-    { label: "Execution", path: "/customer-pilot/execution", key: "customer-pilot-execution" },
-    { label: "Evidence", path: "/customer-pilot/evidence", key: "customer-pilot-evidence" },
-    { label: "Closeout", path: "/customer-pilot/closeout", key: "customer-pilot-closeout" },
-    { label: "Preferences", path: "/customer-pilot/preferences", key: "customer-pilot-preferences" },
-  ];
-  const navHtml = `<nav aria-label="Customer pilot sections" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">${subnav.map((s) => `<a href="${s.path}" class="btn btn-secondary btn-sm${page === s.key ? " btn-primary" : ""}">${escapeHtml(s.label)}</a>`).join("")}</nav>`;
-  const expiryBanner = approvalExpiry ? `<p class="muted" role="status" aria-live="polite">Approval expires: ${escapeHtml(approvalExpiry)}</p>` : "";
-  const scope = ov?.scope || {};
-  const safety = ov?.safety || {};
-  const badges = (ov?.integration_badges || []).map((b) => `<span class="badge ${b.fresh ? "badge-success" : "badge-warning"}">${escapeHtml(b.provider)} · ${escapeHtml(b.state)}</span>`).join(" ");
-  const timelineHtml = timeline.map((e) => `<li><time>${escapeHtml(e.timestamp || "")}</time> <strong>${escapeHtml(e.title || "")}</strong> <span class="badge">${escapeHtml(e.status || "")}</span> <span class="muted">${escapeHtml(e.actor_type || "")}</span></li>`).join("");
-  const stageHtml = stageSummary.map((s) => `<li>${escapeHtml(s.title || s.stage_key)} <span class="badge">${escapeHtml(s.status)}</span></li>`).join("");
-  const commRows = comms.map((c) => `<div class="card" style="margin-bottom:8px;"><strong>${escapeHtml(c.title)}</strong><p class="muted">${escapeHtml(c.body)}</p><button class="btn btn-secondary btn-sm" type="button" data-customer-pilot-ack="${escapeHtml(c.id)}">Acknowledge</button></div>`).join("");
-  const approvalModal = canAdmin && op && pkg ? `
-    <section class="card" id="customer-pilot-approval-form">
-      <h2>Record approval decision</h2>
-      <p class="muted">Customer approval authorizes review only — platform operator typed confirmation is still required before execution.</p>
-      <form data-customer-pilot-decide>
-        <input type="hidden" name="operation_id" value="${escapeHtml(op.id)}" />
-        <input type="hidden" name="payload_hash" value="${escapeHtml(pkg.payload_hash || op.payload_hash || "")}" />
-        <div style="margin-bottom:8px;"><label class="form-label">Approver name</label><input class="form-input" name="approver_name" required /></div>
-        <div style="margin-bottom:8px;"><label class="form-label">Approver email</label><input class="form-input" name="approver_email" type="email" required /></div>
-        <div style="margin-bottom:8px;"><label class="form-label">Rationale</label><textarea class="form-input" name="rationale" required rows="3"></textarea></div>
-        <label style="display:block;margin-bottom:8px;"><input type="checkbox" name="rollback_ack" required /> I acknowledge the rollback plan</label>
-        <label style="display:block;margin-bottom:8px;"><input type="checkbox" name="payload_ack" required /> I acknowledge the operation payload hash</label>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary" type="submit" name="approve" value="true">Approve</button>
-          <button class="btn btn-secondary" type="submit" name="approve" value="false">Reject</button>
-        </div>
-      </form>
-    </section>` : "";
-  let body = "";
-  if (page === "customer-pilot-timeline") {
-    body = `<section class="card" aria-live="polite"><h2>Audit timeline</h2>${expiryBanner}<ul>${timelineHtml || "<li class='muted'>No events yet.</li>"}</ul><button class="btn btn-secondary" type="button" data-customer-pilot-timeline-export>Export timeline</button></section><section class="card"><h2>Stage summary</h2><ul>${stageHtml}</ul></section>`;
-  } else if (page === "customer-pilot-communications") {
-    body = `<section class="card"><h2>Messages</h2>${commRows || "<p class='muted'>No messages yet.</p>"}</section>`;
-  } else if (page === "customer-pilot-preferences") {
-    body = `<section class="card"><h2>Notification preferences</h2>${canAdmin ? `<form data-customer-pilot-prefs><label><input type="checkbox" name="in_app_enabled" ${prefs?.in_app_enabled !== false ? "checked" : ""}/> In-app</label><label><input type="checkbox" name="approval_reminders_enabled" ${prefs?.approval_reminders_enabled !== false ? "checked" : ""}/> Approval reminders</label><label><input type="checkbox" name="evidence_ready_enabled" ${prefs?.evidence_ready_enabled !== false ? "checked" : ""}/> Evidence ready</label><label><input type="checkbox" name="closeout_notifications_enabled" ${prefs?.closeout_notifications_enabled !== false ? "checked" : ""}/> Closeout</label><label>Timezone <input class="form-input" name="timezone" value="${escapeHtml(prefs?.timezone || "UTC")}"/></label><button class="btn btn-primary" type="submit">Save</button></form>` : "<p class='muted'>Admin access required.</p>"}</section>`;
-  } else if (page === "customer-pilot-readiness") {
-    const ops = readiness?.operational_status || {};
-    const opsBadge = (label, key) => {
-      const v = ops[key] || "unknown";
-      const c = v === "operational" ? "#166534" : v === "degraded" ? "#991b1b" : "#92400e";
-      return `<div class="ops-list-row" style="justify-content:space-between;"><span>${escapeHtml(label)}</span><span style="font-size:12px;padding:2px 8px;border-radius:4px;background:${c};color:#fff;">${escapeHtml(v)}</span></div>`;
-    };
-    body = `<section class="card"><h2>Integration readiness</h2><p><span class="badge">${escapeHtml(readiness?.verdict || "—")}</span></p><ul>${(readiness?.remediation_steps || []).map((r) => `<li class="muted">${escapeHtml(r)}</li>`).join("")}</ul></section>
-    <section class="card"><h2>Operational status</h2><p class="muted">Customer-safe monitoring — no infrastructure details exposed.</p>
-      ${opsBadge("Notifications operational", "notifications_operational")}
-      ${opsBadge("Approval reminders operational", "approval_reminders_operational")}
-      ${opsBadge("Support monitoring operational", "support_monitoring_operational")}
-      ${ops.degradation_notice ? `<p class="muted" role="status">${escapeHtml(ops.degradation_notice)}</p>` : ""}
-    </section>`;
-  } else if (page === "customer-pilot-operation") {
-    body = op ? `<section class="card"><h2>Proposed operation</h2><p><strong>${escapeHtml(op.action)}</strong> on <code>${escapeHtml(op.resource_name)}</code></p><p class="muted">Environment: ${escapeHtml(scope.environment_name || "—")} (${escapeHtml(scope.environment_tier || "non-production")})</p><p>Rollback plan: ${escapeHtml(op.rollback_plan || "—")}</p><p>Status: <span class="badge">${escapeHtml(op.status)}</span></p></section>` : `<section class="card"><p class="muted">No operation proposed.</p></section>`;
-  } else if (page === "customer-pilot-approval") {
-    body = pkg ? `<section class="card"><h2>Immutable approval package</h2><pre style="white-space:pre-wrap;font-size:12px;">${escapeHtml(pkg.markdown || JSON.stringify(pkg.package, null, 2))}</pre>${approvalModal}</section>` : `<section class="card"><p class="muted">No approval package available.</p></section>`;
-  } else if (page === "customer-pilot-execution") {
-    body = `<section class="card"><h2>Execution status</h2><p>Operation: <span class="badge">${escapeHtml(exec?.status || ov?.operation_summary?.status || "—")}</span></p><p>Operator confirmation: <span class="badge">${exec?.ready_for_operator_confirmation ? "READY_FOR_OPERATOR_CONFIRMATION" : "AWAITING_GATES"}</span></p><p class="muted">Customers cannot execute or confirm operations from this portal.</p>${(exec?.blockers || []).length ? `<ul>${exec.blockers.map((b) => `<li>${escapeHtml(b)}</li>`).join("")}</ul>` : ""}</section>`;
-  } else if (page === "customer-pilot-evidence") {
-    body = `<section class="card"><h2>Evidence</h2><p>Verification: <span class="badge">${escapeHtml(ver?.verification_status || "PENDING")}</span></p>${op ? `<button class="btn btn-secondary" type="button" data-customer-pilot-export>Export evidence pack</button>` : ""}<pre style="white-space:pre-wrap;font-size:11px;max-height:320px;overflow:auto;">${escapeHtml(JSON.stringify(evidence?.evidence || {}, null, 2))}</pre></section>`;
-  } else if (page === "customer-pilot-closeout") {
-    body = `<section class="card"><h2>Closeout</h2><p>Status: <span class="badge">${escapeHtml(closeout?.status || "—")}</span></p>${(closeout?.blockers || []).length ? `<ul>${closeout.blockers.map((b) => `<li>${escapeHtml(b)}</li>`).join("")}</ul>` : ""}${canAdmin ? `<form data-customer-pilot-closeout><div style="margin-bottom:8px;"><label class="form-label">Sign-off contact</label><input class="form-input" name="signoff_contact" required /></div><textarea class="form-input" name="customer_comments" placeholder="Comments (optional)" rows="3"></textarea><label style="display:block;margin:8px 0;"><input type="checkbox" name="documented_no_operation" /> Pilot ended without operation (documented)</label><button class="btn btn-primary" type="submit">Request closeout review</button></form>` : ""}</section>`;
-  } else {
-    body = `<section class="card"><h2>Pilot scope</h2><p class="muted">Non-production pilot — scoped operations only.</p>${expiryBanner}<p>Environment: ${escapeHtml(scope.environment_name || "—")} · Namespace: ${escapeHtml(scope.namespace || "—")}</p><p>Approval: <span class="badge">${escapeHtml(ov?.approval_status || "—")}</span> · Handoff: <span class="badge">${escapeHtml(ov?.operator_handoff_status || "—")}</span></p></section>
-    <section class="card"><h2>Stage timeline</h2><ul>${stageHtml || timelineHtml || "<li class='muted'>No stages yet.</li>"}</ul></section>
-    <section class="card"><h2>Safety settings</h2><p>Operation limit: ${escapeHtml(String(safety.operation_limit ?? "—"))} · Used: ${escapeHtml(String(safety.operation_count ?? 0))} · Cooldown: ${escapeHtml(String(safety.cooldown_minutes ?? "—"))} min · Kill switch: ${safety.kill_switch ? "ON" : "OFF"}</p><div style="display:flex;gap:6px;flex-wrap:wrap;">${badges || "<span class='muted'>No integrations</span>"}</div></section>`;
-  }
-  return `<div class="container">${renderHeader("Customer Pilot", "Review, approve, and track your scoped non-production pilot")}${renderAlerts()}${navHtml}${body}</div>`;
-}
 
-function renderCustomerOnboarding() {
-  const providers = state.customerOnboardingProviders || [];
-  const sessions = state.customerOnboardingSessions || [];
-  const readiness = state.customerOnboardingReadiness;
-  const prereq = state.customerOnboardingPrerequisites;
-  const canWrite = canWriteResources();
-  const verdict = readiness?.verdict || "—";
-  const verdictClass = verdict === "GO" ? "badge-success" : verdict === "NO_GO" ? "badge-danger" : "badge-warning";
-  const activeId = state.customerOnboardingActiveSession;
-  const active = sessions.find((s) => s.id === activeId) || null;
-  const activeProvider = active ? providers.find((p) => p.provider_type === active.provider_type) : null;
-  const validation = state.customerOnboardingValidation;
-
-  const ONBOARDING_CREDENTIAL_FIELDS = {
-    KUBERNETES: [{ name: "kubeconfig", label: "Kubeconfig (YAML)", secret: true, textarea: true }],
-    GITHUB: [{ name: "token", label: "Personal Access Token", secret: true }],
-    GITHUB_ENTERPRISE: [{ name: "token", label: "Token", secret: true }],
-    GITEA: [{ name: "token", label: "Token", secret: true }],
-    PROMETHEUS: [{ name: "endpoint", label: "Prometheus URL", secret: false }],
-  };
-
-  const sessionRows = sessions.map((s) => `
-    <tr class="${s.id === activeId ? "active-row" : ""}" style="cursor:pointer;" data-cust-onboard-select="${escapeHtml(s.id)}">
-      <td>${escapeHtml(s.provider_type)}</td>
-      <td><span class="badge">${escapeHtml(s.status)}</span></td>
-      <td>${escapeHtml(s.environment_name || "—")}</td>
-      <td>${escapeHtml(s.readiness_verdict || "—")}</td>
-      <td>${s.credential_id ? "Stored (ref only)" : "—"}</td>
-    </tr>`).join("");
-
-  const providerCards = providers.map((p) => `
-    <div class="card" style="margin-bottom:8px;">
-      <strong>${escapeHtml(p.display_name)}</strong>
-      <p class="muted" style="font-size:12px;">${escapeHtml(p.description)}</p>
-      ${canWrite ? `<button class="btn btn-secondary btn-sm" type="button" data-cust-onboard-start="${escapeHtml(p.provider_type)}">Start wizard</button>` : ""}
-    </div>`).join("");
-
-  let wizardPanel = "";
-  if (active && canWrite) {
-    const scopeFields = activeProvider?.required_scope_fields || [];
-    const credFields = ONBOARDING_CREDENTIAL_FIELDS[active.provider_type] || [{ name: "token", label: "Credential", secret: true }];
-    const scopeInputs = scopeFields.map((f) => `
-      <div class="field"><label>${escapeHtml(f.replace(/_/g, " "))}</label>
-        <input type="text" name="${escapeHtml(f)}" value="${escapeHtml((active.scope || {})[f] || "")}" /></div>`).join("");
-    const credInputs = credFields.map((f) => {
-      const input = f.textarea
-        ? `<textarea name="${f.name}" rows="3" autocomplete="off" placeholder="Encrypted — never shown again"></textarea>`
-        : `<input type="${f.secret ? "password" : "text"}" name="${f.name}" autocomplete="off" />`;
-      return `<div class="field"><label>${escapeHtml(f.label)}</label>${input}</div>`;
-    }).join("");
-    const valSummary = validation?.validation_summary
-      ? `<pre class="muted" style="font-size:12px;white-space:pre-wrap;">${escapeHtml(JSON.stringify(validation.validation_summary, null, 2))}</pre>`
-      : "";
-    wizardPanel = `
-      <section class="card" style="border-left:4px solid #2563eb;">
-        <h2>Active wizard — ${escapeHtml(active.provider_type)}</h2>
-        <p class="muted">Step 1: environment · Step 2: credentials · Step 3: validate (read-only)</p>
-        <form data-cust-onboard-env="${escapeHtml(active.id)}" style="margin-bottom:16px;">
-          <h3>1. Environment & scope</h3>
-          <div class="field"><label>Environment name</label>
-            <input type="text" name="environment_name" required value="${escapeHtml(active.environment_name || "")}" placeholder="staging" /></div>
-          <div class="field"><label>Classification</label>
-            <select name="environment_classification">
-              <option value="staging" ${active.environment_classification === "staging" ? "selected" : ""}>staging</option>
-              <option value="development" ${active.environment_classification === "development" ? "selected" : ""}>development</option>
-              <option value="sandbox" ${active.environment_classification === "sandbox" ? "selected" : ""}>sandbox</option>
-            </select></div>
-          ${scopeInputs}
-          ${active.provider_type === "GITHUB_ENTERPRISE" || active.provider_type === "GITEA" ? `
-          <div class="field"><label>API base URL</label>
-            <input type="url" name="api_base_url" value="${escapeHtml(active.api_base_url || "")}" placeholder="https://github.example.com/api/v3" /></div>` : ""}
-          <label><input type="checkbox" name="intended_for_pilot" ${active.intended_for_pilot ? "checked" : ""} /> Intended for pilot</label>
-          <div style="margin-top:8px;"><button class="btn btn-primary btn-sm" type="submit">Save environment</button></div>
-        </form>
-        <form data-cust-onboard-creds="${escapeHtml(active.id)}" style="margin-bottom:16px;">
-          <h3>2. Credentials</h3>
-          <div class="field"><label>Connection name</label><input type="text" name="name" value="onboarding-credential" /></div>
-          ${credInputs}
-          <div style="margin-top:8px;"><button class="btn btn-primary btn-sm" type="submit">Store credentials</button></div>
-        </form>
-        <div>
-          <h3>3. Validate</h3>
-          <p class="muted">Runs read-only checks — no mutations on your estate.</p>
-          <button class="btn btn-secondary btn-sm" type="button" data-cust-onboard-validate="${escapeHtml(active.id)}">Run validation</button>
-          ${validation ? `<p style="margin-top:8px;"><span class="badge">${escapeHtml(validation.status || "—")}</span> Verdict: ${escapeHtml(validation.readiness_verdict || "—")}</p>${valSummary}` : ""}
-        </div>
-      </section>`;
-  }
-
-  const prereqList = (prereq?.items || []).map((i) => `<li>${escapeHtml(i.label)}${i.required ? " *" : ""}</li>`).join("");
-  const remediation = (readiness?.remediation_steps || []).map((r) => `<li>${escapeHtml(r)}</li>`).join("");
-  return `<div class="container">
-    ${renderHeader("Client Onboarding", "Guided DevOps/SRE integration setup — connect, validate, and prepare for operations")}
-    ${renderAlerts()}
-    <section class="card">
-      <h2>Pilot readiness</h2>
-      <p><span class="badge ${verdictClass}">${escapeHtml(verdict)}</span> <span class="muted">Read-only evaluator</span></p>
-      ${remediation ? `<ul class="muted" style="font-size:12px;">${remediation}</ul>` : ""}
-      <div class="ops-setup-actions" style="margin-top:8px;">
-        <a class="btn btn-secondary" href="/connections-secrets" data-nav="/connections-secrets">Connections & secrets hub</a>
-        <a class="btn btn-secondary" href="/integrations/onboarding" data-nav="/integrations/onboarding">Integration marketplace</a>
-      </div>
-    </section>
-    ${wizardPanel}
-    <section class="card">
-      <h2>Wizard progress</h2>
-      <p class="muted">DRAFT → CREDENTIALS_ADDED → VALIDATING → VALIDATED → READY_FOR_PILOT</p>
-      <table class="data-table"><thead><tr><th>Provider</th><th>Status</th><th>Environment</th><th>Verdict</th><th>Credential</th></tr></thead>
-      <tbody>${sessionRows || "<tr><td colspan='5' class='muted'>No sessions yet — start a wizard below.</td></tr>"}</tbody></table>
-    </section>
-    <section class="card"><h2>Connect providers</h2>${providerCards || "<p class='muted'>Loading…</p>"}</section>
-    <section class="card">
-      <h2>RBAC & prerequisites</h2>
-      <p class="muted">Write permissions are not requested during onboarding. Optional scale RBAC is guidance only for a future approved pilot operation.</p>
-      <ul>${prereqList}</ul>
-    </section>
-  </div>`;
-}
 
 
 function cpHealthColor(health) {
@@ -8267,112 +7928,8 @@ function cpHealthBadge(health) {
 
 
 
-function renderCopilotMessage(m) {
-  const isUser = m.role === "USER";
-  const bubbleStyle = isUser
-    ? "background:#2563eb;color:#fff;align-self:flex-end;border-radius:14px 14px 2px 14px;"
-    : "background:#f1f5f9;color:#0f172a;align-self:flex-start;border-radius:14px 14px 14px 2px;";
-  const body = escapeHtml(m.content || "").replace(/\n/g, "<br/>");
-  const cites = (m.citations || []).length
-    ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">${(m.citations || [])
-        .map((c) => `<span class="risk-score-badge" style="background:#e0e7ff;color:#3730a3;font-size:11px;" title="${escapeHtml(c.detail || "")}">${escapeHtml(c.source)}: ${escapeHtml(c.label)}</span>`)
-        .join("")}</div>`
-    : "";
-  return `
-    <div style="max-width:78%;padding:10px 14px;margin:6px 0;${bubbleStyle}">
-      <div style="font-size:14px;line-height:1.5;">${body}</div>
-      ${cites}
-    </div>`;
-}
 
-function renderCopilot() {
-  const sessions = state.copilotSessions || [];
-  const messages = state.copilotMessages || [];
-  const sending = state.copilotSending;
-  const sessionList = sessions.length
-    ? sessions.map((s) => `
-        <div class="ops-list-row" style="cursor:pointer;${state.copilotSessionId === s.id ? "background:#eff6ff;" : ""}" data-copilot-open="${s.id}">
-          <span>${escapeHtml(s.title || "Conversation")}</span>
-          <span class="muted">${s.message_count || 0} msg</span>
-        </div>`).join("")
-    : `<p class="muted">No conversations yet.</p>`;
 
-  const thread = messages.length
-    ? messages.map(renderCopilotMessage).join("")
-    : `<div class="muted" style="text-align:center;padding:30px 0;">Ask a question about your incidents, deployments, SLOs, capacity, cost, or reliability data.</div>`;
-
-  const suggestions = COPILOT_SUGGESTIONS.map(
-    (q) => `<button class="btn btn-secondary" style="font-size:12px;" data-copilot-suggest="${escapeHtml(q)}">${escapeHtml(q)}</button>`
-  ).join("");
-
-  return `
-    <div class="container">
-      ${renderHeader("Copilot", "Ask about incidents, alerts, and deployments — grounded in your connected tools")}
-      ${renderAlerts()}
-      <div style="display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start;">
-        <section class="card">
-          <div class="card-header"><div><h2 style="font-size:15px;">Conversations</h2></div>
-            <button class="btn btn-primary" style="padding:4px 10px;font-size:12px;" data-copilot-new>+ New</button>
-          </div>
-          <div class="ops-list" style="margin-top:10px;">${sessionList}</div>
-        </section>
-
-        <section class="card" style="display:flex;flex-direction:column;min-height:420px;">
-          <div style="flex:1;display:flex;flex-direction:column;overflow-y:auto;max-height:520px;padding:4px;">
-            ${thread}
-            ${sending ? `<div class="muted" style="align-self:flex-start;padding:8px;">Thinking…</div>` : ""}
-          </div>
-          <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">${suggestions}</div>
-          <form data-copilot-chat style="margin-top:12px;display:grid;grid-template-columns:1fr auto;gap:8px;">
-            <input name="message" placeholder="Ask anything about your reliability data…" autocomplete="off" required style="width:100%;" />
-            <button class="btn btn-primary" type="submit" ${sending ? "disabled" : ""}>Send</button>
-            <div style="grid-column:1 / -1;display:flex;gap:8px;">
-              <input name="service" placeholder="Filter: service (optional)" style="flex:1;" />
-              <input name="environment" placeholder="Filter: environment (optional)" style="flex:1;" />
-            </div>
-          </form>
-        </section>
-      </div>
-    </div>`;
-}
-
-function renderRunbooks() {
-  const list = state.runbookList || [];
-  const detail = state.runbookDetail;
-  const canWrite = canWriteResources();
-  const catOptions = RUNBOOK_CATEGORIES.map((c) => `<option value="${c}">${c.replace(/_/g, " ")}</option>`).join("");
-  return `
-    <div class="container">
-      ${renderHeader("Intelligent Runbooks", "Auto-generated investigation and remediation playbooks")}
-      ${renderAlerts()}
-      ${canWrite ? `
-      <section class="card">
-        <div class="card-header"><div><h2>Generate Runbook</h2><p class="muted">Synthesized from incident RCA, recommendations, remediations & postmortems.</p></div></div>
-        <form data-generate-runbook style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin-top:10px;align-items:end;">
-          <div><label class="form-label">Category</label><select name="category">${catOptions}</select></div>
-          <div><label class="form-label">Service (optional)</label><input name="service" placeholder="e.g. checkout" /></div>
-          <button class="btn btn-primary" type="submit">Generate</button>
-        </form>
-      </section>` : ""}
-
-      <section class="card">
-        <form data-runbook-search style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;">
-          <div style="flex:1;min-width:200px;"><label class="form-label">Search</label><input name="search" value="${escapeHtml(state.runbookSearch || "")}" placeholder="Search title, steps, service…" /></div>
-          <div><label class="form-label">Category</label><select name="category"><option value="">All</option>${RUNBOOK_CATEGORIES.map((c) => `<option value="${c}" ${state.runbookCategory === c ? "selected" : ""}>${c.replace(/_/g, " ")}</option>`).join("")}</select></div>
-          <button class="btn btn-secondary" type="submit">Search</button>
-        </form>
-        <div class="ops-list" style="margin-top:12px;">
-          ${list.length === 0 ? `<p class="muted">No runbooks yet. Generate one above.</p>` : list.map((rb) => `
-            <div class="ops-list-row" style="cursor:pointer;" data-open-runbook="${rb.id}">
-              <span>${escapeHtml(rb.title)} ${impactBadge2(rb.category)}</span>
-              <span class="muted">v${rb.version} · ${escapeHtml(rb.status)} · ${rb.source_incident_count} incident(s)</span>
-            </div>`).join("")}
-        </div>
-      </section>
-
-      ${renderRunbookDetail(detail)}
-    </div>`;
-}
 
 function probColor(p) {
   if (p >= 65) return "#dc2626";
@@ -8741,9 +8298,9 @@ function renderPage() {
     case "change-failure":
       return lazyReliabilityOpsView("renderChangeFailure");
     case "runbooks":
-      return renderRunbooks();
+      return lazyCopilotRunbooksView("renderRunbooks");
     case "copilot":
-      return renderCopilot();
+      return lazyCopilotRunbooksView("renderCopilot");
     case "reliability-dashboard":
       return lazyReliabilityOpsView("renderReliabilityDashboard");
     case "reliability-maturity":
@@ -8873,7 +8430,7 @@ function renderPage() {
     case "operations-overview":
       return renderDashboard();
     case "customer-onboarding":
-      return renderCustomerOnboarding();
+      return lazyCustomerJourneyView("renderCustomerOnboarding");
     case "customer-pilot":
     case "customer-pilot-readiness":
     case "customer-pilot-operation":
@@ -8884,7 +8441,7 @@ function renderPage() {
     case "customer-pilot-timeline":
     case "customer-pilot-communications":
     case "customer-pilot-preferences":
-      return renderCustomerPilot();
+      return lazyCustomerJourneyView("renderCustomerPilot");
     case "pilot":
       return lazyPilotOperatorView("renderPilot");
     case "pilot-operations-health":
@@ -8896,7 +8453,7 @@ function renderPage() {
     case "pilot-evidence":
       return lazyPilotOperatorView("renderPilotEvidence");
     case "onboarding":
-      return renderOnboarding();
+      return lazyCustomerJourneyView("renderOnboarding");
     case "help-home":
       return lazyHelpView("renderHelpHome");
     case "help-search":
@@ -13509,6 +13066,8 @@ function bindEvents() {
   });
 
   if (typeof bindControlPlaneEvents === "function") bindControlPlaneEvents();
+  if (typeof bindCopilotRunbooksEvents === "function") bindCopilotRunbooksEvents();
+  if (typeof bindCustomerJourneyEvents === "function") bindCustomerJourneyEvents();
   if (typeof bindReliabilityOpsEvents === "function") bindReliabilityOpsEvents();
   if (typeof bindPlatformOpsEvents === "function") bindPlatformOpsEvents();
   if (typeof bindPilotOperatorEvents === "function") bindPilotOperatorEvents();

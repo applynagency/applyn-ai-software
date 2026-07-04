@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { loadFrontendExports, loadFrontendWithPilotOperator } from "./frontend.harness.mjs";
 
 const appJsPath = fileURLToPath(new URL("./app.js", import.meta.url));
+const customerJourneyUiJsPath = fileURLToPath(new URL("./customer-journey-ui.js", import.meta.url));
 const pilotOperatorJsPath = fileURLToPath(new URL("./pilot-operator.js", import.meta.url));
 
 test("valid SPA routes are not treated as development-only redirects", () => {
@@ -191,7 +192,7 @@ test("execution console discovers operations via live-operations list endpoint",
 });
 
 test("customer pilot UI still has no operator confirmation controls", () => {
-  const source = readFileSync(appJsPath, "utf8");
+  const source = readFileSync(customerJourneyUiJsPath, "utf8");
   const customerBlock = source.match(/function renderCustomerPilot\(\)[\s\S]*?^function /m);
   assert.ok(customerBlock);
   assert.doesNotMatch(customerBlock[0], /confirmation-token/);

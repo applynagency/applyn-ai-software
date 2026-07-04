@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { loadFrontendExports } from "./frontend.harness.mjs";
 
 const appJsPath = fileURLToPath(new URL("./app.js", import.meta.url));
+const customerJourneyUiJsPath = fileURLToPath(new URL("./customer-journey-ui.js", import.meta.url));
 const developmentUiJsPath = fileURLToPath(new URL("./development-ui.js", import.meta.url));
 const pilotOperatorJsPath = fileURLToPath(new URL("./pilot-operator.js", import.meta.url));
 const validateScript = fileURLToPath(new URL("../scripts/validate-frontend.js", import.meta.url));
@@ -1182,7 +1183,7 @@ test("Sprint 68C: operator pilot nav is gated from customer portal contexts", ()
 });
 
 test("Sprint 68C: customer pilot UI has no operator confirm or token controls", () => {
-  const source = readFileSync(appJsPath, "utf8");
+  const source = readFileSync(customerJourneyUiJsPath, "utf8");
   const customerBlock = source.match(/function renderCustomerPilot\(\)[\s\S]*?^function /m);
   assert.ok(customerBlock, "renderCustomerPilot should exist");
   const block = customerBlock[0];
