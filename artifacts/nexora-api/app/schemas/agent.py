@@ -1,7 +1,9 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, Any
-from app.models.agent import AgentType, AgentRunStatus
+from typing import Any
+
+from pydantic import BaseModel
+
+from app.models.agent import AgentRunStatus, AgentType
 
 
 class AgentRunRequest(BaseModel):
@@ -65,13 +67,13 @@ class AgentRunResponse(BaseModel):
     status: AgentRunStatus
     requirement_id: str
     triggered_by: str
-    error_message: Optional[str]
-    duration_ms: Optional[int]
-    tokens_used: Optional[int]
-    model_used: Optional[str]
+    error_message: str | None
+    duration_ms: int | None
+    tokens_used: int | None
+    model_used: str | None
     created_at: datetime
     updated_at: datetime
-    output: Optional[ProductOwnerOutput] = None
+    output: ProductOwnerOutput | None = None
 
     model_config = {"from_attributes": True}
 

@@ -1,7 +1,10 @@
-from sqlalchemy import String, Text, ForeignKey, Enum as SAEnum, Integer, JSON
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 import enum
-from app.database.base import Base, UUIDMixin, TimestampMixin
+
+from sqlalchemy import JSON, ForeignKey, Integer, String, Text
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.database.base import Base, TimestampMixin, UUIDMixin
 
 
 class AgentType(str, enum.Enum):

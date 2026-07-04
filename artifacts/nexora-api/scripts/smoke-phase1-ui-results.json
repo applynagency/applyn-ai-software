@@ -1,0 +1,62 @@
+{
+  "generated_at": "2026-07-04T17:14:21.193Z",
+  "base_url": "http://127.0.0.1:8000",
+  "email": "browser-smoke-1783108438688@example.com",
+  "checks": [
+    {
+      "name": "login",
+      "status": "PASS",
+      "detail": "browser-smoke-1783108438688@example.com"
+    },
+    {
+      "name": "ui_Command Center",
+      "status": "PASS",
+      "detail": "/"
+    },
+    {
+      "name": "ui_Metrics",
+      "status": "WARN",
+      "detail": "/metrics — empty #app (check lazy chunk)"
+    },
+    {
+      "name": "ui_Logs",
+      "status": "PASS",
+      "detail": "/logs"
+    },
+    {
+      "name": "ui_War Rooms",
+      "status": "PASS",
+      "detail": "/war-rooms"
+    },
+    {
+      "name": "ui_Incidents",
+      "status": "PASS",
+      "detail": "/incidents"
+    },
+    {
+      "name": "ui_Delivery",
+      "status": "PASS",
+      "detail": "/delivery"
+    },
+    {
+      "name": "console_errors",
+      "status": "WARN",
+      "detail": "8 error(s)"
+    }
+  ],
+  "console_errors": [
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+  ],
+  "summary": {
+    "pass": 6,
+    "fail": 0,
+    "warn": 2
+  }
+}

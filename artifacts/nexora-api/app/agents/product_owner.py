@@ -1,13 +1,13 @@
 import json
-import uuid
 import re
+import uuid
+
 import anthropic
+
 from app.core.config import settings
 from app.core.exceptions import AgentError
 from app.core.logging import get_logger
-from app.schemas.agent import (
-    ProductOwnerOutput, Epic, Feature, UserStory, SprintPlan, Risk
-)
+from app.schemas.agent import Epic, Feature, ProductOwnerOutput, Risk, SprintPlan, UserStory
 
 logger = get_logger(__name__)
 
@@ -85,7 +85,9 @@ class ProductOwnerAgent:
     def __init__(self):
         if not settings.ANTHROPIC_API_KEY:
             raise AgentError("ANTHROPIC_API_KEY is not configured. Add it in the Secrets panel.")
-        self.client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+        from app.ai.compat import gateway_anthropic_client
+
+        self.client = gateway_anthropic_client(feature="agent:product_owner")
 
     async def run(self, requirement_text: str) -> tuple[ProductOwnerOutput, int]:
         """

@@ -1,14 +1,15 @@
-from typing import Any, Optional
+from typing import Any
+
 from pydantic import BaseModel
 
 
 class ApiResponse(BaseModel):
     success: bool = True
-    data: Optional[Any] = None
-    message: Optional[str] = None
+    data: Any | None = None
+    message: str | None = None
 
 
 class ErrorResponse(BaseModel):
     success: bool = False
     detail: str
-    error_type: Optional[str] = None
+    error_type: str | None = None

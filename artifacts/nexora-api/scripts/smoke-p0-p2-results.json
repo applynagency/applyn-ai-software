@@ -1,0 +1,81 @@
+{
+  "generated_at": "2026-07-04T17:15:59.501Z",
+  "api": "http://localhost:8000/nexora-api",
+  "checks": [
+    {
+      "name": "health",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "login",
+      "status": "PASS",
+      "detail": "browser-smoke-1783108438688@example.com"
+    },
+    {
+      "name": "auth_me",
+      "status": "PASS",
+      "detail": "browser-smoke-1783108438688@example.com"
+    },
+    {
+      "name": "p0_logs_search",
+      "status": "PASS",
+      "detail": "provider=LOKI mode=marketplace"
+    },
+    {
+      "name": "p0_monitoring_dashboard",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "p1_metrics_query",
+      "status": "PASS",
+      "detail": "series=0 simulated=true"
+    },
+    {
+      "name": "p1_notification_channels",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "p1_security_scans",
+      "status": "PASS",
+      "detail": "count=0"
+    },
+    {
+      "name": "p2_gitops_list",
+      "status": "PASS",
+      "detail": "apps=0"
+    },
+    {
+      "name": "p2_gitops_refresh",
+      "status": "PASS",
+      "detail": "apps=0"
+    },
+    {
+      "name": "p2_war_room_realtime",
+      "status": "PASS",
+      "detail": "online=0"
+    },
+    {
+      "name": "p2_war_room_messages",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "p2_gitops_app_sync_route",
+      "status": "PASS",
+      "detail": "simulated=true status=sync_triggered"
+    },
+    {
+      "name": "p2_pe_providers",
+      "status": "PASS",
+      "detail": "status=200"
+    }
+  ],
+  "summary": {
+    "pass": 14,
+    "fail": 0,
+    "warn": 0
+  }
+}

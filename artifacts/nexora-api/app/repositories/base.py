@@ -1,17 +1,19 @@
-from typing import Any, Generic, Optional, Type, TypeVar
-from sqlalchemy import select, func, and_
+from typing import Any, Generic, TypeVar
+
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.database.base import Base, utcnow
 
 ModelType = TypeVar("ModelType", bound=Base)
 
 
 class BaseRepository(Generic[ModelType]):
-    def __init__(self, model: Type[ModelType], session: AsyncSession):
+    def __init__(self, model: type[ModelType], session: AsyncSession):
         self.model = model
         self.session = session
 
-    async def get_by_id(self, id: str, include_deleted: bool = False) -> Optional[ModelType]:
+    async def get_by_id(self, id: str, include_deleted: bool = False) -> ModelType | None:
         stmt = select(self.model).where(self.model.id == id)
         if not include_deleted and hasattr(self.model, "deleted_at"):
             stmt = stmt.where(self.model.deleted_at.is_(None))
@@ -20,10 +22,11 @@ class BaseRepository(Generic[ModelType]):
 
     async def list_all(
         self,
-        filters: Optional[list[Any]] = None,
+        filters: list[Any] | None = None,
         offset: int = 0,
         limit: int = 50,
         include_deleted: bool = False,
+        options: list[Any] | None = None,
     ) -> tuple[list[ModelType], int]:
         conditions = []
         if not include_deleted and hasattr(self.model, "deleted_at"):
@@ -39,6 +42,11 @@ class BaseRepository(Generic[ModelType]):
         if where_clause is not None:
             count_stmt = count_stmt.where(where_clause)
             data_stmt = data_stmt.where(where_clause)
+
+        # Eager-load relationships in the same query batch to avoid N+1 fetches
+        # when callers need related rows for every item in the page.
+        if options:
+            data_stmt = data_stmt.options(*options)
 
         data_stmt = data_stmt.offset(offset).limit(limit)
 

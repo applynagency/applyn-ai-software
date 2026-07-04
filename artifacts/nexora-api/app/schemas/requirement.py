@@ -1,6 +1,7 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+
+from pydantic import BaseModel
+
 from app.models.requirement import RequirementStatus
 
 
@@ -11,9 +12,9 @@ class RequirementCreate(BaseModel):
 
 
 class RequirementUpdate(BaseModel):
-    title: Optional[str] = None
-    content: Optional[str] = None
-    status: Optional[RequirementStatus] = None
+    title: str | None = None
+    content: str | None = None
+    status: RequirementStatus | None = None
 
 
 class RequirementResponse(BaseModel):

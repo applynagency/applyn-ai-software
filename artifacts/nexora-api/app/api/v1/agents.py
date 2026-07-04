@@ -1,16 +1,22 @@
+
 from fastapi import APIRouter, Query
-from typing import Optional
+
 from app.auth.dependencies import CurrentUser, DBSession
-from app.schemas.agent import AgentRunRequest, AgentRunResponse
-from app.workflows.engine import AgentWorkflowEngine
+from app.auth.org_context import OrgContextDep
 from app.repositories.agent import AgentRunRepository
+from app.schemas.agent import AgentRunRequest, AgentRunResponse
+from app.tenancy.guards import get_requirement_for_org
+from app.workflows.engine import AgentWorkflowEngine
 
 router = APIRouter(prefix="/agents", tags=["AI Agents"])
 
 
 @router.post("/product-owner/run", response_model=AgentRunResponse, status_code=202)
 async def run_product_owner_agent(
-    data: AgentRunRequest, current_user: CurrentUser, session: DBSession
+    data: AgentRunRequest,
+    current_user: CurrentUser,
+    session: DBSession,
+    org_context: OrgContextDep,
 ):
     """
     Trigger the Product Owner Agent to analyze a business requirement.
@@ -24,34 +30,43 @@ async def run_product_owner_agent(
     from app.models.agent import AgentType
     data.agent_type = AgentType.PRODUCT_OWNER
     engine = AgentWorkflowEngine(session)
-    return await engine.execute(data, current_user)
+    return await engine.execute(data, current_user, org_context)
 
 
 @router.get("/runs", response_model=dict)
 async def list_agent_runs(
     current_user: CurrentUser,
     session: DBSession,
-    requirement_id: Optional[str] = Query(default=None, description="Filter by requirement ID"),
+    org_context: OrgContextDep,
+    requirement_id: str | None = Query(default=None, description="Filter by requirement ID"),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=20, ge=1, le=100),
 ):
     """List agent runs, optionally filtered by requirement."""
     run_repo = AgentRunRepository(session)
+    organization_id = org_context.requires_organization
     if requirement_id:
+        await get_requirement_for_org(session, requirement_id, org_context)
         items, total = await run_repo.list_by_requirement(requirement_id, offset=offset, limit=limit)
     else:
-        items, total = await run_repo.list_all(offset=offset, limit=limit)
+        items, total = await run_repo.list_by_organization(
+            organization_id, offset=offset, limit=limit
+        )
     return {"items": [AgentRunResponse.model_validate(r) for r in items], "total": total}
 
 
 @router.get("/runs/{run_id}", response_model=AgentRunResponse)
-async def get_agent_run(run_id: str, current_user: CurrentUser, session: DBSession):
+async def get_agent_run(
+    run_id: str, current_user: CurrentUser, session: DBSession, org_context: OrgContextDep
+):
     """Get details and output of a specific agent run."""
     run_repo = AgentRunRepository(session)
     run = await run_repo.get_with_outputs(run_id)
     if not run:
         from app.core.exceptions import NotFoundError
         raise NotFoundError("AgentRun", run_id)
+
+    await get_requirement_for_org(session, run.requirement_id, org_context)
 
     response = AgentRunResponse.model_validate(run)
     if run.outputs:

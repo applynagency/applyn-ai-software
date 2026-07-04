@@ -1,13 +1,34 @@
 from fastapi import Request
-from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from app.core.exceptions import NexoraException
+from fastapi.responses import JSONResponse
+
+from app.core.exceptions import NexoraException, ValidationError
 from app.core.logging import get_logger
+from app.lifecycle.customer_messages import translate_customer_error
 
 logger = get_logger(__name__)
 
 
+def _is_customer_lifecycle_path(path: str) -> bool:
+    normalized = path.split("?")[0]
+    if normalized.startswith("/nexora-api"):
+        normalized = normalized[len("/nexora-api") :]
+    customer_prefixes = (
+        "/v1/agents/deployment",
+        "/v1/change-requests",
+        "/v1/regeneration",
+        "/v1/releases",
+        "/v1/agents/approval",
+        "/v1/agents/fullstack-assembly",
+    )
+    return any(normalized.startswith(prefix) for prefix in customer_prefixes)
+
+
 async def nexora_exception_handler(request: Request, exc: NexoraException) -> JSONResponse:
+    message = exc.message
+    if isinstance(exc, ValidationError) and _is_customer_lifecycle_path(request.url.path):
+        message = translate_customer_error(exc.message)
+
     logger.warning(
         "handled_exception",
         path=request.url.path,
@@ -17,7 +38,7 @@ async def nexora_exception_handler(request: Request, exc: NexoraException) -> JS
     )
     return JSONResponse(
         status_code=exc.status_code,
-        content={"detail": exc.message, "error_type": type(exc).__name__},
+        content={"detail": message, "error_type": type(exc).__name__},
     )
 
 

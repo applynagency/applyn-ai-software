@@ -1,11 +1,15 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.exceptions import NotFoundError, ForbiddenError
+
+from app.auth.org_context import OrgContext
+from app.core.exceptions import ForbiddenError
+from app.core.logging import get_logger
+from app.models.user import User
+from app.repositories.audit import AuditLogRepository
 from app.repositories.project import ProjectRepository
 from app.repositories.workspace import WorkspaceRepository
-from app.repositories.audit import AuditLogRepository
-from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectResponse, ProjectListResponse
-from app.models.user import User
-from app.core.logging import get_logger
+from app.schemas.project import ProjectCreate, ProjectListResponse, ProjectResponse, ProjectUpdate
+from app.tenancy.guards import ensure_workspace_write, get_project_for_org, get_workspace_for_org
+from app.tenancy.permissions import can_write_resources
 
 logger = get_logger(__name__)
 
@@ -17,12 +21,14 @@ class ProjectService:
         self.workspace_repo = WorkspaceRepository(session)
         self.audit_repo = AuditLogRepository(session)
 
-    async def create(self, data: ProjectCreate, current_user: User) -> ProjectResponse:
-        workspace = await self.workspace_repo.get_by_id(data.workspace_id)
-        if not workspace:
-            raise NotFoundError("Workspace", data.workspace_id)
+    async def create(
+        self, data: ProjectCreate, current_user: User, org_context: OrgContext
+    ) -> ProjectResponse:
+        workspace = await get_workspace_for_org(self.session, data.workspace_id, org_context)
+        await ensure_workspace_write(self.session, workspace, org_context)
         if workspace.owner_id != current_user.id and not current_user.is_superuser:
-            raise ForbiddenError("You don't have access to this workspace")
+            if not org_context.role or not can_write_resources(org_context.role):
+                raise ForbiddenError("You don't have access to this workspace")
 
         project = await self.project_repo.create(
             name=data.name,
@@ -42,35 +48,41 @@ class ProjectService:
         return ProjectResponse.model_validate(project)
 
     async def list_for_user(
-        self, current_user: User, workspace_id: str | None = None, offset: int = 0, limit: int = 50
+        self,
+        current_user: User,
+        org_context: OrgContext,
+        workspace_id: str | None = None,
+        offset: int = 0,
+        limit: int = 50,
     ) -> ProjectListResponse:
+        organization_id = org_context.requires_organization
         if workspace_id:
+            await get_workspace_for_org(self.session, workspace_id, org_context)
             items, total = await self.project_repo.list_by_workspace(
                 workspace_id, offset=offset, limit=limit
             )
         else:
-            items, total = await self.project_repo.list_by_owner(
-                current_user.id, offset=offset, limit=limit
+            items, total = await self.project_repo.list_by_organization(
+                organization_id, offset=offset, limit=limit
             )
         return ProjectListResponse(
             items=[ProjectResponse.model_validate(p) for p in items],
             total=total,
         )
 
-    async def get(self, project_id: str, current_user: User) -> ProjectResponse:
-        project = await self.project_repo.get_by_id(project_id)
-        if not project:
-            raise NotFoundError("Project", project_id)
+    async def get(
+        self, project_id: str, current_user: User, org_context: OrgContext
+    ) -> ProjectResponse:
+        project = await get_project_for_org(self.session, project_id, org_context)
         if project.owner_id != current_user.id and not current_user.is_superuser:
-            raise ForbiddenError()
+            if not org_context.role or not can_write_resources(org_context.role):
+                raise ForbiddenError()
         return ProjectResponse.model_validate(project)
 
     async def update(
-        self, project_id: str, data: ProjectUpdate, current_user: User
+        self, project_id: str, data: ProjectUpdate, current_user: User, org_context: OrgContext
     ) -> ProjectResponse:
-        project = await self.project_repo.get_by_id(project_id)
-        if not project:
-            raise NotFoundError("Project", project_id)
+        project = await get_project_for_org(self.session, project_id, org_context)
         if project.owner_id != current_user.id and not current_user.is_superuser:
             raise ForbiddenError()
 
@@ -87,10 +99,10 @@ class ProjectService:
 
         return ProjectResponse.model_validate(updated)
 
-    async def delete(self, project_id: str, current_user: User) -> None:
-        project = await self.project_repo.get_by_id(project_id)
-        if not project:
-            raise NotFoundError("Project", project_id)
+    async def delete(
+        self, project_id: str, current_user: User, org_context: OrgContext
+    ) -> None:
+        project = await get_project_for_org(self.session, project_id, org_context)
         if project.owner_id != current_user.id and not current_user.is_superuser:
             raise ForbiddenError()
 

@@ -2,17 +2,78 @@ version: "3.9"
 
 services:
   api:
-    build: .
+    build:
+      context: ../..
+      dockerfile: artifacts/nexora-api/Dockerfile
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=postgresql+asyncpg://nexora:nexora@db:5432/nexora
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-change-me-in-production}
-      - ENVIRONMENT=production
-      - LOG_FORMAT=json
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      # Delegate background/scheduled work to the worker + scheduler services so
+      # the API does not run in-process loops (no duplicate scheduling).
+      - JOB_QUEUE_ENABLED=true
+      - PILOT_67F_ARTIFACT_DIR=/app/artifacts/customer-pilot-staging-go-live-validation
+    volumes:
+      # Serve the live frontend assets from the host so UI changes appear
+      # without rebuilding the image (app.js/styles.css are served via FileResponse).
+      - ./static:/app/static:ro
+      # Sprint 67F: shared staging evidence artifacts for deployment-readiness evaluator.
+      - ./artifacts:/app/artifacts
     depends_on:
       db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Background worker(s): drain the on-demand job queue. Scale with
+  # `docker compose up --scale worker=3`. Cron is owned by the scheduler service.
+  worker:
+    build:
+      context: ../..
+      dockerfile: artifacts/nexora-api/Dockerfile
+    command: ["arq", "app.jobs.worker.WorkerSettings"]
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://nexora:nexora@db:5432/nexora
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - JOB_QUEUE_ENABLED=true
+      - JOB_WORKER_QUEUE=nexora:jobs
+      - JOB_CRON_ENABLED=false
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Dedicated scheduler ("beat"): single instance owns the periodic cron jobs.
+  # Do not scale this service above 1.
+  scheduler:
+    build:
+      context: ../..
+      dockerfile: artifacts/nexora-api/Dockerfile
+    command: ["arq", "app.jobs.worker.WorkerSettings"]
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://nexora:nexora@db:5432/nexora
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - JOB_QUEUE_ENABLED=true
+      - JOB_WORKER_QUEUE=nexora:jobs
+      - JOB_CRON_ENABLED=true
+      - JOB_MAX_CONCURRENCY=2
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     restart: unless-stopped
 
@@ -26,6 +87,15 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nexora"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5

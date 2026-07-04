@@ -1,4 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.requirement import Requirement, RequirementStatus
 from app.repositories.base import BaseRepository
 

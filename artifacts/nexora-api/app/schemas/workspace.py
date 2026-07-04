@@ -1,13 +1,13 @@
-from pydantic import BaseModel, model_validator
-from datetime import datetime
-from typing import Optional
 import re
+from datetime import datetime
+
+from pydantic import BaseModel, model_validator
 
 
 class WorkspaceCreate(BaseModel):
     name: str
-    description: Optional[str] = None
-    slug: Optional[str] = None
+    description: str | None = None
+    slug: str | None = None
 
     @model_validator(mode="after")
     def set_slug(self) -> "WorkspaceCreate":
@@ -19,14 +19,14 @@ class WorkspaceCreate(BaseModel):
 
 
 class WorkspaceUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
+    name: str | None = None
+    description: str | None = None
 
 
 class WorkspaceResponse(BaseModel):
     id: str
     name: str
-    description: Optional[str]
+    description: str | None
     slug: str
     owner_id: str
     created_at: datetime

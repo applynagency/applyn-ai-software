@@ -1,25 +1,26 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+
+from pydantic import BaseModel
+
 from app.models.project import ProjectStatus
 
 
 class ProjectCreate(BaseModel):
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     workspace_id: str
 
 
 class ProjectUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    status: Optional[ProjectStatus] = None
+    name: str | None = None
+    description: str | None = None
+    status: ProjectStatus | None = None
 
 
 class ProjectResponse(BaseModel):
     id: str
     name: str
-    description: Optional[str]
+    description: str | None
     status: ProjectStatus
     workspace_id: str
     owner_id: str

@@ -1,7 +1,10 @@
-from sqlalchemy import String, Text, ForeignKey, Enum as SAEnum
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 import enum
-from app.database.base import Base, UUIDMixin, TimestampMixin, SoftDeleteMixin
+
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy import ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.database.base import Base, SoftDeleteMixin, TimestampMixin, UUIDMixin
 
 
 class ProjectStatus(str, enum.Enum):

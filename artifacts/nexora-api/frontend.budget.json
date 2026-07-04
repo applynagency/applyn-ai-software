@@ -1,0 +1,17 @@
+{
+  "comment": "Performance budgets for the Nexora Engineering Operations Platform SPA. The initial bundle is the set of render-blocking assets the browser must download before first paint; lazy chunks (help.js) are excluded. Budgets are enforced against the brotli transfer size by scripts/build-frontend.mjs.",
+  "initialBundleKB": 200,
+  "initial": ["app.js", "styles.css"],
+  "assets": {
+    "app.js": { "maxBrotliKB": 190, "maxRawKB": 1050 },
+    "styles.css": { "maxBrotliKB": 30 },
+    "help.js": { "maxBrotliKB": 60, "lazy": true },
+    "pilot-operator.js": { "maxBrotliKB": 85, "lazy": true },
+    "billing.js": { "maxBrotliKB": 35, "lazy": true },
+    "product-catalog.js": { "maxBrotliKB": 25, "lazy": true },
+    "operations-overview.js": { "maxBrotliKB": 20, "lazy": true },
+    "integration-onboarding.js": { "maxBrotliKB": 30, "lazy": true },
+    "incidents.js": { "maxBrotliKB": 25, "lazy": true },
+    "delivery.js": { "maxBrotliKB": 30, "lazy": true }
+  }
+}

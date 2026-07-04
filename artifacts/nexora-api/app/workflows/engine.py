@@ -1,16 +1,21 @@
 import time
+
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.exceptions import NotFoundError, ForbiddenError, AgentError
-from app.repositories.requirement import RequirementRepository
-from app.repositories.agent import AgentRunRepository, AgentOutputRepository
-from app.repositories.audit import AuditLogRepository
-from app.models.user import User
-from app.models.requirement import RequirementStatus
-from app.models.agent import AgentType, AgentRunStatus
+
 from app.agents.product_owner import ProductOwnerAgent
-from app.schemas.agent import AgentRunRequest, AgentRunResponse, ProductOwnerOutput
+from app.auth.org_context import OrgContext
 from app.core.config import settings
+from app.core.exceptions import AgentError, ForbiddenError
 from app.core.logging import get_logger
+from app.models.agent import AgentRunStatus, AgentType
+from app.models.requirement import RequirementStatus
+from app.models.user import User
+from app.repositories.agent import AgentOutputRepository, AgentRunRepository
+from app.repositories.audit import AuditLogRepository
+from app.repositories.requirement import RequirementRepository
+from app.schemas.agent import AgentRunRequest, AgentRunResponse, ProductOwnerOutput
+from app.tenancy.guards import get_requirement_for_org
+from app.tenancy.permissions import can_write_resources
 
 logger = get_logger(__name__)
 
@@ -28,12 +33,15 @@ class AgentWorkflowEngine:
         self.output_repo = AgentOutputRepository(session)
         self.audit_repo = AuditLogRepository(session)
 
-    async def execute(self, data: AgentRunRequest, current_user: User) -> AgentRunResponse:
-        requirement = await self.req_repo.get_by_id(data.requirement_id)
-        if not requirement:
-            raise NotFoundError("Requirement", data.requirement_id)
+    async def execute(
+        self, data: AgentRunRequest, current_user: User, org_context: OrgContext
+    ) -> AgentRunResponse:
+        requirement = await get_requirement_for_org(
+            self.session, data.requirement_id, org_context
+        )
         if requirement.submitted_by != current_user.id and not current_user.is_superuser:
-            raise ForbiddenError("You don't have access to this requirement")
+            if not org_context.role or not can_write_resources(org_context.role):
+                raise ForbiddenError("You don't have access to this requirement")
 
         agent_run = await self.run_repo.create(
             agent_type=data.agent_type,

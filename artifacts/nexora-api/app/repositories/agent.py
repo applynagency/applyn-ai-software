@@ -1,8 +1,12 @@
-from typing import Optional
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.agent import AgentRun, AgentOutput, AgentType, AgentRunStatus
+from sqlalchemy.orm import selectinload
+
+from app.models.agent import AgentOutput, AgentRun, AgentRunStatus, AgentType
+from app.models.project import Project
+from app.models.requirement import Requirement
+from app.models.workspace import Workspace
 from app.repositories.base import BaseRepository
 
 
@@ -10,7 +14,7 @@ class AgentRunRepository(BaseRepository[AgentRun]):
     def __init__(self, session: AsyncSession):
         super().__init__(AgentRun, session)
 
-    async def get_with_outputs(self, run_id: str) -> Optional[AgentRun]:
+    async def get_with_outputs(self, run_id: str) -> AgentRun | None:
         stmt = (
             select(AgentRun)
             .where(AgentRun.id == run_id)
@@ -18,6 +22,34 @@ class AgentRunRepository(BaseRepository[AgentRun]):
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def list_by_organization(
+        self, organization_id: str, offset: int = 0, limit: int = 50
+    ) -> tuple[list[AgentRun], int]:
+        org_filter = Workspace.organization_id == organization_id
+        count_stmt = (
+            select(func.count(AgentRun.id))
+            .select_from(AgentRun)
+            .join(Requirement, AgentRun.requirement_id == Requirement.id)
+            .join(Project, Requirement.project_id == Project.id)
+            .join(Workspace, Project.workspace_id == Workspace.id)
+            .where(org_filter)
+        )
+        total_result = await self.session.execute(count_stmt)
+        total = total_result.scalar_one()
+
+        stmt = (
+            select(AgentRun)
+            .join(Requirement, AgentRun.requirement_id == Requirement.id)
+            .join(Project, Requirement.project_id == Project.id)
+            .join(Workspace, Project.workspace_id == Workspace.id)
+            .where(org_filter)
+            .order_by(AgentRun.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().unique().all()), total
 
     async def list_by_requirement(
         self, requirement_id: str, offset: int = 0, limit: int = 50
@@ -30,7 +62,7 @@ class AgentRunRepository(BaseRepository[AgentRun]):
 
     async def get_latest_for_requirement(
         self, requirement_id: str, agent_type: AgentType = AgentType.PRODUCT_OWNER
-    ) -> Optional[AgentRun]:
+    ) -> AgentRun | None:
         stmt = (
             select(AgentRun)
             .where(

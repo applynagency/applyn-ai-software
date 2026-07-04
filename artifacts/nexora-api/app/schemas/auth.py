@@ -1,5 +1,6 @@
-from pydantic import BaseModel, EmailStr, field_validator
 import re
+
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class RegisterRequest(BaseModel):
@@ -26,6 +27,8 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+    # Required when the account has MFA enabled (TOTP code or recovery code).
+    mfa_code: str | None = None
 
 
 class TokenResponse(BaseModel):
@@ -33,10 +36,13 @@ class TokenResponse(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
     expires_in: int
+    organization_id: str | None = None
+    role: str | None = None
 
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
+    organization_id: str | None = None
 
 
 class UserResponse(BaseModel):
@@ -48,3 +54,19 @@ class UserResponse(BaseModel):
     is_superuser: bool
 
     model_config = {"from_attributes": True}
+
+
+class SessionInfo(BaseModel):
+    jti: str
+    user_id: str
+    ip: str | None = None
+    user_agent: str | None = None
+    organization_id: str | None = None
+    created_at: float | None = None
+    expires_at: float | None = None
+    current: bool = False
+
+
+class SessionListResponse(BaseModel):
+    sessions: list[SessionInfo]
+    total: int

@@ -1,3 +1,5 @@
+anthropic>=0.105.0
+bcrypt==4.0.1
 fastapi>=0.115.0
 uvicorn[standard]>=0.32.0
 sqlalchemy[asyncio]>=2.0.36
@@ -9,7 +11,51 @@ python-jose[cryptography]>=3.3.0
 passlib[bcrypt]>=1.7.4
 python-multipart>=0.0.18
 openai>=1.56.0
+pypdf>=5.1.0
+python-docx>=1.1.2
+# Sprint 38B — scheduled workflow runs (cron parsing + next-run calculation)
+croniter>=3.0.3
 httpx>=0.28.0
 structlog>=24.4.0
 python-dotenv>=1.0.1
 greenlet>=3.1.1
+# Sprint 33B — real Azure Container Apps deployment (ACR Build Tasks + Container Apps)
+azure-identity>=1.19.0
+azure-mgmt-containerregistry>=10.3.0
+azure-mgmt-appcontainers>=3.1.0
+# Sprint 34A — VM (SSH) deployment provider
+paramiko>=3.5.0
+# Sprint 34B — Kubernetes deployment provider
+kubernetes>=31.0.0
+# Sprint 35B — AWS infrastructure validation (BYOI)
+boto3>=1.34.0
+# Distributed rate limiting — shared sliding window across API replicas.
+redis>=5.0.0
+# Async job queue — Arq (Redis-backed) runs AI Teams / workflows / discovery /
+# monitoring / report generation as out-of-request background jobs with retry,
+# dead-letter, cancellation and progress. Imported lazily so the API boots
+# without it; only the worker process strictly requires it.
+arq>=0.26.0
+# Enterprise SSO — SAML 2.0 assertion parsing + XML-DSIG signature verification.
+# signxml is pure-Python (cryptography + lxml); no native xmlsec dependency. XML
+# is parsed with a hardened lxml parser (no DTD/network/entity expansion) to
+# prevent XXE. OIDC/OAuth2 (Entra/Okta/Google/Ping/generic) reuse python-jose + httpx.
+lxml>=5.2.0
+signxml>=4.0.0
+# Prometheus metrics exposition (/metrics).
+prometheus-client>=0.20.0
+# Distributed tracing (OpenTelemetry). OTLP + Zipkin exporters ship by default;
+# the Jaeger exporter is an optional extra: pip install opentelemetry-exporter-jaeger
+opentelemetry-sdk>=1.24.0
+opentelemetry-exporter-otlp-proto-http>=1.24.0
+opentelemetry-exporter-zipkin-json>=1.24.0
+opentelemetry-instrumentation-fastapi>=0.45b0
+opentelemetry-instrumentation-sqlalchemy>=0.45b0
+opentelemetry-instrumentation-httpx>=0.45b0
+opentelemetry-instrumentation-redis>=0.45b0
+pytest>=8.3.0
+pytest-asyncio>=0.24.0
+aiosqlite>=0.20.0
+# Distributed rate limiting tests — in-process Redis (Lua-capable) so the
+# Redis-backed path is exercised without a live server.
+fakeredis>=2.21.0
