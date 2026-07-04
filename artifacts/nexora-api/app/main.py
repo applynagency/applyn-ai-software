@@ -414,9 +414,9 @@ async def startupz():
     return JSONResponse(body, status_code=status_code)
 
 
-@app.get("/metrics", tags=["Health"], include_in_schema=False)
+@app.get(f"{BASE_PATH}/metrics", tags=["Health"], include_in_schema=False)
 async def metrics_endpoint():
-    """Prometheus metrics in the text exposition format."""
+    """Prometheus metrics in the text exposition format (ops scrape path)."""
     from app.observability import metrics as metrics_mod
 
     if not metrics_mod.METRICS_AVAILABLE:

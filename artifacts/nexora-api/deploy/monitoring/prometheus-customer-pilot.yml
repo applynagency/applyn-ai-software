@@ -1,0 +1,23 @@
+# Customer Pilot staging Prometheus (Sprint 67G).
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/rules/customer-pilot-alerts.yml
+  - /etc/prometheus/rules/customer-pilot-alerts-test.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["customer-pilot-alertmanager:9093"]
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: nexora-api
+    metrics_path: /nexora-api/metrics
+    static_configs:
+      - targets: ["api:8000"]

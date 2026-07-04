@@ -13,6 +13,8 @@ const deliveryJsPath = fileURLToPath(new URL("./delivery.js", import.meta.url));
 const warRoomsJsPath = fileURLToPath(new URL("./war-rooms.js", import.meta.url));
 const observabilityUiJsPath = fileURLToPath(new URL("./observability-ui.js", import.meta.url));
 const developmentUiJsPath = fileURLToPath(new URL("./development-ui.js", import.meta.url));
+const securityPlatformJsPath = fileURLToPath(new URL("./security-platform.js", import.meta.url));
+const platformOpsUiJsPath = fileURLToPath(new URL("./platform-ops-ui.js", import.meta.url));
 const secretsHubJsPath = fileURLToPath(new URL("./secrets-hub.js", import.meta.url));
 
 class MockHeaders {
@@ -275,6 +277,12 @@ globalThis.__nexoraExports = {
   vm.createContext(sandbox);
   vm.runInContext(harness, sandbox);
   vm.runInContext(readFileSync(developmentUiJsPath, "utf8"), sandbox);
+  if (options.chunks?.includes("security-platform")) {
+    vm.runInContext(readFileSync(securityPlatformJsPath, "utf8"), sandbox);
+  }
+  if (options.chunks?.includes("platform-ops")) {
+    vm.runInContext(readFileSync(platformOpsUiJsPath, "utf8"), sandbox);
+  }
   if (options.chunks?.includes("pilot-operator")) {
     vm.runInContext(readFileSync(pilotOperatorJsPath, "utf8"), sandbox);
   }

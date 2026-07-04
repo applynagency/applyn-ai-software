@@ -20,13 +20,15 @@ const deliveryJsPath = path.join(root, "static", "delivery.js");
 const warRoomsJsPath = path.join(root, "static", "war-rooms.js");
 const observabilityUiJsPath = path.join(root, "static", "observability-ui.js");
 const developmentUiJsPath = path.join(root, "static", "development-ui.js");
+const securityPlatformJsPath = path.join(root, "static", "security-platform.js");
+const platformOpsUiJsPath = path.join(root, "static", "platform-ops-ui.js");
 
 function fail(message) {
   console.error(`Frontend validation failed: ${message}`);
   process.exit(1);
 }
 
-for (const file of [appJsPath, helpJsPath, pilotOperatorJsPath, billingJsPath, productCatalogJsPath, operationsOverviewJsPath, integrationOnboardingJsPath, incidentsJsPath, deliveryJsPath, warRoomsJsPath, observabilityUiJsPath, developmentUiJsPath]) {
+for (const file of [appJsPath, helpJsPath, pilotOperatorJsPath, billingJsPath, productCatalogJsPath, operationsOverviewJsPath, integrationOnboardingJsPath, incidentsJsPath, deliveryJsPath, warRoomsJsPath, observabilityUiJsPath, developmentUiJsPath, securityPlatformJsPath, platformOpsUiJsPath]) {
   try {
     execSync(`node --check "${file}"`, { stdio: "pipe" });
   } catch (error) {
@@ -225,6 +227,23 @@ if (source.includes("function bindAiTeamEvents(")) {
   fail("bindAiTeamEvents() must live in development-ui.js, not static/app.js");
 }
 
+if (!source.includes("function loadSecurityPlatformChunk(")) {
+  fail("missing loadSecurityPlatformChunk() lazy loader in static/app.js");
+}
+if (source.includes("function renderSecurityPlatform(")) {
+  fail("renderSecurityPlatform() must live in security-platform.js, not static/app.js");
+}
+
+if (!source.includes("function loadPlatformOpsUiChunk(")) {
+  fail("missing loadPlatformOpsUiChunk() lazy loader in static/app.js");
+}
+if (source.includes("function renderPlatformEngineering(")) {
+  fail("renderPlatformEngineering() must live in platform-ops-ui.js, not static/app.js");
+}
+if (source.includes("function loadOperator(")) {
+  fail("loadOperator() must live in platform-ops-ui.js, not static/app.js");
+}
+
 const warRoomsSource = readFileSync(warRoomsJsPath, "utf8");
 if (!warRoomsSource.includes("function renderWarRooms(")) {
   fail("static/war-rooms.js must define war room renderers");
@@ -249,4 +268,20 @@ if (!developmentUiSource.includes("function bindAiTeamEvents(")) {
   fail("static/development-ui.js must define bindAiTeamEvents()");
 }
 
-console.log("Frontend validation passed: static/app.js + help.js + pilot-operator.js + billing.js + product-catalog.js + operations-overview.js + integration-onboarding.js + incidents.js + delivery.js + war-rooms.js + observability-ui.js + development-ui.js parse successfully.");
+const securityPlatformSource = readFileSync(securityPlatformJsPath, "utf8");
+if (!securityPlatformSource.includes("function renderSecurityPlatform(")) {
+  fail("static/security-platform.js must define security platform renderers");
+}
+if (!securityPlatformSource.includes("function loadSecurityPlatform(")) {
+  fail("static/security-platform.js must define loadSecurityPlatform()");
+}
+
+const platformOpsUiSource = readFileSync(platformOpsUiJsPath, "utf8");
+if (!platformOpsUiSource.includes("function renderPlatformEngineering(")) {
+  fail("static/platform-ops-ui.js must define platform engineering renderers");
+}
+if (!platformOpsUiSource.includes("function bindPlatformOpsEvents(")) {
+  fail("static/platform-ops-ui.js must define bindPlatformOpsEvents()");
+}
+
+console.log("Frontend validation passed: static/app.js + help.js + pilot-operator.js + billing.js + product-catalog.js + operations-overview.js + integration-onboarding.js + incidents.js + delivery.js + war-rooms.js + observability-ui.js + development-ui.js + security-platform.js + platform-ops-ui.js parse successfully.");
