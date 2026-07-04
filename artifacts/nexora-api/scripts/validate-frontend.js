@@ -191,6 +191,9 @@ if (!incidentsSource.includes("function renderIncidentsList(")) {
 if (!incidentsSource.includes("function bindIncidentsEvents(")) {
   fail("static/incidents.js must define bindIncidentsEvents()");
 }
+if (!incidentsSource.includes("function renderIncidentConfidenceCard(")) {
+  fail("static/incidents.js must define incident intelligence renderers");
+}
 
 const deliverySource = readFileSync(deliveryJsPath, "utf8");
 if (!deliverySource.includes("function renderDeliveryOverview(")) {
@@ -298,6 +301,12 @@ if (source.includes("function renderCopilot(")) {
 }
 if (source.includes("async function loadRunbooks(")) {
   fail("loadRunbooks() must live in copilot-runbooks-ui.js, not static/app.js");
+}
+if (source.includes("function renderRemediationActions(")) {
+  fail("renderRemediationActions() must live in incidents.js, not static/app.js");
+}
+if (source.includes("function renderIncidentConfidenceCard(")) {
+  fail("renderIncidentConfidenceCard() must live in incidents.js, not static/app.js");
 }
 
 const warRoomsSource = readFileSync(warRoomsJsPath, "utf8");
