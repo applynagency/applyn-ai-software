@@ -59,6 +59,8 @@ const SOURCES = [
   { name: "development-ui.js", loader: "js" },
   { name: "security-platform.js", loader: "js" },
   { name: "platform-ops-ui.js", loader: "js" },
+  { name: "control-plane.js", loader: "js" },
+  { name: "incident-response-ui.js", loader: "js" },
   { name: "styles.css", loader: "css" },
 ];
 

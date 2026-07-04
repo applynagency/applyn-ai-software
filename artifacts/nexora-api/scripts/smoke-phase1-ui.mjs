@@ -17,6 +17,8 @@ const routes = [
   { path: "/metrics", name: "Metrics", expect: /metric|query|observ|prometheus|loading|PromQL|skeleton|Metrics Explorer/i },
   { path: "/security-platform", name: "Security", expect: /security|posture|finding|DevSecOps|overview|skeleton/i },
   { path: "/platform-engineering", name: "Platform Eng", expect: /platform|engineering|IaC|template|stack|skeleton/i },
+  { path: "/control-plane", name: "Control Plane", expect: /control plane|cloud|cluster|kubernetes|skeleton/i },
+  { path: "/incident-response/postmortems", name: "Postmortems", expect: /postmortem|lesson|incident|pending|skeleton/i },
   { path: "/logs", name: "Logs", expect: /log|search|query|observ/i },
   { path: "/war-rooms", name: "War Rooms", expect: /war room|collaborat|incident|message/i },
   { path: "/incidents", name: "Incidents", expect: /incident/i },

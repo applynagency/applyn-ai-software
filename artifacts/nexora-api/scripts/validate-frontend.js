@@ -22,13 +22,15 @@ const observabilityUiJsPath = path.join(root, "static", "observability-ui.js");
 const developmentUiJsPath = path.join(root, "static", "development-ui.js");
 const securityPlatformJsPath = path.join(root, "static", "security-platform.js");
 const platformOpsUiJsPath = path.join(root, "static", "platform-ops-ui.js");
+const controlPlaneJsPath = path.join(root, "static", "control-plane.js");
+const incidentResponseUiJsPath = path.join(root, "static", "incident-response-ui.js");
 
 function fail(message) {
   console.error(`Frontend validation failed: ${message}`);
   process.exit(1);
 }
 
-for (const file of [appJsPath, helpJsPath, pilotOperatorJsPath, billingJsPath, productCatalogJsPath, operationsOverviewJsPath, integrationOnboardingJsPath, incidentsJsPath, deliveryJsPath, warRoomsJsPath, observabilityUiJsPath, developmentUiJsPath, securityPlatformJsPath, platformOpsUiJsPath]) {
+for (const file of [appJsPath, helpJsPath, pilotOperatorJsPath, billingJsPath, productCatalogJsPath, operationsOverviewJsPath, integrationOnboardingJsPath, incidentsJsPath, deliveryJsPath, warRoomsJsPath, observabilityUiJsPath, developmentUiJsPath, securityPlatformJsPath, platformOpsUiJsPath, controlPlaneJsPath, incidentResponseUiJsPath]) {
   try {
     execSync(`node --check "${file}"`, { stdio: "pipe" });
   } catch (error) {
@@ -220,6 +222,9 @@ if (!source.includes("function escapeHtml(")) {
 if (!source.includes("function canWriteResources(")) {
   fail("canWriteResources() must live in static/app.js (RBAC helper for all chunks)");
 }
+if (!source.includes("function cpHealthBadge(")) {
+  fail("cpHealthBadge() must live in static/app.js (shared by delivery and control-plane chunks)");
+}
 if (source.includes("function renderWorkflows(")) {
   fail("renderWorkflows() must live in development-ui.js, not static/app.js");
 }
@@ -242,6 +247,19 @@ if (source.includes("function renderPlatformEngineering(")) {
 }
 if (source.includes("function loadOperator(")) {
   fail("loadOperator() must live in platform-ops-ui.js, not static/app.js");
+}
+
+if (!source.includes("function loadControlPlaneChunk(")) {
+  fail("missing loadControlPlaneChunk() lazy loader in static/app.js");
+}
+if (source.includes("function renderControlPlane(")) {
+  fail("renderControlPlane() must live in control-plane.js, not static/app.js");
+}
+if (!source.includes("function loadIncidentResponseUiChunk(")) {
+  fail("missing loadIncidentResponseUiChunk() lazy loader in static/app.js");
+}
+if (source.includes("function renderIncidentResponse(")) {
+  fail("renderIncidentResponse() must live in incident-response-ui.js, not static/app.js");
 }
 
 const warRoomsSource = readFileSync(warRoomsJsPath, "utf8");
@@ -284,4 +302,17 @@ if (!platformOpsUiSource.includes("function bindPlatformOpsEvents(")) {
   fail("static/platform-ops-ui.js must define bindPlatformOpsEvents()");
 }
 
-console.log("Frontend validation passed: static/app.js + help.js + pilot-operator.js + billing.js + product-catalog.js + operations-overview.js + integration-onboarding.js + incidents.js + delivery.js + war-rooms.js + observability-ui.js + development-ui.js + security-platform.js + platform-ops-ui.js parse successfully.");
+const controlPlaneSource = readFileSync(controlPlaneJsPath, "utf8");
+if (!controlPlaneSource.includes("function renderControlPlane(")) {
+  fail("static/control-plane.js must define control plane renderers");
+}
+if (!controlPlaneSource.includes("function bindControlPlaneEvents(")) {
+  fail("static/control-plane.js must define bindControlPlaneEvents()");
+}
+
+const incidentResponseUiSource = readFileSync(incidentResponseUiJsPath, "utf8");
+if (!incidentResponseUiSource.includes("function renderIncidentResponse(")) {
+  fail("static/incident-response-ui.js must define incident response renderers");
+}
+
+console.log("Frontend validation passed: static/app.js + help.js + pilot-operator.js + billing.js + product-catalog.js + operations-overview.js + integration-onboarding.js + incidents.js + delivery.js + war-rooms.js + observability-ui.js + development-ui.js + security-platform.js + platform-ops-ui.js + control-plane.js + incident-response-ui.js parse successfully.");
