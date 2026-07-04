@@ -25,13 +25,14 @@ const platformOpsUiJsPath = path.join(root, "static", "platform-ops-ui.js");
 const controlPlaneJsPath = path.join(root, "static", "control-plane.js");
 const incidentResponseUiJsPath = path.join(root, "static", "incident-response-ui.js");
 const discoveryUiJsPath = path.join(root, "static", "discovery-ui.js");
+const reliabilityOpsUiJsPath = path.join(root, "static", "reliability-ops-ui.js");
 
 function fail(message) {
   console.error(`Frontend validation failed: ${message}`);
   process.exit(1);
 }
 
-for (const file of [appJsPath, helpJsPath, pilotOperatorJsPath, billingJsPath, productCatalogJsPath, operationsOverviewJsPath, integrationOnboardingJsPath, incidentsJsPath, deliveryJsPath, warRoomsJsPath, observabilityUiJsPath, developmentUiJsPath, securityPlatformJsPath, platformOpsUiJsPath, controlPlaneJsPath, incidentResponseUiJsPath, discoveryUiJsPath]) {
+for (const file of [appJsPath, helpJsPath, pilotOperatorJsPath, billingJsPath, productCatalogJsPath, operationsOverviewJsPath, integrationOnboardingJsPath, incidentsJsPath, deliveryJsPath, warRoomsJsPath, observabilityUiJsPath, developmentUiJsPath, securityPlatformJsPath, platformOpsUiJsPath, controlPlaneJsPath, incidentResponseUiJsPath, discoveryUiJsPath, reliabilityOpsUiJsPath]) {
   try {
     execSync(`node --check "${file}"`, { stdio: "pipe" });
   } catch (error) {
@@ -270,6 +271,16 @@ if (source.includes("function renderDiscovery(")) {
   fail("renderDiscovery() must live in discovery-ui.js, not static/app.js");
 }
 
+if (!source.includes("function loadReliabilityOpsUiChunk(")) {
+  fail("missing loadReliabilityOpsUiChunk() lazy loader in static/app.js");
+}
+if (source.includes("function renderServiceHealth(")) {
+  fail("renderServiceHealth() must live in reliability-ops-ui.js, not static/app.js");
+}
+if (source.includes("async function loadCapacity(")) {
+  fail("loadCapacity() must live in reliability-ops-ui.js, not static/app.js");
+}
+
 const warRoomsSource = readFileSync(warRoomsJsPath, "utf8");
 if (!warRoomsSource.includes("function renderWarRooms(")) {
   fail("static/war-rooms.js must define war room renderers");
@@ -331,4 +342,15 @@ if (!discoveryUiSource.includes("function loadDiscovery(")) {
   fail("static/discovery-ui.js must define loadDiscovery()");
 }
 
-console.log("Frontend validation passed: static/app.js + help.js + pilot-operator.js + billing.js + product-catalog.js + operations-overview.js + integration-onboarding.js + incidents.js + delivery.js + war-rooms.js + observability-ui.js + development-ui.js + security-platform.js + platform-ops-ui.js + control-plane.js + incident-response-ui.js + discovery-ui.js parse successfully.");
+const reliabilityOpsUiSource = readFileSync(reliabilityOpsUiJsPath, "utf8");
+if (!reliabilityOpsUiSource.includes("function renderServiceHealth(")) {
+  fail("static/reliability-ops-ui.js must define service health renderers");
+}
+if (!reliabilityOpsUiSource.includes("function bindReliabilityOpsEvents(")) {
+  fail("static/reliability-ops-ui.js must define bindReliabilityOpsEvents()");
+}
+if (!reliabilityOpsUiSource.includes("async function loadCapacity(")) {
+  fail("static/reliability-ops-ui.js must define loadCapacity()");
+}
+
+console.log("Frontend validation passed: static/app.js + help.js + pilot-operator.js + billing.js + product-catalog.js + operations-overview.js + integration-onboarding.js + incidents.js + delivery.js + war-rooms.js + observability-ui.js + development-ui.js + security-platform.js + platform-ops-ui.js + control-plane.js + incident-response-ui.js + discovery-ui.js + reliability-ops-ui.js parse successfully.");
