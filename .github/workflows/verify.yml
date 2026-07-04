@@ -1,0 +1,121 @@
+name: Verify
+
+on:
+  push:
+    paths:
+      - "artifacts/nexora-api/**"
+      - ".github/workflows/verify.yml"
+  pull_request:
+    paths:
+      - "artifacts/nexora-api/**"
+      - ".github/workflows/verify.yml"
+
+defaults:
+  run:
+    working-directory: artifacts/nexora-api
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: nexora
+          POSTGRES_PASSWORD: nexora
+          POSTGRES_DB: nexora
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nexora"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://nexora:nexora@localhost:5432/nexora
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: ci-test-secret-key
+      ENVIRONMENT: test
+      ANTHROPIC_API_KEY: ""
+      SKIP_DOCKER_VERIFY: "1"
+      SMOKE_BASE_URL: http://localhost:8000/nexora-api
+      SMOKE_ALLOW_AGENT_FAILURE: "0"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: artifacts/nexora-api/requirements*.txt
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run CI verification
+        run: bash scripts/run_full_verification.sh
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexora-coverage
+          path: |
+            artifacts/nexora-api/coverage.json
+            artifacts/nexora-api/coverage.xml
+            artifacts/nexora-api/coverage_html
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build API image
+        run: docker compose -f artifacts/nexora-api/docker-compose.yml build api
+
+      - name: Start stack
+        working-directory: artifacts/nexora-api
+        run: |
+          docker compose up -d
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/nexora-api/health >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose logs api
+          exit 1
+
+      - name: Run API smoke test
+        working-directory: artifacts/nexora-api
+        env:
+          SMOKE_BASE_URL: http://localhost:8000/nexora-api
+          SMOKE_ALLOW_AGENT_FAILURE: "1"
+        run: |
+          python3 -m pip install httpx
+          python3 scripts/smoke_test.py
+          node scripts/smoke-lazy-routes.mjs
+          node scripts/smoke-p0-p2-pass.mjs
+
+      - name: Tear down
+        if: always()
+        working-directory: artifacts/nexora-api
+        run: docker compose down -v

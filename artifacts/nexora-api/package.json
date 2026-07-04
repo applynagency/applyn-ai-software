@@ -1,0 +1,16 @@
+{
+  "name": "applyn-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Build, optimization and tests for the APPYLN customer SPA (static/).",
+  "scripts": {
+    "build": "node scripts/build-frontend.mjs",
+    "analyze": "node scripts/analyze-bundle.mjs",
+    "validate": "node scripts/validate-frontend.js",
+    "test": "node --test static/*.test.mjs",
+    "verify:ci": "bash scripts/run_full_verification.sh"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}

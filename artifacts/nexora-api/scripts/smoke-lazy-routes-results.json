@@ -1,0 +1,101 @@
+{
+  "generated_at": "2026-07-04T20:05:39.985Z",
+  "api": "http://localhost:8000/nexora-api",
+  "checks": [
+    {
+      "name": "health",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "auth_bootstrap",
+      "status": "WARN",
+      "detail": "registered lazy-route-1783195540658@example.com"
+    },
+    {
+      "name": "login",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "lazy_/security-platform_/v1/security/overview",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "lazy_/security-platform_/v1/security/findings?limit=30",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "lazy_/control-plane_/v1/control-plane/providers",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "lazy_/control-plane_/v1/control-plane/clusters",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "lazy_/discovery_/v1/discovery/summary",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "lazy_/discovery_/v1/discovery/progress",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "lazy_/incident-response/postmortems_/v1/postmortems?limit=50",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "lazy_/incident-response/postmortems_/v1/incidents/oncall",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "lazy_/_/v1/ops-workspace/my-work",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "lazy_/_/v1/monitoring/alerts?limit=30",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "lazy_/delivery_/v1/delivery/operations",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "lazy_/war-rooms_/v1/war-rooms",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "lazy_/metrics_/v1/observability/providers",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "lazy_/dashboard_/v1/credentials",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "lazy_/connections-secrets_/v1/credentials?limit=200",
+      "status": "PASS",
+      "detail": "status=200"
+    }
+  ],
+  "summary": {
+    "pass": 17,
+    "fail": 0,
+    "warn": 1
+  }
+}

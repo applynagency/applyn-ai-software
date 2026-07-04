@@ -53,8 +53,18 @@ async function main() {
     if (msg.type() === "error") {
       const text = msg.text();
       if (/CSP|Content Security Policy|unsafe-inline|favicon/i.test(text)) return;
+      // Benign: feature probes and optional integrations may 403/404 without breaking the page.
+      if (/Failed to load resource: the server responded with a status of (403|404)/i.test(text)) return;
       results.console_errors.push(text.slice(0, 300));
     }
+  });
+
+  page.on("response", (response) => {
+    const status = response.status();
+    if (status < 500) return;
+    const url = response.url();
+    if (!url.includes("/v1/")) return;
+    results.console_errors.push(`HTTP ${status} ${url.slice(0, 200)}`);
   });
 
   await page.goto(BASE, { waitUntil: "domcontentloaded", timeout: 30000 });
