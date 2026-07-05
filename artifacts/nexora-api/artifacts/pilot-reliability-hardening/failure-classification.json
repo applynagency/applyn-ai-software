@@ -1,0 +1,61 @@
+{
+  "sprint": "66K",
+  "failures": [
+    {
+      "test": "test_pending_approval_does_not_complete_customer_stage",
+      "module": "app/tests/test_pilot_execution.py",
+      "original_error": "PROPOSE_OPERATION status PENDING not COMPLETED",
+      "deterministic": false,
+      "order_dependent": true,
+      "backends": [
+        "sqlite",
+        "postgresql"
+      ],
+      "root_cause_category": "stage_seed/advance_idempotency",
+      "related_to_66j": true,
+      "fix_summary": "Prereq stage seeding via pilot_fixtures; _complete_stage_required; prior-stage assert in propose"
+    },
+    {
+      "test": "test_decide_pending_approval_and_execution_readiness",
+      "module": "app/tests/test_pilot_execution.py",
+      "original_error": "CUSTOMER_APPROVAL stayed PENDING after decide",
+      "deterministic": false,
+      "order_dependent": true,
+      "backends": [
+        "sqlite",
+        "postgresql"
+      ],
+      "root_cause_category": "approval_state_persistence",
+      "related_to_66j": true,
+      "fix_summary": "Complete CUSTOMER_APPROVAL on decide; refresh enrollment on status read; prereq fixtures"
+    },
+    {
+      "test": "test_live_operation_two_step_confirmation",
+      "module": "app/tests/test_pilot_readiness.py",
+      "original_error": "'payments-api' not in preflight JSON",
+      "deterministic": true,
+      "order_dependent": false,
+      "backends": [
+        "sqlite",
+        "postgresql"
+      ],
+      "root_cause_category": "export_serialization/redaction",
+      "related_to_66j": true,
+      "fix_summary": "Enrich proposal preflight with resource_name; approve before confirm"
+    },
+    {
+      "test": "test_export_pilot_report",
+      "module": "app/tests/test_pilot_readiness.py",
+      "original_error": "assessment is None after assessment/run",
+      "deterministic": true,
+      "order_dependent": false,
+      "backends": [
+        "sqlite",
+        "postgresql"
+      ],
+      "root_cause_category": "fixture_isolation",
+      "related_to_66j": true,
+      "fix_summary": "run_pilot_prereqs with mocked collectors and integrations before assessment"
+    }
+  ]
+}

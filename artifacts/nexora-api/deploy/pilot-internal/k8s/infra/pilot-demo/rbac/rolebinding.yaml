@@ -1,0 +1,16 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: nexora-pilot-scale
+  namespace: nexora-pilot
+  labels:
+    app: pilot-demo
+    nexora.applyn.io/pilot: internal
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: nexora-pilot-scale
+subjects:
+  - kind: ServiceAccount
+    name: nexora-pilot-operator
+    namespace: nexora-pilot

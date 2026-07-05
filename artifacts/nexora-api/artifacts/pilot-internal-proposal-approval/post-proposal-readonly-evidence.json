@@ -1,0 +1,18 @@
+{
+  "captured_at": "2026-07-02T10:24:12.707166+00:00",
+  "prometheus_error": "HTTPStatusError",
+  "deployment": {
+    "desired_replicas": 1,
+    "ready_replicas": 1,
+    "available_replicas": 1
+  },
+  "pods": [
+    {
+      "name": "pilot-demo-57c4b9d8f-rt6m6",
+      "phase": "Running",
+      "ready": true,
+      "restarts": 0
+    }
+  ],
+  "events_count": 1
+}

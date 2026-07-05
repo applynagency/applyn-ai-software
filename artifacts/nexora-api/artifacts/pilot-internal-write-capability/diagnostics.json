@@ -1,0 +1,201 @@
+{
+  "integration_health": [
+    {
+      "provider": "KUBERNETES",
+      "missing": [
+        "deploy",
+        "apply",
+        "query_metrics",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    },
+    {
+      "provider": "PROMETHEUS",
+      "missing": [
+        "write",
+        "deploy",
+        "apply",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    },
+    {
+      "provider": "GITHUB",
+      "missing": [
+        "write",
+        "deploy",
+        "apply",
+        "query_metrics",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    },
+    {
+      "provider": "PROMETHEUS",
+      "missing": [
+        "write",
+        "deploy",
+        "apply",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    },
+    {
+      "provider": "GITHUB",
+      "missing": [
+        "read",
+        "write",
+        "deploy",
+        "apply",
+        "query_metrics",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    },
+    {
+      "provider": "KUBERNETES",
+      "missing": [
+        "write",
+        "deploy",
+        "apply",
+        "query_metrics",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    }
+  ],
+  "capability_gaps": [
+    {
+      "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+      "provider": "KUBERNETES",
+      "missing": [
+        "deploy",
+        "apply",
+        "query_metrics",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    },
+    {
+      "connection_id": "4eacbdc9-1230-43cd-a941-0aa07efb6062",
+      "provider": "PROMETHEUS",
+      "missing": [
+        "write",
+        "deploy",
+        "apply",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    },
+    {
+      "connection_id": "08503643-4ba6-4cef-86f3-1658bc0ca8b6",
+      "provider": "GITHUB",
+      "missing": [
+        "write",
+        "deploy",
+        "apply",
+        "query_metrics",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    },
+    {
+      "connection_id": "47e1dcb5-cae1-4538-baed-f69acd9a4dfe",
+      "provider": "PROMETHEUS",
+      "missing": [
+        "write",
+        "deploy",
+        "apply",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    },
+    {
+      "connection_id": "d68c7d9c-4a09-4e10-b714-8fc2809e6ac9",
+      "provider": "GITHUB",
+      "missing": [
+        "read",
+        "write",
+        "deploy",
+        "apply",
+        "query_metrics",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    },
+    {
+      "connection_id": "f5531aa9-5d20-415e-a5e4-80df585f22e6",
+      "provider": "KUBERNETES",
+      "missing": [
+        "write",
+        "deploy",
+        "apply",
+        "query_metrics",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    }
+  ],
+  "validation_history": [
+    {
+      "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+      "entries": 6
+    },
+    {
+      "connection_id": "4eacbdc9-1230-43cd-a941-0aa07efb6062",
+      "entries": 1
+    },
+    {
+      "connection_id": "08503643-4ba6-4cef-86f3-1658bc0ca8b6",
+      "entries": 1
+    },
+    {
+      "connection_id": "47e1dcb5-cae1-4538-baed-f69acd9a4dfe",
+      "entries": 1
+    },
+    {
+      "connection_id": "d68c7d9c-4a09-4e10-b714-8fc2809e6ac9",
+      "entries": 1
+    },
+    {
+      "connection_id": "f5531aa9-5d20-415e-a5e4-80df585f22e6",
+      "entries": 1
+    }
+  ],
+  "troubleshooting": {
+    "invalid_kubeconfig": "Verify kubeconfig server URL, CA bundle, and client credentials. Re-validate after updating the secret reference.",
+    "expired_token": "Rotate the API token in your secret manager and re-validate the connection.",
+    "insufficient_k8s_rbac": "Grant get/list/watch on workloads; for pilot live ops grant patch/update on deployments in the target namespace.",
+    "github_repo_access": "Ensure the token or GitHub App has repository contents read and Actions read for required repos.",
+    "prometheus_unreachable": "Confirm Prometheus URL is reachable from Nexora and /api/v1/query returns 200.",
+    "argocd_permissions": "Token needs application get/list; sync requires additional apply permissions.",
+    "cloud_identity_denied": "Verify IAM role/subscription scope includes read for inventory and monitoring.",
+    "observability_query": "Grant metrics/logs query capability on the observability integration."
+  },
+  "support_token_available": true
+}

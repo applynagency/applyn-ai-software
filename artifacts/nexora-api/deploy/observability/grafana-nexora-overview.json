@@ -1,0 +1,120 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "title": "Nexora — Platform Overview (RED / USE / Business)",
+  "uid": "nexora-overview",
+  "tags": ["nexora", "sprint-62b"],
+  "timezone": "utc",
+  "schemaVersion": 39,
+  "version": 1,
+  "time": {"from": "now-6h", "to": "now"},
+  "templating": {"list": []},
+  "panels": [
+    {
+      "type": "row", "title": "RED — Requests / Errors / Duration",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0}
+    },
+    {
+      "type": "timeseries", "title": "Request rate (req/s) by status",
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 1},
+      "targets": [{"expr": "sum(rate(nexora_http_requests_total[5m])) by (status)", "legendFormat": "{{status}}"}]
+    },
+    {
+      "type": "stat", "title": "Error ratio (5xx)",
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 1},
+      "targets": [{"expr": "sum(rate(nexora_http_requests_total{status=~\"5..\"}[5m])) / clamp_min(sum(rate(nexora_http_requests_total[5m])), 1)"}]
+    },
+    {
+      "type": "timeseries", "title": "Latency p50 / p95 / p99 (s)",
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 1},
+      "targets": [
+        {"expr": "histogram_quantile(0.50, sum(rate(nexora_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50"},
+        {"expr": "histogram_quantile(0.95, sum(rate(nexora_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95"},
+        {"expr": "histogram_quantile(0.99, sum(rate(nexora_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99"}
+      ]
+    },
+    {
+      "type": "row", "title": "USE — Saturation / Utilization",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 9}
+    },
+    {
+      "type": "timeseries", "title": "In-flight requests",
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 10},
+      "targets": [{"expr": "nexora_http_requests_in_progress"}]
+    },
+    {
+      "type": "timeseries", "title": "DB pool utilization",
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 10},
+      "targets": [{"expr": "nexora_db_pool_connections", "legendFormat": "{{state}}"}]
+    },
+    {
+      "type": "timeseries", "title": "DB query p99 (s)",
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 10},
+      "targets": [{"expr": "histogram_quantile(0.99, sum(rate(nexora_database_query_duration_seconds_bucket[5m])) by (le, operation))", "legendFormat": "{{operation}}"}]
+    },
+    {
+      "type": "row", "title": "AI / Events / Queue",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 18}
+    },
+    {
+      "type": "timeseries", "title": "AI provider availability",
+      "gridPos": {"h": 8, "w": 6, "x": 0, "y": 19},
+      "targets": [{"expr": "nexora_ai_provider_up", "legendFormat": "{{provider}}"}]
+    },
+    {
+      "type": "timeseries", "title": "AI tokens/s + cost/s",
+      "gridPos": {"h": 8, "w": 6, "x": 6, "y": 19},
+      "targets": [
+        {"expr": "sum(rate(nexora_ai_tokens_total[5m]))", "legendFormat": "tokens/s"},
+        {"expr": "sum(rate(nexora_ai_cost_usd_total[5m]))", "legendFormat": "usd/s"}
+      ]
+    },
+    {
+      "type": "timeseries", "title": "Event delivery + pending",
+      "gridPos": {"h": 8, "w": 6, "x": 12, "y": 19},
+      "targets": [
+        {"expr": "sum(rate(nexora_events_total[5m])) by (status)", "legendFormat": "{{status}}"},
+        {"expr": "nexora_event_consumer_pending", "legendFormat": "pending"}
+      ]
+    },
+    {
+      "type": "timeseries", "title": "Queue depth + job outcomes",
+      "gridPos": {"h": 8, "w": 6, "x": 18, "y": 19},
+      "targets": [
+        {"expr": "nexora_queue_depth", "legendFormat": "{{queue}}"},
+        {"expr": "sum(rate(nexora_jobs_total[5m])) by (status)", "legendFormat": "{{status}}"}
+      ]
+    },
+    {
+      "type": "row", "title": "Search / Graph / Execution / Business",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 27}
+    },
+    {
+      "type": "timeseries", "title": "Search queries (index vs live)",
+      "gridPos": {"h": 8, "w": 6, "x": 0, "y": 28},
+      "targets": [{"expr": "sum(rate(nexora_search_queries_total[5m])) by (backend, outcome)", "legendFormat": "{{backend}}/{{outcome}}"}]
+    },
+    {
+      "type": "timeseries", "title": "Graph traversal cache hit ratio",
+      "gridPos": {"h": 8, "w": 6, "x": 6, "y": 28},
+      "targets": [{"expr": "sum(rate(nexora_graph_traversal_total{cache=\"hit\"}[5m])) / clamp_min(sum(rate(nexora_graph_traversal_total[5m])), 1)"}]
+    },
+    {
+      "type": "timeseries", "title": "Executions recovered + active",
+      "gridPos": {"h": 8, "w": 6, "x": 12, "y": 28},
+      "targets": [
+        {"expr": "sum(rate(nexora_execution_recovered_total[15m])) by (action)", "legendFormat": "{{action}}"},
+        {"expr": "nexora_execution_active", "legendFormat": "active"}
+      ]
+    },
+    {
+      "type": "timeseries", "title": "Business — orgs / incidents / plugins",
+      "gridPos": {"h": 8, "w": 6, "x": 18, "y": 28},
+      "targets": [
+        {"expr": "nexora_organizations_total", "legendFormat": "orgs"},
+        {"expr": "sum(nexora_incidents_total)", "legendFormat": "incidents"},
+        {"expr": "nexora_plugins_active", "legendFormat": "plugins"}
+      ]
+    }
+  ]
+}

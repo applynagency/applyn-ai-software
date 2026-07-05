@@ -1,0 +1,5 @@
+{
+  "status": "NOT_CONFIGURED",
+  "detail": "SMTP_HOST unset \u2014 in-app notifications only",
+  "email_delivery": "NOT_CONFIGURED"
+}

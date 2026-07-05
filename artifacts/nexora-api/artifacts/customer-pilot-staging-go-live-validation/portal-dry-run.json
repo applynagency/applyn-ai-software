@@ -1,0 +1,63 @@
+{
+  "passed": true,
+  "steps": [
+    {
+      "step": "onboarding_providers",
+      "path": "/v1/onboarding/integrations/providers",
+      "status_code": 200,
+      "ok": true
+    },
+    {
+      "step": "customer_overview",
+      "path": "/v1/customer-pilot/overview",
+      "status_code": 200,
+      "ok": true
+    },
+    {
+      "step": "customer_timeline",
+      "path": "/v1/customer-pilot/timeline",
+      "status_code": 200,
+      "ok": true
+    },
+    {
+      "step": "customer_readiness",
+      "path": "/v1/customer-pilot/readiness",
+      "status_code": 200,
+      "ok": true
+    },
+    {
+      "step": "support_diagnostics",
+      "path": "/v1/pilot/support/diagnostics",
+      "status_code": 200,
+      "ok": true
+    },
+    {
+      "step": "support_export",
+      "path": "/v1/pilot/support/diagnostics/export",
+      "status_code": 200,
+      "ok": true
+    },
+    {
+      "step": "evidence_export",
+      "path": "/v1/pilot/evidence-pack/export",
+      "status_code": 200,
+      "ok": true
+    },
+    {
+      "step": "timeline_export",
+      "path": "/v1/customer-pilot/timeline/export",
+      "status_code": 200,
+      "ok": true
+    },
+    {
+      "step": "execution_status",
+      "path": "/v1/pilot/execution/status",
+      "status_code": 200,
+      "ok": true
+    }
+  ],
+  "export_redaction_clean": true,
+  "provider_mutation": false,
+  "execution_performed": false,
+  "validated_at": "2026-07-02T17:36:27.872984+00:00"
+}

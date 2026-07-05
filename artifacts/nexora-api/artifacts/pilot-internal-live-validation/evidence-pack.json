@@ -1,0 +1,161 @@
+{
+  "enrollment": {
+    "id": "2c0ce636-4f82-420d-8321-8a4c6f1ed754",
+    "execution_status": "IN_PROGRESS",
+    "kill_switch": false
+  },
+  "readiness": {
+    "enrollment_id": "2c0ce636-4f82-420d-8321-8a4c6f1ed754",
+    "status": "DRAFT",
+    "readiness_score": 0,
+    "completed_items": 0,
+    "total_items": 0,
+    "blockers": [],
+    "checklist": [],
+    "live_operations_enabled": false,
+    "onboarding_path_id": null
+  },
+  "assessment": null,
+  "scorecard": {
+    "scores": {
+      "setup_readiness": 0,
+      "visibility": 83,
+      "operational_maturity": 83,
+      "automation_readiness": 100,
+      "risk": 0,
+      "value_realized": 0
+    },
+    "metrics": {
+      "integration_connection_success_rate": 0.83,
+      "time_to_first_assessment_hours": null,
+      "time_saved_estimate_hours": null
+    },
+    "insufficient_data": [],
+    "created_at": "2026-07-02T09:01:12.505382Z"
+  },
+  "stages": [
+    {
+      "id": "abeb3f8e-b6fa-490d-bfb2-522cf988653a",
+      "stage_key": "CONNECT",
+      "title": "Connect integrations",
+      "status": "COMPLETED",
+      "owner_id": "915e1592-0447-44d7-a9a0-8faffce4ef1a",
+      "evidence": {},
+      "blockers": [],
+      "rollback_plan": null,
+      "outcome": null,
+      "started_at": "2026-07-02T09:00:27.448665Z",
+      "completed_at": "2026-07-02T09:00:27.448665Z"
+    },
+    {
+      "id": "2d1251d5-5375-4901-a9d5-8f2b1614a12d",
+      "stage_key": "VALIDATE",
+      "title": "Validate integration readiness",
+      "status": "COMPLETED",
+      "owner_id": "915e1592-0447-44d7-a9a0-8faffce4ef1a",
+      "evidence": {},
+      "blockers": [],
+      "rollback_plan": null,
+      "outcome": null,
+      "started_at": "2026-07-02T09:00:27.466339Z",
+      "completed_at": "2026-07-02T09:00:27.466339Z"
+    },
+    {
+      "id": "ae62f555-3e53-421a-ae5f-349b5c17404c",
+      "stage_key": "READ_ONLY_ASSESSMENT",
+      "title": "Run read-only assessment",
+      "status": "PENDING",
+      "owner_id": null,
+      "evidence": {},
+      "blockers": [],
+      "rollback_plan": null,
+      "outcome": null,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "2700f31d-2b0c-48cc-abeb-311253ab1b0a",
+      "stage_key": "BASELINE_CAPTURE",
+      "title": "Capture pilot baseline",
+      "status": "PENDING",
+      "owner_id": null,
+      "evidence": {},
+      "blockers": [],
+      "rollback_plan": null,
+      "outcome": null,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "72a684bf-98aa-4df4-858b-25b45979d7c9",
+      "stage_key": "PROPOSE_OPERATION",
+      "title": "Propose safe live operation",
+      "status": "PENDING",
+      "owner_id": null,
+      "evidence": {},
+      "blockers": [],
+      "rollback_plan": null,
+      "outcome": null,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "d8032510-ed60-4712-8763-b5dace62db7c",
+      "stage_key": "CUSTOMER_APPROVAL",
+      "title": "Obtain customer approval",
+      "status": "PENDING",
+      "owner_id": null,
+      "evidence": {},
+      "blockers": [],
+      "rollback_plan": null,
+      "outcome": null,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "a66acbd3-29f5-4ac8-9737-15149b4c4bb3",
+      "stage_key": "EXECUTE",
+      "title": "Execute approved operation",
+      "status": "PENDING",
+      "owner_id": null,
+      "evidence": {},
+      "blockers": [],
+      "rollback_plan": null,
+      "outcome": null,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "063bf887-1294-4c52-ae0a-1910194fe272",
+      "stage_key": "VERIFY",
+      "title": "Verify post-operation health",
+      "status": "PENDING",
+      "owner_id": null,
+      "evidence": {},
+      "blockers": [],
+      "rollback_plan": null,
+      "outcome": null,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "2ce1218a-8166-412f-8153-67b570c0aad2",
+      "stage_key": "COMPLETE",
+      "title": "Complete pilot",
+      "status": "PENDING",
+      "owner_id": null,
+      "evidence": {},
+      "blockers": [],
+      "rollback_plan": null,
+      "outcome": null,
+      "started_at": null,
+      "completed_at": null
+    }
+  ],
+  "operation": null,
+  "approval": null,
+  "blockers": [],
+  "recommendations": [],
+  "exported_at": "2026-07-02T09:01:12.512960+00:00",
+  "redacted": true
+}

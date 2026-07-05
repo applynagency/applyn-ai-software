@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "violations_found": [],
+  "notes": [
+    "confirmation_token redacted from proposal.json export",
+    "No kubeconfig, bearer headers, or PEM blocks in artifacts"
+  ],
+  "scanned_at": "2026-07-02T10:24:12Z"
+}

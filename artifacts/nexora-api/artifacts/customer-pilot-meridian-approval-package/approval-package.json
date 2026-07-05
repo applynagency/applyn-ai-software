@@ -1,0 +1,152 @@
+{
+  "banner": "PROPOSED ONLY \u2014 NOT APPROVED \u2014 NOT EXECUTED",
+  "generated_at": "2026-07-03T04:15:07.100222+00:00",
+  "organization": {
+    "id": "86238c88-f8f6-44da-a335-50ce4ba807af",
+    "name": "Meridian Analytics Pilot"
+  },
+  "proposal": {
+    "operation_id": "d1440973-a1d9-4c72-9c39-d992a08d5a97",
+    "action": "scale_deployment",
+    "template_id": "scale_deployment",
+    "status": "PENDING_CONFIRMATION",
+    "execution_label": "LIVE-ELIGIBLE / NOT EXECUTED",
+    "idempotency_key": "meridian-[REDACTED]-scale-2-to-3-v1",
+    "payload_hash": "01d4211b68133b9df33a64c43284509a60fb13ba489e4ba661228949a2c0f508"
+  },
+  "approval": {
+    "approval_id": "bc63be25-1fc0-4d4a-9b76-63c307e993ca",
+    "status": "PENDING",
+    "expires_at": "2026-07-04T04:15:07.082223Z",
+    "approver_name": "Meridian Pilot Approver",
+    "approver_email": "approver@customer.example",
+    "payload_hash": "01d4211b68133b9df33a64c43284509a60fb13ba489e4ba661228949a2c0f508"
+  },
+  "target": {
+    "integration_id": "4d106712-0035-42f7-be12-451fc4a8c665",
+    "namespace": "[REDACTED]",
+    "deployment": "[REDACTED]",
+    "environment": "meridian-staging-np",
+    "environment_tier": "non-production"
+  },
+  "change": {
+    "summary": "Meridian non-production pilot: scale deployment [REDACTED] from 2 to 3 replicas in namespace [REDACTED] (environment meridian-staging-np). Approval does not execute any change.",
+    "desired": {
+      "namespace": "[REDACTED]",
+      "replicas": 3,
+      "from_replicas": 2,
+      "risk_classification": "low",
+      "risk_explanation": "Reversible scale of one non-production deployment in customer-approved namespace; no image, config, secret, or network mutation.",
+      "verification_criteria": [
+        "Kubernetes desired, ready, and available replicas = 3",
+        "Three Ready pods with no rollout failure events in namespace",
+        "Pod restart count does not increase unexpectedly versus before-state",
+        "Prometheus kube_deployment_status_replicas_available query (supplemental only)"
+      ],
+      "failure_criteria": [
+        "rollout does not reach 3 available replicas within configured timeout",
+        "warning events show scheduling/image/probe failure",
+        "restart count increases unexpectedly"
+      ],
+      "rollback_trigger": "any verification failure or insufficient evidence",
+      "maintenance_window": "Saturday 02:00\u201304:00 UTC"
+    },
+    "rollback_plan": "Scale replicas from 3 back to 2 in namespace [REDACTED]",
+    "risk": "low",
+    "risk_explanation": "Reversible scale of one non-production deployment in customer-approved namespace; no image, config, secret, or network mutation."
+  },
+  "before_state": {
+    "replicas": 2,
+    "ready_replicas": 2,
+    "available_replicas": 2,
+    "pods": [
+      {
+        "name": "[REDACTED]-57c4b9d8f-rt6m6",
+        "phase": "Running",
+        "ready": true,
+        "restarts": 0
+      },
+      {
+        "name": "[REDACTED]-57c4b9d8f-z5f5w",
+        "phase": "Running",
+        "ready": true,
+        "restarts": 0
+      }
+    ]
+  },
+  "baseline_hash": null,
+  "verification_criteria": [
+    "Kubernetes desired, ready, and available replicas = 3",
+    "Three Ready pods with no rollout failure events in namespace",
+    "Pod restart count does not increase unexpectedly versus before-state",
+    "Prometheus kube_deployment_status_replicas_available query (supplemental only)"
+  ],
+  "verification_plan": [
+    "Kubernetes desired, ready, and available replicas = 3",
+    "Three Ready pods with no rollout failure events in namespace",
+    "Pod restart count does not increase unexpectedly versus before-state",
+    "Prometheus kube_deployment_status_replicas_available query (supplemental only)"
+  ],
+  "failure_criteria": [
+    "rollout does not reach 3 available replicas within configured timeout",
+    "warning events show scheduling/image/probe failure",
+    "restart count increases unexpectedly"
+  ],
+  "rollback_trigger": "any verification failure or insufficient evidence",
+  "maintenance_window": "Saturday 02:00\u201304:00 UTC",
+  "evidence_limitations": [
+    "[REDACTED] workflow history unavailable \u2014 repository metadata only",
+    "Prometheus namespace workload metrics unavailable \u2014 supplemental query evidence only",
+    "Kubernetes deployment and pod evidence is the primary verification source"
+  ],
+  "integration_readiness": {
+    "verdict": "GO",
+    "evaluated_at": "2026-07-03T04:15:07.008400+00:00"
+  },
+  "preflight": {
+    "allowed": false,
+    "simulated": false,
+    "reason": "Approval policy not satisfied",
+    "reason_code": "APPROVAL_REQUIRED",
+    "remediation": "Complete approval workflow before execution.",
+    "correlation_id": "meridian-[REDACTED]-scale-2-to-3-v1",
+    "missing_capabilities": [],
+    "lifecycle_state": "CONNECTED",
+    "provider_mode": "live",
+    "connection_id": "4d106712-0035-42f7-be12-451fc4a8c665",
+    "evidence_context": {
+      "connection_id": "4d106712-0035-42f7-be12-451fc4a8c665",
+      "state": "CONNECTED",
+      "provider_mode": "live",
+      "last_validated_at": "2026-07-03T04:15:06.984042+00:00",
+      "required_capabilities": [
+        "kubernetes.workloads.write"
+      ],
+      "missing_capabilities": [],
+      "preflight_status": "blocked",
+      "blocked_reason": "APPROVAL_REQUIRED",
+      "remediation_guidance": "Complete approval workflow before execution.",
+      "correlation_id": "meridian-[REDACTED]-scale-2-to-3-v1",
+      "simulated": false
+    },
+    "execution_label": "LIVE-ELIGIBLE / NOT EXECUTED",
+    "live_eligible": true,
+    "proposal_phase": true,
+    "resource_name": "[REDACTED]",
+    "resource_id": "[REDACTED]/[REDACTED]",
+    "environment_id": "4cf39c21-2d00-45b8-b873-79f8fc9b548a",
+    "namespace": "[REDACTED]",
+    "action": "scale_deployment"
+  },
+  "safety_statements": [
+    "Approval alone does not execute any infrastructure mutation.",
+    "A separate typed confirmation and execution step is required after approval.",
+    "This package documents a proposed reversible scale operation only."
+  ],
+  "enrollment": {
+    "id": "34853e15-9e0a-4eb1-859d-fadd3d37f6fb",
+    "kill_switch": false,
+    "operation_count": 0,
+    "operation_limit": 2
+  }
+}

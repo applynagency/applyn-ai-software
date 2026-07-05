@@ -1,0 +1,7 @@
+{
+  "endpoint": "POST /v1/pilot/live-operations/30d98614-5fc6-4410-a28c-e65a15eeabc7/confirm",
+  "typed_confirmation": "pilot-demo",
+  "execution_path": "Pilot confirm \u2192 LiveMutationGate \u2192 k8s_ops.execute_write",
+  "idempotency_key": "sprint66g-pilot-demo-scale-1-to-2-v1",
+  "payload_hash": "5d69df027a2f5038e26f295678194ef0570d39440a74482ee1ea80c6dcbbb11e"
+}

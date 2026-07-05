@@ -1,0 +1,166 @@
+{
+  "sprint": "66H",
+  "banner": "APPROVED FOR INTERNAL PILOT \u2014 NOT EXECUTED \u2014 TYPED CONFIRMATION REQUIRED",
+  "started_at": "2026-07-02T10:39:58.586126+00:00",
+  "organization_id": "41a17fb0-9d64-4e84-accf-0c81f6dc87c4",
+  "enrollment_id": "2c0ce636-4f82-420d-8321-8a4c6f1ed754",
+  "operation_id": "30d98614-5fc6-4410-a28c-e65a15eeabc7",
+  "approval_id": "9cbd4673-d64b-4ef2-a0d7-510483366be3",
+  "go_no_go_execute_only": "GO",
+  "safety_confirmations": {
+    "typed_confirmation_submitted": false,
+    "execution_endpoint_called": false,
+    "execution_readiness_endpoint_called": true,
+    "confirm_endpoint_called": false,
+    "provider_mutation_called": false,
+    "kubernetes_mutation_occurred": false,
+    "customer_or_production_touched": false,
+    "stages_beyond_customer_approval_advanced": false
+  },
+  "remaining_blocker": "typed confirmation only",
+  "pre_approval_validation": {
+    "passed": false,
+    "blockers": [
+      "Approval status must be PENDING (got APPROVED)",
+      "approved_at must be null before decision",
+      "CUSTOMER_APPROVAL must be PENDING before approval"
+    ]
+  },
+  "counts_before": {
+    "proposals": 1,
+    "approvals": 1,
+    "executed_operations": 0
+  },
+  "approval_decision": {
+    "status": "APPROVED",
+    "approved_at": "2026-07-02T10:39:03.144033Z",
+    "payload_hash": "5d69df027a2f5038e26f295678194ef0570d39440a74482ee1ea80c6dcbbb11e",
+    "decision_rationale": "Internal pilot approval for controlled non-production execution-readiness validation. Execution remains separately gated by typed confirmation.",
+    "skipped_decide": true
+  },
+  "operation_after_approval": {
+    "status": "PENDING_CONFIRMATION",
+    "payload_hash": "5d69df027a2f5038e26f295678194ef0570d39440a74482ee1ea80c6dcbbb11e",
+    "execution_label": "LIVE-ELIGIBLE / NOT EXECUTED",
+    "correlation_id": "sprint66g-pilot-demo-scale-1-to-2-v1"
+  },
+  "stage_transitions": {
+    "before": {
+      "CONNECT": "COMPLETED",
+      "VALIDATE": "COMPLETED",
+      "READ_ONLY_ASSESSMENT": "COMPLETED",
+      "BASELINE_CAPTURE": "COMPLETED",
+      "PROPOSE_OPERATION": "COMPLETED",
+      "CUSTOMER_APPROVAL": "COMPLETED",
+      "EXECUTE": "PENDING",
+      "VERIFY": "PENDING",
+      "COMPLETE": "PENDING"
+    },
+    "after": {
+      "CONNECT": "COMPLETED",
+      "VALIDATE": "COMPLETED",
+      "READ_ONLY_ASSESSMENT": "COMPLETED",
+      "BASELINE_CAPTURE": "COMPLETED",
+      "PROPOSE_OPERATION": "COMPLETED",
+      "CUSTOMER_APPROVAL": "COMPLETED",
+      "EXECUTE": "PENDING",
+      "VERIFY": "PENDING",
+      "COMPLETE": "PENDING"
+    }
+  },
+  "execution_readiness": {
+    "operation_id": "30d98614-5fc6-4410-a28c-e65a15eeabc7",
+    "operation_status": "PENDING_CONFIRMATION",
+    "ready_for_typed_confirmation": true,
+    "provider_mutation_called": false,
+    "kubernetes_mutation_called": false,
+    "remaining_required_action": "typed confirmation",
+    "execution_label": "LIVE-ELIGIBLE / NOT EXECUTED",
+    "gates": {
+      "stage_connect": true,
+      "stage_validate": true,
+      "stage_read_only_assessment": true,
+      "stage_baseline_capture": true,
+      "stage_propose_operation": true,
+      "stage_customer_approval": true,
+      "typed_confirmation_supplied": false,
+      "typed_confirmation_required": true,
+      "approval_approved": true,
+      "approval_unexpired": true,
+      "payload_hash_matches": true,
+      "kill_switch_off": true,
+      "operation_limit_ok": true,
+      "cooldown_clear": true,
+      "non_production_environment": true,
+      "operation_awaiting_confirmation": true,
+      "idempotency_key_present": true,
+      "idempotency_unused": true,
+      "rollback_plan_present": true,
+      "before_state_captured": true,
+      "verification_plan_defined": true,
+      "integration_connected": true,
+      "provider_mode_live": true,
+      "live_mutation_gate_preflight": true,
+      "target_replicas_defined": true,
+      "rollback_target_valid": true
+    },
+    "blockers": [],
+    "preflight": {
+      "allowed": true,
+      "simulated": false,
+      "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+      "provider_mode": "live",
+      "validated_capabilities": {
+        "read": true,
+        "write": true
+      },
+      "correlation_id": "sprint66g-pilot-demo-scale-1-to-2-v1",
+      "evidence_context": {
+        "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+        "state": "CONNECTED",
+        "provider_mode": "live",
+        "last_validated_at": "2026-07-02T10:39:58.857080+00:00",
+        "required_capabilities": [
+          "kubernetes.workloads.write"
+        ],
+        "missing_capabilities": [],
+        "preflight_status": "passed",
+        "blocked_reason": null,
+        "remediation_guidance": null,
+        "correlation_id": null,
+        "simulated": false
+      },
+      "lifecycle_state": "CONNECTED",
+      "remediation": null,
+      "reason": null,
+      "reason_code": null
+    }
+  },
+  "counts_after": {
+    "proposals": 1,
+    "approvals": 1,
+    "executed_operations": 0
+  },
+  "redaction": {
+    "secrets_detected": false,
+    "patterns_matched": [],
+    "banner": "APPROVED FOR INTERNAL PILOT \u2014 NOT EXECUTED \u2014 TYPED CONFIRMATION REQUIRED"
+  },
+  "immutability_validation": {
+    "passed": true,
+    "blockers": [],
+    "replicas_before": {
+      "desired_replicas": 1,
+      "ready_replicas": 1,
+      "available_replicas": 1,
+      "source": "prometheus"
+    },
+    "replicas_after": {
+      "desired_replicas": 1,
+      "ready_replicas": 1,
+      "available_replicas": 1,
+      "source": "prometheus"
+    }
+  },
+  "completed_at": "2026-07-02T10:39:59.448343+00:00"
+}

@@ -1,0 +1,107 @@
+{
+  "generated_at": "2026-06-17T09:59:07.580721Z",
+  "project_id": "4b36ded8-4b90-48fa-b6c9-9ba6f21acced",
+  "requirement_id": "70bce18f-6caa-4691-baf6-10f319a97847",
+  "steps": [
+    {
+      "step": "register",
+      "status": 201,
+      "detail": null
+    },
+    {
+      "step": "login",
+      "status": 200,
+      "detail": null
+    },
+    {
+      "step": "create_org",
+      "status": 201,
+      "detail": null
+    },
+    {
+      "step": "switch_org",
+      "status": 200,
+      "detail": null
+    },
+    {
+      "step": "create_workspace",
+      "status": 201,
+      "detail": null
+    },
+    {
+      "step": "create_project",
+      "status": 201,
+      "detail": null
+    },
+    {
+      "step": "create_requirement",
+      "status": 201,
+      "detail": null
+    },
+    {
+      "step": "list_workflows",
+      "status": 200,
+      "detail": null
+    },
+    {
+      "step": "deploy_attempt_1",
+      "status": 422,
+      "detail": "No human-approved approval run found. Approve via /v1/approval/{artifact_id}/approve first."
+    },
+    {
+      "step": "approval_attempt_1",
+      "status": 422,
+      "detail": "No completed Full Stack Assembly run found. Run Full Stack Assembly first."
+    },
+    {
+      "step": "assembly_attempt_1",
+      "status": 422,
+      "detail": "No completed Frontend Execution run found for this requirement. Run Frontend Execution first."
+    },
+    {
+      "step": "approval_attempt_2",
+      "status": 422,
+      "detail": "No completed Full Stack Assembly run found. Run Full Stack Assembly first."
+    },
+    {
+      "step": "deploy_attempt_2",
+      "status": 422,
+      "detail": "No human-approved approval run found. Approve via /v1/approval/{artifact_id}/approve first."
+    },
+    {
+      "step": "create_change_request",
+      "status": 201,
+      "detail": null
+    },
+    {
+      "step": "release_regeneration_attempt_1",
+      "status": 422,
+      "detail": "Regeneration failed at backend_architect: No completed Business Analyst run found for this requirement. Run Business Analyst first."
+    },
+    {
+      "step": "list_builds",
+      "status": 200,
+      "detail": null
+    },
+    {
+      "step": "list_deployments",
+      "status": 200,
+      "detail": null
+    },
+    {
+      "step": "list_releases",
+      "status": 200,
+      "detail": null
+    },
+    {
+      "step": "list_app_versions",
+      "status": 200,
+      "detail": null
+    },
+    {
+      "step": "list_change_requests",
+      "status": 200,
+      "detail": null
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pilot-demo
+  namespace: nexora-pilot
+  labels:
+    app: pilot-demo
+    managed-by: pilot-bootstrap
+    environment: non-production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pilot-demo
+  template:
+    metadata:
+      labels:
+        app: pilot-demo
+        managed-by: pilot-bootstrap
+        environment: non-production
+    spec:
+      containers:
+        - name: pilot-demo
+          image: hashicorp/http-echo:0.2.3
+          args:
+            - -text=pilot-demo
+            - -listen=:8080
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10

@@ -1,0 +1,13 @@
+{
+  "id": "9cbd4673-d64b-4ef2-a0d7-510483366be3",
+  "operation_id": "30d98614-5fc6-4410-a28c-e65a15eeabc7",
+  "approver_name": "Internal Pilot Approver",
+  "approver_email": "pilot-approver@nexora.internal",
+  "operation_summary": "Controlled internal pilot validation: scale deployment pilot-demo from 1 to 2 replicas in namespace nexora-pilot (non-production) using namespace-scoped Kubernetes RBAC.",
+  "target_environment": "development",
+  "rollback_plan": "Scale replicas from 2 back to 1 in namespace nexora-pilot",
+  "payload_hash": "5d69df027a2f5038e26f295678194ef0570d39440a74482ee1ea80c6dcbbb11e",
+  "status": "PENDING",
+  "expires_at": "2026-07-03T10:24:12.697604Z",
+  "approved_at": null
+}

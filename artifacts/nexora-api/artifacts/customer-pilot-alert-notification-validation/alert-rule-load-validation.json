@@ -1,0 +1,29 @@
+{
+  "valid": true,
+  "detail": "Prometheus rule groups loaded",
+  "alerts_loaded": [
+    "CustomerPilotAlertDeliveryTest",
+    "CustomerPilotApprovalRemindersNotRunning",
+    "CustomerPilotDeploymentUnhealthy",
+    "CustomerPilotNotificationFailuresHigh",
+    "CustomerPilotNotificationQueueStale",
+    "CustomerPilotRedisUnavailable",
+    "CustomerPilotReminderCronStale",
+    "CustomerPilotSchedulerUnhealthy",
+    "CustomerPilotSupportExportFailures",
+    "CustomerPilotWorkerUnhealthy"
+  ],
+  "alerts_expected": [
+    "CustomerPilotApprovalRemindersNotRunning",
+    "CustomerPilotDeploymentUnhealthy",
+    "CustomerPilotNotificationFailuresHigh",
+    "CustomerPilotNotificationQueueStale",
+    "CustomerPilotRedisUnavailable",
+    "CustomerPilotReminderCronStale",
+    "CustomerPilotSchedulerUnhealthy",
+    "CustomerPilotSupportExportFailures",
+    "CustomerPilotWorkerUnhealthy"
+  ],
+  "test_alert_rule": "CustomerPilotAlertDeliveryTest",
+  "validated_at": "2026-07-02T18:01:59.327692+00:00"
+}

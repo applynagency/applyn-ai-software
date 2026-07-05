@@ -1,0 +1,64 @@
+{
+  "verdict": "GO",
+  "checks": [
+    {
+      "name": "redis_connectivity",
+      "passed": true,
+      "detail": "Redis reachable",
+      "fix": "Restore Redis connectivity before relying on reminder delivery"
+    },
+    {
+      "name": "arq_worker_heartbeat",
+      "passed": true,
+      "detail": "Last reminder job completed at 2026-07-03 03:31:48.788188+00:00",
+      "fix": "Ensure Arq worker is running and processing cron jobs"
+    },
+    {
+      "name": "approval_reminder_cron_registered",
+      "passed": true,
+      "detail": "Reminder cron registered",
+      "fix": "Enable PILOT_MODE_ENABLED and JOB_CRON_ENABLED with worker on default queue"
+    },
+    {
+      "name": "scheduler_lock_capability",
+      "passed": true,
+      "detail": "Redis lock available",
+      "fix": "Verify Redis lock configuration or disable DISTRIBUTED_LOCK_ENABLED for single-node"
+    },
+    {
+      "name": "reminder_last_success",
+      "passed": true,
+      "detail": "Last successful reminder run 0.7h ago",
+      "fix": "Investigate cron_customer_pilot_approval_reminders failures in worker logs"
+    },
+    {
+      "name": "reminder_failure_streak",
+      "passed": true,
+      "detail": "Consecutive reminder failures: 0",
+      "fix": "Review worker logs and Redis connectivity; resolve root cause before customer onboarding"
+    },
+    {
+      "name": "failed_delivery_backlog",
+      "passed": true,
+      "detail": "Failed notification deliveries: 0",
+      "fix": "Use delivery requeue endpoint for failed records after fixing root cause"
+    },
+    {
+      "name": "clock_sanity",
+      "passed": true,
+      "detail": "System clock uses UTC",
+      "fix": "Sync NTP on worker nodes"
+    },
+    {
+      "name": "email_provider",
+      "passed": true,
+      "detail": "Email not configured (in-app only)",
+      "fix": "Configure SMTP_HOST for email reminders if required"
+    }
+  ],
+  "failed_checks": [],
+  "insufficient_evidence": [],
+  "remediation_steps": [],
+  "evaluated_at": "2026-07-03T04:11:21.629140+00:00",
+  "read_only": true
+}

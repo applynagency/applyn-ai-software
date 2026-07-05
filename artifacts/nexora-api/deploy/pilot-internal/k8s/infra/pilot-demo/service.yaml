@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pilot-demo
+  namespace: nexora-pilot
+  labels:
+    app: pilot-demo
+    managed-by: pilot-bootstrap
+    environment: non-production
+spec:
+  type: ClusterIP
+  selector:
+    app: pilot-demo
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

@@ -1,0 +1,271 @@
+{
+  "firing_events": [
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotAlertDeliveryTest",
+      "severity": "info",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-02T18:03:52.601Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotRedisUnavailable",
+      "severity": "critical",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T07:11:34.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotSchedulerUnhealthy",
+      "severity": "critical",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T07:16:34.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotDeploymentUnhealthy",
+      "severity": "warning",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T07:21:34.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotSupportExportFailures",
+      "severity": "info",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T07:36:34.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotRedisUnavailable",
+      "severity": "critical",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T08:33:19.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotSchedulerUnhealthy",
+      "severity": "critical",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T08:38:19.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotDeploymentUnhealthy",
+      "severity": "warning",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T08:43:19.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotRedisUnavailable",
+      "severity": "critical",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T14:05:49.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotWorkerUnhealthy",
+      "severity": "critical",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T14:10:49.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotDeploymentUnhealthy",
+      "severity": "warning",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T14:15:49.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotSupportExportFailures",
+      "severity": "info",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T14:30:49.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotRedisUnavailable",
+      "severity": "critical",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T15:33:34.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotWorkerUnhealthy",
+      "severity": "critical",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T15:38:34.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotDeploymentUnhealthy",
+      "severity": "warning",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T15:43:34.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotSupportExportFailures",
+      "severity": "info",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T15:58:34.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotSchedulerUnhealthy",
+      "severity": "critical",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T16:58:34.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotSupportExportFailures",
+      "severity": "info",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T16:59:04.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotRedisUnavailable",
+      "severity": "critical",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T18:14:19.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotRedisUnavailable",
+      "severity": "critical",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T18:23:49.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotSchedulerUnhealthy",
+      "severity": "critical",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T18:28:49.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotDeploymentUnhealthy",
+      "severity": "warning",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T18:33:49.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "status": "firing",
+      "alertname": "CustomerPilotSupportExportFailures",
+      "severity": "info",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T18:48:49.517Z",
+      "ends_at": "0001-01-01T00:00:00Z"
+    }
+  ],
+  "resolved_events": [
+    {
+      "status": "resolved",
+      "alertname": "CustomerPilotAlertDeliveryTest",
+      "severity": "info",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-02T18:01:52.601Z",
+      "ends_at": "2026-07-02T18:02:52.601Z"
+    },
+    {
+      "status": "resolved",
+      "alertname": "CustomerPilotAlertDeliveryTest",
+      "severity": "info",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-02T18:03:52.601Z",
+      "ends_at": "2026-07-02T18:04:07.601Z"
+    },
+    {
+      "status": "resolved",
+      "alertname": "CustomerPilotSupportExportFailures",
+      "severity": "info",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T07:36:34.517Z",
+      "ends_at": "2026-07-03T08:07:49.517Z"
+    },
+    {
+      "status": "resolved",
+      "alertname": "CustomerPilotDeploymentUnhealthy",
+      "severity": "warning",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T07:21:34.517Z",
+      "ends_at": "2026-07-03T08:27:49.517Z"
+    },
+    {
+      "status": "resolved",
+      "alertname": "CustomerPilotDeploymentUnhealthy",
+      "severity": "warning",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T08:43:19.517Z",
+      "ends_at": "2026-07-03T09:01:49.517Z"
+    },
+    {
+      "status": "resolved",
+      "alertname": "CustomerPilotSupportExportFailures",
+      "severity": "info",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T14:30:49.517Z",
+      "ends_at": "2026-07-03T15:13:19.517Z"
+    },
+    {
+      "status": "resolved",
+      "alertname": "CustomerPilotSupportExportFailures",
+      "severity": "info",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T15:58:34.517Z",
+      "ends_at": "2026-07-03T16:28:49.517Z"
+    },
+    {
+      "status": "resolved",
+      "alertname": "CustomerPilotSupportExportFailures",
+      "severity": "info",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T16:59:04.517Z",
+      "ends_at": "2026-07-03T18:09:04.517Z"
+    },
+    {
+      "status": "resolved",
+      "alertname": "CustomerPilotRedisUnavailable",
+      "severity": "critical",
+      "component": "customer-pilot",
+      "starts_at": "2026-07-03T18:14:19.517Z",
+      "ends_at": "2026-07-03T18:18:04.517Z"
+    }
+  ],
+  "firing_count": 23,
+  "resolved_count": 9,
+  "duplicate_prevented": false,
+  "channel": "internal_webhook",
+  "rule_name": "CustomerPilotSupportExportFailures",
+  "delivered": true,
+  "resolved_at": "2026-07-03T18:18:24.603740+00:00",
+  "validated_at": "2026-07-03T18:48:55.924018+00:00",
+  "fired_at": "2026-07-02T18:03:58.471764+00:00"
+}

@@ -1,0 +1,97 @@
+{
+  "total": 6,
+  "connected": 5,
+  "degraded": 1,
+  "failed": 0,
+  "expired": 0,
+  "reauth_required": 0,
+  "last_validation": "2026-07-02T09:00:27.359170Z",
+  "capability_gaps": [
+    {
+      "connection_id": "4eacbdc9-1230-43cd-a941-0aa07efb6062",
+      "provider": "PROMETHEUS",
+      "missing": [
+        "write",
+        "deploy",
+        "apply",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    },
+    {
+      "connection_id": "08503643-4ba6-4cef-86f3-1658bc0ca8b6",
+      "provider": "GITHUB",
+      "missing": [
+        "write",
+        "deploy",
+        "apply",
+        "query_metrics",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    },
+    {
+      "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+      "provider": "KUBERNETES",
+      "missing": [
+        "write",
+        "deploy",
+        "apply",
+        "query_metrics",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    },
+    {
+      "connection_id": "47e1dcb5-cae1-4538-baed-f69acd9a4dfe",
+      "provider": "PROMETHEUS",
+      "missing": [
+        "write",
+        "deploy",
+        "apply",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    },
+    {
+      "connection_id": "d68c7d9c-4a09-4e10-b714-8fc2809e6ac9",
+      "provider": "GITHUB",
+      "missing": [
+        "read",
+        "write",
+        "deploy",
+        "apply",
+        "query_metrics",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    },
+    {
+      "connection_id": "f5531aa9-5d20-415e-a5e4-80df585f22e6",
+      "provider": "KUBERNETES",
+      "missing": [
+        "write",
+        "deploy",
+        "apply",
+        "query_metrics",
+        "query_logs",
+        "query_traces",
+        "traffic_shift",
+        "sync_gitops"
+      ]
+    }
+  ],
+  "upcoming_expiry": [],
+  "affected_features": [],
+  "remediation_hints": []
+}

@@ -1,0 +1,76 @@
+# Dedicated scheduler ("beat") node. Single replica owns the periodic cron jobs
+# (discovery, monitoring, escalation, workflow). Exactly-once is guaranteed three
+# ways: replicas=1, Arq cron(unique=True), and the Redis scheduler lock — so even
+# during a rolling update overlap no tick double-fires. If this pod dies, the
+# lease expires and the replacement resumes; missed ticks simply run next cycle.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexora-scheduler
+  namespace: nexora
+  labels:
+    app.kubernetes.io/name: nexora-scheduler
+    app.kubernetes.io/component: scheduler
+    app.kubernetes.io/part-of: nexora
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nexora-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nexora-scheduler
+        app.kubernetes.io/component: scheduler
+        app.kubernetes.io/part-of: nexora
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: scheduler
+          image: nexora/api:latest
+          imagePullPolicy: IfNotPresent
+          command: ["arq", "app.jobs.worker.WorkerSettings"]
+          env:
+            - name: JOB_WORKER_QUEUE
+              value: "nexora:jobs"
+            - name: JOB_CRON_ENABLED
+              value: "true"
+            # Keep the scheduler lean: it dispatches cron, processing happens on
+            # the worker fleet.
+            - name: JOB_MAX_CONCURRENCY
+              value: "2"
+          envFrom:
+            - configMapRef:
+                name: nexora-config
+            - secretRef:
+                name: nexora-secrets
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pgrep -f 'arq app.jobs.worker' > /dev/null"]
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: nexora-scheduler
+  namespace: nexora
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nexora-scheduler

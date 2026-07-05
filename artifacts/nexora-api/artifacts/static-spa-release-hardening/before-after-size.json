@@ -1,0 +1,48 @@
+{
+  "measurement": "static source file bytes (raw) and production build analysis.json",
+  "budget": {
+    "maxRawKB_app.js": 950,
+    "changed": false
+  },
+  "before": {
+    "phase": "post-Sprint-68C, pre-Sprint-68D",
+    "app.js": {
+      "rawBytes": 1016198,
+      "rawKB": 992.4,
+      "minKB": 822.0,
+      "gzipKB": 142.0,
+      "brotliKB": 110.0,
+      "budgetStatus": "FAIL",
+      "overByRawKB": 42.4
+    },
+    "pilot-operator.js": null,
+    "initialBundleBrotliKB": 119.0
+  },
+  "after": {
+    "phase": "Sprint-68D release-hardened",
+    "app.js": {
+      "rawBytes": 970500,
+      "rawKB": 947.8,
+      "minKB": 784.9,
+      "gzipKB": 135.3,
+      "brotliKB": 104.9,
+      "budgetStatus": "PASS",
+      "underByRawKB": 2.2
+    },
+    "pilot-operator.js": {
+      "rawBytes": 48805,
+      "rawKB": 47.7,
+      "minKB": 39.0,
+      "gzipKB": 8.0,
+      "brotliKB": 6.9,
+      "lazy": true
+    },
+    "initialBundleBrotliKB": 114.1
+  },
+  "delta": {
+    "app.js_rawKB": -44.6,
+    "pilot-operator.js_rawKB": 47.7,
+    "netSourceMovedKB": 47.7,
+    "initialBundleBrotliKB": -4.9
+  }
+}

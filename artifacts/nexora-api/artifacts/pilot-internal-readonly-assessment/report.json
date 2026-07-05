@@ -1,0 +1,714 @@
+{
+  "started_at": "2026-07-02T09:26:29.704464+00:00",
+  "organization_id": "41a17fb0-9d64-4e84-accf-0c81f6dc87c4",
+  "enrollment_id": "2c0ce636-4f82-420d-8321-8a4c6f1ed754",
+  "registry_ids": {
+    "KUBERNETES": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+    "GITHUB": "08503643-4ba6-4cef-86f3-1658bc0ca8b6",
+    "PROMETHEUS": "4eacbdc9-1230-43cd-a941-0aa07efb6062"
+  },
+  "stages": {
+    "before": {
+      "CONNECT": {
+        "status": "COMPLETED",
+        "completed_at": "2026-07-02T09:00:27.448665Z"
+      },
+      "VALIDATE": {
+        "status": "COMPLETED",
+        "completed_at": "2026-07-02T09:00:27.466339Z"
+      },
+      "READ_ONLY_ASSESSMENT": {
+        "status": "COMPLETED",
+        "completed_at": "2026-07-02T09:23:42.889689Z"
+      },
+      "BASELINE_CAPTURE": {
+        "status": "COMPLETED",
+        "completed_at": "2026-07-02T09:23:42.907377Z"
+      },
+      "PROPOSE_OPERATION": {
+        "status": "PENDING",
+        "completed_at": null
+      },
+      "CUSTOMER_APPROVAL": {
+        "status": "PENDING",
+        "completed_at": null
+      },
+      "EXECUTE": {
+        "status": "PENDING",
+        "completed_at": null
+      },
+      "VERIFY": {
+        "status": "PENDING",
+        "completed_at": null
+      },
+      "COMPLETE": {
+        "status": "PENDING",
+        "completed_at": null
+      }
+    },
+    "after": {
+      "CONNECT": {
+        "status": "COMPLETED",
+        "completed_at": "2026-07-02T09:00:27.448665Z",
+        "evidence": {}
+      },
+      "VALIDATE": {
+        "status": "COMPLETED",
+        "completed_at": "2026-07-02T09:00:27.466339Z",
+        "evidence": {}
+      },
+      "READ_ONLY_ASSESSMENT": {
+        "status": "COMPLETED",
+        "completed_at": "2026-07-02T09:23:42.889689Z",
+        "evidence": {
+          "assessment_id": "203c3f74-90bf-4d4d-8f56-6b0f37bff46e",
+          "source_modes": {
+            "PROMETHEUS": "live",
+            "GITHUB": "live",
+            "KUBERNETES": "live"
+          },
+          "finding_count": 5
+        }
+      },
+      "BASELINE_CAPTURE": {
+        "status": "COMPLETED",
+        "completed_at": "2026-07-02T09:23:42.907377Z",
+        "evidence": {
+          "scorecard_id": "b3464090-58de-4710-affd-0a46b7af6f3e",
+          "baseline_hash": "f14b045b2283011a6a4c51b447bd4876b7a19f2441da35e818edf50f478dff77",
+          "assessment_id": "203c3f74-90bf-4d4d-8f56-6b0f37bff46e"
+        }
+      },
+      "PROPOSE_OPERATION": {
+        "status": "PENDING",
+        "completed_at": null,
+        "evidence": {}
+      },
+      "CUSTOMER_APPROVAL": {
+        "status": "PENDING",
+        "completed_at": null,
+        "evidence": {}
+      },
+      "EXECUTE": {
+        "status": "PENDING",
+        "completed_at": null,
+        "evidence": {}
+      },
+      "VERIFY": {
+        "status": "PENDING",
+        "completed_at": null,
+        "evidence": {}
+      },
+      "COMPLETE": {
+        "status": "PENDING",
+        "completed_at": null,
+        "evidence": {}
+      }
+    }
+  },
+  "assessment": {
+    "id": "5a1636f1-baca-492a-93de-cb732473f708",
+    "status": "COMPLETED",
+    "summary": {
+      "findings": [
+        {
+          "finding_id": "k8s-namespace-inventory",
+          "title": "Namespace 'nexora-pilot' inventory captured",
+          "description": "Observed 0 deployment(s), 0 pod(s), 0 service(s) in live cluster.",
+          "source": "KUBERNETES",
+          "source_mode": "live",
+          "confidence": "HIGH",
+          "risk": "INFO",
+          "evidence": [
+            {
+              "type": "kubernetes_inventory",
+              "cluster": "default",
+              "namespace": "nexora-pilot",
+              "deployments": [],
+              "pods": [],
+              "events": []
+            }
+          ],
+          "gaps": [],
+          "recommendation": null
+        },
+        {
+          "finding_id": "k8s-empty-namespace",
+          "title": "Pilot namespace has no workloads",
+          "description": "Namespace exists but no deployments or pods were observed.",
+          "source": "KUBERNETES",
+          "source_mode": "live",
+          "confidence": "HIGH",
+          "risk": "INFO",
+          "evidence": [
+            {
+              "type": "empty_namespace",
+              "namespace": "nexora-pilot"
+            }
+          ],
+          "gaps": [],
+          "recommendation": "Deploy a non-production pilot workload to enable deeper health signals."
+        },
+        {
+          "finding_id": "github-repo-metadata",
+          "title": "Repository pilot-admin/pilot-test metadata captured",
+          "description": "Default branch: main.",
+          "source": "GITHUB",
+          "source_mode": "live",
+          "confidence": "HIGH",
+          "risk": "INFO",
+          "evidence": [
+            {
+              "type": "repository_metadata",
+              "metadata": {
+                "full_name": "pilot-admin/pilot-test",
+                "default_branch": "main",
+                "visibility": "private",
+                "open_issues": 0,
+                "pushed_at": null,
+                "size": 23
+              },
+              "recent_commits": [
+                {
+                  "sha": "a290d0689feb",
+                  "message": "Initial commit\n",
+                  "author": "pilot-admin",
+                  "date": "2026-07-02T09:26:19Z"
+                }
+              ]
+            }
+          ],
+          "gaps": [
+            "workflows_unavailable",
+            "workflow_runs_unavailable",
+            "branch_protection_not_readable"
+          ],
+          "recommendation": null
+        },
+        {
+          "finding_id": "github-pipelines-insufficient",
+          "title": "Pipeline run history not available",
+          "description": "Workflow definitions or runs could not be read with current token scope.",
+          "source": "GITHUB",
+          "source_mode": "live",
+          "confidence": "INSUFFICIENT_EVIDENCE",
+          "risk": "INFO",
+          "evidence": [
+            {
+              "workflows": []
+            }
+          ],
+          "gaps": [
+            "workflow_runs_unavailable"
+          ],
+          "recommendation": null
+        },
+        {
+          "finding_id": "prometheus-health",
+          "title": "Prometheus endpoint healthy",
+          "description": "Build info and target summary collected via read-only API.",
+          "source": "PROMETHEUS",
+          "source_mode": "live",
+          "confidence": "HIGH",
+          "risk": "INFO",
+          "evidence": [
+            {
+              "type": "prometheus_health",
+              "buildinfo": {
+                "version": "2.54.1",
+                "revision": "e6cfa720fbe6280153fab13090a483dbd40bece3",
+                "branch": "HEAD",
+                "buildUser": "root@812ffd741951",
+                "buildDate": "20240827-10:59:03",
+                "goVersion": "go1.22.6"
+              },
+              "targets": {
+                "total": 1,
+                "up": 1,
+                "down": 0,
+                "jobs": [
+                  "prometheus"
+                ]
+              },
+              "queries": [
+                {
+                  "name": "up",
+                  "expression": "up",
+                  "series_count": 1,
+                  "sample": [
+                    {
+                      "metric": {
+                        "__name__": "up",
+                        "job": "prometheus"
+                      },
+                      "value": [
+                        1782984390.047,
+                        "1"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "prometheus_ready",
+                  "expression": "prometheus_ready",
+                  "series_count": 1,
+                  "sample": [
+                    {
+                      "metric": {
+                        "__name__": "prometheus_ready",
+                        "job": "prometheus"
+                      },
+                      "value": [
+                        1782984390.05,
+                        "1"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "kube_pod_container_status_restarts_total",
+                  "expression": "kube_pod_container_status_restarts_total{namespace=\"nexora-pilot\"}",
+                  "series_count": 0,
+                  "sample": []
+                },
+                {
+                  "name": "kube_deployment_status_replicas_available",
+                  "expression": "kube_deployment_status_replicas_available{namespace=\"nexora-pilot\"}",
+                  "series_count": 0,
+                  "sample": []
+                }
+              ]
+            }
+          ],
+          "gaps": [
+            "namespace_workload_metrics_unavailable"
+          ],
+          "recommendation": null
+        },
+        {
+          "finding_id": "prometheus-workload-metrics-gap",
+          "title": "No workload metrics for pilot namespace",
+          "description": "Prometheus did not return series for namespace-scoped kube-state metrics.",
+          "source": "PROMETHEUS",
+          "source_mode": "live",
+          "confidence": "INSUFFICIENT_EVIDENCE",
+          "risk": "INFO",
+          "evidence": [
+            {
+              "queries": [
+                {
+                  "name": "up",
+                  "expression": "up",
+                  "series_count": 1,
+                  "sample": [
+                    {
+                      "metric": {
+                        "__name__": "up",
+                        "job": "prometheus"
+                      },
+                      "value": [
+                        1782984390.047,
+                        "1"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "prometheus_ready",
+                  "expression": "prometheus_ready",
+                  "series_count": 1,
+                  "sample": [
+                    {
+                      "metric": {
+                        "__name__": "prometheus_ready",
+                        "job": "prometheus"
+                      },
+                      "value": [
+                        1782984390.05,
+                        "1"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "kube_pod_container_status_restarts_total",
+                  "expression": "kube_pod_container_status_restarts_total{namespace=\"nexora-pilot\"}",
+                  "series_count": 0,
+                  "sample": []
+                },
+                {
+                  "name": "kube_deployment_status_replicas_available",
+                  "expression": "kube_deployment_status_replicas_available{namespace=\"nexora-pilot\"}",
+                  "series_count": 0,
+                  "sample": []
+                }
+              ]
+            }
+          ],
+          "gaps": [
+            "namespace_workload_metrics_unavailable"
+          ],
+          "recommendation": "Configure scrape targets for the pilot namespace before SLO-style analysis."
+        }
+      ],
+      "gaps": [
+        "branch_protection_not_readable",
+        "namespace_workload_metrics_unavailable",
+        "workflow_runs_unavailable",
+        "workflows_unavailable"
+      ],
+      "integration_health": {
+        "total": 6,
+        "connected": 5,
+        "source_mode": "live"
+      },
+      "kubernetes": {
+        "source_mode": "live",
+        "cluster": "default",
+        "api_server": "https://pilot-k3s:6443",
+        "version": "v1.30.4+k3s1",
+        "namespaces_observed": [
+          "default",
+          "kube-node-lease",
+          "kube-public",
+          "kube-system",
+          "nexora-pilot"
+        ],
+        "namespace": "nexora-pilot",
+        "namespace_exists": true,
+        "deployments": [],
+        "pods": [],
+        "services": [],
+        "events": [],
+        "network_policies": []
+      },
+      "github": {
+        "source_mode": "live",
+        "repository": "pilot-admin/pilot-test",
+        "metadata": {
+          "full_name": "pilot-admin/pilot-test",
+          "default_branch": "main",
+          "visibility": "private",
+          "open_issues": 0,
+          "pushed_at": null,
+          "size": 23
+        },
+        "recent_commits": [
+          {
+            "sha": "a290d0689feb",
+            "message": "Initial commit\n",
+            "author": "pilot-admin",
+            "date": "2026-07-02T09:26:19Z"
+          }
+        ],
+        "workflows": [],
+        "workflow_runs": [],
+        "branch_protection": null,
+        "releases": [],
+        "gaps": [
+          "workflows_unavailable",
+          "workflow_runs_unavailable",
+          "branch_protection_not_readable"
+        ]
+      },
+      "prometheus": {
+        "source_mode": "live",
+        "endpoint": "http://pilot-prometheus:9090",
+        "queries": [
+          {
+            "name": "up",
+            "expression": "up",
+            "series_count": 1,
+            "sample": [
+              {
+                "metric": {
+                  "__name__": "up",
+                  "job": "prometheus"
+                },
+                "value": [
+                  1782984390.047,
+                  "1"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "prometheus_ready",
+            "expression": "prometheus_ready",
+            "series_count": 1,
+            "sample": [
+              {
+                "metric": {
+                  "__name__": "prometheus_ready",
+                  "job": "prometheus"
+                },
+                "value": [
+                  1782984390.05,
+                  "1"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "kube_pod_container_status_restarts_total",
+            "expression": "kube_pod_container_status_restarts_total{namespace=\"nexora-pilot\"}",
+            "series_count": 0,
+            "sample": []
+          },
+          {
+            "name": "kube_deployment_status_replicas_available",
+            "expression": "kube_deployment_status_replicas_available{namespace=\"nexora-pilot\"}",
+            "series_count": 0,
+            "sample": []
+          }
+        ],
+        "buildinfo": {
+          "version": "2.54.1",
+          "revision": "e6cfa720fbe6280153fab13090a483dbd40bece3",
+          "branch": "HEAD",
+          "buildUser": "root@812ffd741951",
+          "buildDate": "20240827-10:59:03",
+          "goVersion": "go1.22.6"
+        },
+        "targets": {
+          "total": 1,
+          "up": 1,
+          "down": 0,
+          "jobs": [
+            "prometheus"
+          ]
+        },
+        "gaps": [
+          "namespace_workload_metrics_unavailable"
+        ]
+      },
+      "connection_ids": {
+        "KUBERNETES": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+        "GITHUB": "08503643-4ba6-4cef-86f3-1658bc0ca8b6",
+        "PROMETHEUS": "4eacbdc9-1230-43cd-a941-0aa07efb6062"
+      }
+    },
+    "recommendations": [
+      {
+        "priority": "LOW",
+        "action": "Deploy a non-production pilot workload to enable deeper health signals.",
+        "evidence": [
+          {
+            "type": "empty_namespace",
+            "namespace": "nexora-pilot"
+          }
+        ],
+        "source_mode": "live"
+      },
+      {
+        "priority": "MEDIUM",
+        "action": "Evidence gap: Repository pilot-admin/pilot-test metadata captured \u2014 review GITHUB integration scope",
+        "evidence": [
+          {
+            "type": "repository_metadata",
+            "metadata": {
+              "full_name": "pilot-admin/pilot-test",
+              "default_branch": "main",
+              "visibility": "private",
+              "open_issues": 0,
+              "pushed_at": null,
+              "size": 23
+            },
+            "recent_commits": [
+              {
+                "sha": "a290d0689feb",
+                "message": "Initial commit\n",
+                "author": "pilot-admin",
+                "date": "2026-07-02T09:26:19Z"
+              }
+            ]
+          }
+        ],
+        "source_mode": "live"
+      },
+      {
+        "priority": "MEDIUM",
+        "action": "Evidence gap: Pipeline run history not available \u2014 review GITHUB integration scope",
+        "evidence": [
+          {
+            "workflows": []
+          }
+        ],
+        "source_mode": "live"
+      },
+      {
+        "priority": "MEDIUM",
+        "action": "Evidence gap: Prometheus endpoint healthy \u2014 review PROMETHEUS integration scope",
+        "evidence": [
+          {
+            "type": "prometheus_health",
+            "buildinfo": {
+              "version": "2.54.1",
+              "revision": "e6cfa720fbe6280153fab13090a483dbd40bece3",
+              "branch": "HEAD",
+              "buildUser": "root@812ffd741951",
+              "buildDate": "20240827-10:59:03",
+              "goVersion": "go1.22.6"
+            },
+            "targets": {
+              "total": 1,
+              "up": 1,
+              "down": 0,
+              "jobs": [
+                "prometheus"
+              ]
+            },
+            "queries": [
+              {
+                "name": "up",
+                "expression": "up",
+                "series_count": 1,
+                "sample": [
+                  {
+                    "metric": {
+                      "__name__": "up",
+                      "job": "prometheus"
+                    },
+                    "value": [
+                      1782984390.047,
+                      "1"
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "prometheus_ready",
+                "expression": "prometheus_ready",
+                "series_count": 1,
+                "sample": [
+                  {
+                    "metric": {
+                      "__name__": "prometheus_ready",
+                      "job": "prometheus"
+                    },
+                    "value": [
+                      1782984390.05,
+                      "1"
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "kube_pod_container_status_restarts_total",
+                "expression": "kube_pod_container_status_restarts_total{namespace=\"nexora-pilot\"}",
+                "series_count": 0,
+                "sample": []
+              },
+              {
+                "name": "kube_deployment_status_replicas_available",
+                "expression": "kube_deployment_status_replicas_available{namespace=\"nexora-pilot\"}",
+                "series_count": 0,
+                "sample": []
+              }
+            ]
+          }
+        ],
+        "source_mode": "live"
+      },
+      {
+        "priority": "MEDIUM",
+        "action": "Evidence gap: No workload metrics for pilot namespace \u2014 review PROMETHEUS integration scope",
+        "evidence": [
+          {
+            "queries": [
+              {
+                "name": "up",
+                "expression": "up",
+                "series_count": 1,
+                "sample": [
+                  {
+                    "metric": {
+                      "__name__": "up",
+                      "job": "prometheus"
+                    },
+                    "value": [
+                      1782984390.047,
+                      "1"
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "prometheus_ready",
+                "expression": "prometheus_ready",
+                "series_count": 1,
+                "sample": [
+                  {
+                    "metric": {
+                      "__name__": "prometheus_ready",
+                      "job": "prometheus"
+                    },
+                    "value": [
+                      1782984390.05,
+                      "1"
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "kube_pod_container_status_restarts_total",
+                "expression": "kube_pod_container_status_restarts_total{namespace=\"nexora-pilot\"}",
+                "series_count": 0,
+                "sample": []
+              },
+              {
+                "name": "kube_deployment_status_replicas_available",
+                "expression": "kube_deployment_status_replicas_available{namespace=\"nexora-pilot\"}",
+                "series_count": 0,
+                "sample": []
+              }
+            ]
+          }
+        ],
+        "source_mode": "live"
+      }
+    ],
+    "source_modes": {
+      "PROMETHEUS": "live",
+      "GITHUB": "live",
+      "KUBERNETES": "live"
+    },
+    "created_at": "2026-07-02T09:26:30.059070Z",
+    "export_markdown": "# Pilot Read-Only Assessment\n\nAssessment ID: 5a1636f1-baca-492a-93de-cb732473f708\n\n## Findings\n\n- **Namespace 'nexora-pilot' inventory captured** (risk=INFO, confidence=HIGH)\n- **Pilot namespace has no workloads** (risk=INFO, confidence=HIGH)\n- **Repository pilot-admin/pilot-test metadata captured** (risk=INFO, confidence=HIGH)\n- **Pipeline run history not available** (risk=INFO, confidence=INSUFFICIENT_EVIDENCE)\n- **Prometheus endpoint healthy** (risk=INFO, confidence=HIGH)\n- **No workload metrics for pilot namespace** (risk=INFO, confidence=INSUFFICIENT_EVIDENCE)\n\n## Recommendations\n\n- **LOW**: Deploy a non-production pilot workload to enable deeper health signals. _(source: live)_\n- **MEDIUM**: Evidence gap: Repository pilot-admin/pilot-test metadata captured \u2014 review GITHUB integration scope _(source: live)_\n- **MEDIUM**: Evidence gap: Pipeline run history not available \u2014 review GITHUB integration scope _(source: live)_\n- **MEDIUM**: Evidence gap: Prometheus endpoint healthy \u2014 review PROMETHEUS integration scope _(source: live)_\n- **MEDIUM**: Evidence gap: No workload metrics for pilot namespace \u2014 review PROMETHEUS integration scope _(source: live)_"
+  },
+  "baseline": {
+    "scores": {
+      "setup_readiness": 0,
+      "visibility": 100,
+      "operational_maturity": 100,
+      "automation_readiness": 100,
+      "risk": 0,
+      "value_realized": 0
+    },
+    "metrics": {
+      "integration_connection_success_rate": 1.0,
+      "time_to_first_assessment_hours": null,
+      "finding_count": 6,
+      "insufficient_evidence_count": 2,
+      "baseline_hash": "3ddea418972798f7104bf0cc0895d9081be950be2f1d9ee533c78fd95980ce67"
+    },
+    "insufficient_data": [
+      "branch_protection_not_readable",
+      "namespace_workload_metrics_unavailable",
+      "workflow_runs_unavailable",
+      "workflows_unavailable"
+    ],
+    "created_at": "2026-07-02T09:26:30.079349Z"
+  },
+  "exports": {
+    "evidence_pack_status": 200,
+    "evidence_pack_path": "artifacts/pilot-internal-readonly-assessment/evidence_pack.json",
+    "diagnostics_status": 200,
+    "diagnostics_path": "artifacts/pilot-internal-readonly-assessment/diagnostics.json",
+    "report_status": 200,
+    "report_path": "artifacts/pilot-internal-readonly-assessment/report.json"
+  },
+  "redaction_violations": [],
+  "go_no_go": "GO",
+  "next_action": "Eligible for PROPOSE_OPERATION when customer-ready (not advanced by 66D)"
+}

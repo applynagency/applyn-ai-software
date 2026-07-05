@@ -1,0 +1,38 @@
+{
+  "organization_id": "86238c88-f8f6-44da-a335-50ce4ba807af",
+  "organization_name": "Meridian Analytics Pilot",
+  "organization_slug": "meridian-pilot-np",
+  "customer_admin_email_redacted": true,
+  "approver_email_redacted": true,
+  "enrollment_id": "34853e15-9e0a-4eb1-859d-fadd3d37f6fb",
+  "environment_id": "4cf39c21-2d00-45b8-b873-79f8fc9b548a",
+  "kickoff_scope": {
+    "customer_name": "Meridian Analytics Pilot",
+    "environment_name": "meridian-staging-np",
+    "environment_classification": "staging",
+    "approved_namespace": "nexora-pilot",
+    "approved_repository": "pilot-admin/pilot-test",
+    "prometheus_scope": "read-only namespace queries",
+    "named_approver": "Meridian Pilot Approver",
+    "named_operator": "nexora-operator@example.com",
+    "maintenance_window": "Agreed Sat 02:00-04:00 UTC",
+    "first_operation_candidate": "scale_deployment",
+    "rollback_plan": "Scale replicas 2 \u2192 1 in approved namespace",
+    "success_criteria": "Deployment healthy at 2 replicas with Prometheus verification",
+    "production_excluded": true,
+    "in_app_notifications_acknowledged": true,
+    "captured_at": "2026-07-02T18:16:03.897303+00:00"
+  },
+  "allowlist_update": {
+    "updated": false,
+    "recommended_pilot_organization_ids": [
+      "41a17fb0-9d64-4e84-accf-0c81f6dc87c4",
+      "86238c88-f8f6-44da-a335-50ce4ba807af"
+    ],
+    "requires_api_restart": true,
+    "detail": "Set PILOT_ORGANIZATION_IDS in host .env and restart API"
+  },
+  "tenant_isolation": "organization_scoped",
+  "pilot_portal_enabled": true,
+  "notification_model": "in_app_only"
+}

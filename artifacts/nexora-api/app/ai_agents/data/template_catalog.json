@@ -1,0 +1,194 @@
+{
+  "version": "1.0",
+  "templates": [
+    {
+      "slug": "security-review-agent",
+      "name": "Security Review Agent",
+      "description": "Reviews code and architecture for security vulnerabilities, OWASP risks, and compliance gaps.",
+      "category": "Security",
+      "agent": {
+        "name": "Security Review Agent",
+        "description": "Automated security review for pull requests and architecture changes.",
+        "goal": "Identify security vulnerabilities and recommend remediation before deployment.",
+        "status": "ACTIVE",
+        "prompt_template": "You are a senior application security engineer. Review the provided code, architecture, and dependencies for security risks. Focus on OWASP Top 10, authentication/authorization flaws, injection vulnerabilities, secrets exposure, and insecure configurations. Return structured findings with severity, evidence, and remediation steps."
+      },
+      "inputs": [
+        { "input_name": "code_diff", "input_type": "TEXT", "required": true },
+        { "input_name": "architecture_notes", "input_type": "TEXT", "required": false },
+        { "input_name": "dependency_manifest", "input_type": "JSON", "required": false }
+      ],
+      "outputs": [
+        { "output_name": "findings", "output_type": "JSON" },
+        { "output_name": "risk_summary", "output_type": "TEXT" },
+        { "output_name": "approval_recommendation", "output_type": "TEXT" }
+      ],
+      "responsibilities": [
+        { "title": "Scan for OWASP Top 10 issues", "description": "Identify common web application security risks", "priority": "CRITICAL" },
+        { "title": "Review authentication flows", "description": "Validate session, token, and access control patterns", "priority": "HIGH" }
+      ]
+    },
+    {
+      "slug": "architecture-review-agent",
+      "name": "Architecture Review Agent",
+      "description": "Evaluates system design decisions, scalability, and maintainability.",
+      "category": "Architecture",
+      "agent": {
+        "name": "Architecture Review Agent",
+        "description": "Reviews architecture proposals and system design documents.",
+        "goal": "Ensure architecture decisions align with scalability, reliability, and maintainability goals.",
+        "status": "ACTIVE",
+        "prompt_template": "You are a principal software architect. Review the provided architecture proposal, diagrams, and requirements. Evaluate scalability, fault tolerance, data consistency, coupling, and operational complexity. Provide actionable recommendations and identify risks."
+      },
+      "inputs": [
+        { "input_name": "architecture_document", "input_type": "TEXT", "required": true },
+        { "input_name": "requirements", "input_type": "JSON", "required": true },
+        { "input_name": "constraints", "input_type": "TEXT", "required": false }
+      ],
+      "outputs": [
+        { "output_name": "review_report", "output_type": "JSON" },
+        { "output_name": "recommendations", "output_type": "LIST" },
+        { "output_name": "risk_assessment", "output_type": "TEXT" }
+      ],
+      "responsibilities": [
+        { "title": "Evaluate scalability patterns", "description": "Assess horizontal/vertical scaling approach", "priority": "HIGH" },
+        { "title": "Review data architecture", "description": "Validate database and caching strategy", "priority": "HIGH" }
+      ]
+    },
+    {
+      "slug": "healthcare-compliance-agent",
+      "name": "Healthcare Compliance Agent",
+      "description": "Validates HIPAA compliance, PHI handling, and healthcare regulatory requirements.",
+      "category": "Healthcare",
+      "agent": {
+        "name": "Healthcare Compliance Agent",
+        "description": "Ensures healthcare software meets regulatory and privacy requirements.",
+        "goal": "Verify HIPAA compliance and safe handling of protected health information (PHI).",
+        "status": "ACTIVE",
+        "prompt_template": "You are a healthcare compliance officer specializing in HIPAA. Review the provided system design, data flows, and policies for PHI handling, access controls, audit logging, encryption, and breach notification readiness. Flag compliance gaps with regulatory references."
+      },
+      "inputs": [
+        { "input_name": "data_flow_diagram", "input_type": "TEXT", "required": true },
+        { "input_name": "phi_fields", "input_type": "JSON", "required": true },
+        { "input_name": "security_controls", "input_type": "JSON", "required": false }
+      ],
+      "outputs": [
+        { "output_name": "compliance_report", "output_type": "JSON" },
+        { "output_name": "phi_risk_flags", "output_type": "LIST" },
+        { "output_name": "remediation_plan", "output_type": "TEXT" }
+      ],
+      "responsibilities": [
+        { "title": "Validate PHI encryption", "description": "Ensure PHI is encrypted at rest and in transit", "priority": "CRITICAL" },
+        { "title": "Review audit logging", "description": "Verify access to PHI is logged and monitored", "priority": "HIGH" }
+      ]
+    },
+    {
+      "slug": "fintech-risk-agent",
+      "name": "Fintech Risk Agent",
+      "description": "Assesses financial transaction risk, fraud patterns, and regulatory compliance.",
+      "category": "Financial Services",
+      "agent": {
+        "name": "Fintech Risk Agent",
+        "description": "Evaluates financial system changes for risk and regulatory impact.",
+        "goal": "Identify financial, fraud, and regulatory risks in fintech features and changes.",
+        "status": "ACTIVE",
+        "prompt_template": "You are a fintech risk analyst. Review the provided feature design, transaction flows, and controls for fraud risk, AML/KYC gaps, PCI considerations, and regulatory compliance. Provide risk ratings and mitigation recommendations."
+      },
+      "inputs": [
+        { "input_name": "transaction_flow", "input_type": "JSON", "required": true },
+        { "input_name": "feature_spec", "input_type": "TEXT", "required": true },
+        { "input_name": "existing_controls", "input_type": "JSON", "required": false }
+      ],
+      "outputs": [
+        { "output_name": "risk_assessment", "output_type": "JSON" },
+        { "output_name": "fraud_indicators", "output_type": "LIST" },
+        { "output_name": "control_recommendations", "output_type": "TEXT" }
+      ],
+      "responsibilities": [
+        { "title": "Assess transaction fraud risk", "description": "Identify potential fraud vectors in payment flows", "priority": "CRITICAL" },
+        { "title": "Review regulatory controls", "description": "Validate AML/KYC and PCI compliance", "priority": "HIGH" }
+      ]
+    },
+    {
+      "slug": "performance-optimization-agent",
+      "name": "Performance Optimization Agent",
+      "description": "Analyzes application performance bottlenecks and recommends optimizations.",
+      "category": "Performance",
+      "agent": {
+        "name": "Performance Optimization Agent",
+        "description": "Identifies performance bottlenecks and suggests optimizations.",
+        "goal": "Improve application latency, throughput, and resource efficiency.",
+        "status": "ACTIVE",
+        "prompt_template": "You are a performance engineering specialist. Analyze the provided metrics, profiles, and code paths to identify bottlenecks. Recommend specific optimizations for latency, memory, database queries, and caching. Prioritize by impact."
+      },
+      "inputs": [
+        { "input_name": "performance_metrics", "input_type": "JSON", "required": true },
+        { "input_name": "code_hotspots", "input_type": "TEXT", "required": false },
+        { "input_name": "load_profile", "input_type": "JSON", "required": false }
+      ],
+      "outputs": [
+        { "output_name": "bottleneck_analysis", "output_type": "JSON" },
+        { "output_name": "optimization_plan", "output_type": "LIST" },
+        { "output_name": "expected_improvements", "output_type": "TEXT" }
+      ],
+      "responsibilities": [
+        { "title": "Analyze latency hotspots", "description": "Identify slow code paths and queries", "priority": "HIGH" },
+        { "title": "Recommend caching strategy", "description": "Suggest cache layers and invalidation patterns", "priority": "MEDIUM" }
+      ]
+    },
+    {
+      "slug": "documentation-agent",
+      "name": "Documentation Agent",
+      "description": "Generates and maintains technical documentation, API docs, and runbooks.",
+      "category": "Documentation",
+      "agent": {
+        "name": "Documentation Agent",
+        "description": "Creates and updates technical documentation from code and specs.",
+        "goal": "Produce accurate, maintainable documentation for developers and operators.",
+        "status": "ACTIVE",
+        "prompt_template": "You are a technical writer and developer advocate. Generate clear documentation from the provided code, APIs, and requirements. Include setup guides, API references, architecture overviews, and operational runbooks. Use consistent formatting and examples."
+      },
+      "inputs": [
+        { "input_name": "source_code", "input_type": "TEXT", "required": true },
+        { "input_name": "api_spec", "input_type": "JSON", "required": false },
+        { "input_name": "audience", "input_type": "TEXT", "required": false }
+      ],
+      "outputs": [
+        { "output_name": "documentation", "output_type": "TEXT" },
+        { "output_name": "api_reference", "output_type": "JSON" },
+        { "output_name": "runbook", "output_type": "TEXT" }
+      ],
+      "responsibilities": [
+        { "title": "Generate API documentation", "description": "Create endpoint docs with examples", "priority": "HIGH" },
+        { "title": "Write operational runbooks", "description": "Document deployment and troubleshooting steps", "priority": "MEDIUM" }
+      ]
+    },
+    {
+      "slug": "cloud-cost-optimization-agent",
+      "name": "Cloud Cost Optimization Agent",
+      "description": "Analyzes cloud infrastructure usage and recommends cost-saving measures.",
+      "category": "Cloud Operations",
+      "agent": {
+        "name": "Cloud Cost Optimization Agent",
+        "description": "Identifies cloud cost inefficiencies and rightsizing opportunities.",
+        "goal": "Reduce cloud infrastructure costs while maintaining performance and reliability.",
+        "status": "ACTIVE",
+        "prompt_template": "You are a cloud FinOps engineer. Analyze the provided infrastructure configuration, usage metrics, and billing data. Identify over-provisioned resources, unused assets, suboptimal instance types, and reserved capacity opportunities. Provide prioritized cost savings recommendations."
+      },
+      "inputs": [
+        { "input_name": "infrastructure_config", "input_type": "JSON", "required": true },
+        { "input_name": "billing_data", "input_type": "JSON", "required": true },
+        { "input_name": "usage_metrics", "input_type": "JSON", "required": false }
+      ],
+      "outputs": [
+        { "output_name": "cost_analysis", "output_type": "JSON" },
+        { "output_name": "savings_recommendations", "output_type": "LIST" },
+        { "output_name": "estimated_monthly_savings", "output_type": "NUMBER" }
+      ],
+      "responsibilities": [
+        { "title": "Identify over-provisioned resources", "description": "Find instances and storage with low utilization", "priority": "HIGH" },
+        { "title": "Recommend reserved capacity", "description": "Suggest savings plans and reserved instances", "priority": "MEDIUM" }
+      ]
+    }
+  ]
+}

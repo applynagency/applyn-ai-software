@@ -1,0 +1,17 @@
+{
+  "customer_name": "Meridian Analytics Pilot",
+  "environment_name": "meridian-staging-np",
+  "environment_classification": "staging",
+  "approved_namespace": "nexora-pilot",
+  "approved_repository": "pilot-admin/pilot-test",
+  "prometheus_scope": "read-only namespace queries",
+  "named_approver": "Meridian Pilot Approver",
+  "named_operator": "nexora-operator@example.com",
+  "maintenance_window": "Agreed Sat 02:00-04:00 UTC",
+  "first_operation_candidate": "scale_deployment",
+  "rollback_plan": "Scale replicas 2 \u2192 1 in approved namespace",
+  "success_criteria": "Deployment healthy at 2 replicas with Prometheus verification",
+  "production_excluded": true,
+  "in_app_notifications_acknowledged": true,
+  "captured_at": "2026-07-02T18:16:03.897303+00:00"
+}

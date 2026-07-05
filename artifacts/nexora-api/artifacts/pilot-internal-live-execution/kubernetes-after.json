@@ -1,0 +1,38 @@
+{
+  "captured_at": "2026-07-02T11:04:55.582672+00:00",
+  "deployment": {
+    "desired_replicas": 2,
+    "ready_replicas": 2,
+    "available_replicas": 2,
+    "conditions": [
+      {
+        "type": "Progressing",
+        "status": "True",
+        "reason": "NewReplicaSetAvailable"
+      },
+      {
+        "type": "Available",
+        "status": "True",
+        "reason": "MinimumReplicasAvailable"
+      }
+    ]
+  },
+  "pods": [
+    {
+      "name": "pilot-demo-57c4b9d8f-rt6m6",
+      "phase": "Running",
+      "ready": true,
+      "restarts": 0
+    },
+    {
+      "name": "pilot-demo-57c4b9d8f-z5f5w",
+      "phase": "Running",
+      "ready": true,
+      "restarts": 0
+    }
+  ],
+  "pod_count": 2,
+  "total_restarts": 0,
+  "warning_events": [],
+  "rollout_failed": false
+}

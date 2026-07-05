@@ -1,0 +1,22 @@
+{
+  "environment": "development",
+  "app_version": "1.0.0",
+  "pilot_mode_enabled": true,
+  "pilot_mode_all_orgs": false,
+  "pilot_organization_ids_count": 1,
+  "pilot_organization_ids_redacted": true,
+  "debug_enabled": false,
+  "rate_limit_enabled": true,
+  "cors_origins_count": 0,
+  "cors_wildcard": false,
+  "jwt_placeholder_detected": false,
+  "metrics_enabled": true,
+  "job_queue_enabled": true,
+  "job_cron_enabled": true,
+  "migration_head": "0039_customer_pilot_operations",
+  "migration_current": "0039_customer_pilot_operations",
+  "migration_at_head": true,
+  "alembic_head_count": 1,
+  "smtp_configured": false,
+  "validated_at": "2026-07-02T17:36:26.187571+00:00"
+}

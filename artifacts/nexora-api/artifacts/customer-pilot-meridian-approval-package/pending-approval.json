@@ -1,0 +1,13 @@
+{
+  "id": "bc63be25-1fc0-4d4a-9b76-63c307e993ca",
+  "operation_id": "d1440973-a1d9-4c72-9c39-d992a08d5a97",
+  "approver_name": "Meridian Pilot Approver",
+  "approver_email": "approver@customer.example",
+  "operation_summary": "Meridian non-production pilot: scale deployment pilot-demo from 2 to 3 replicas in namespace nexora-pilot (environment meridian-staging-np). Approval does not execute any change.",
+  "target_environment": "meridian-staging-np",
+  "rollback_plan": "Scale replicas from 3 back to 2 in namespace nexora-pilot",
+  "payload_hash": "01d4211b68133b9df33a64c43284509a60fb13ba489e4ba661228949a2c0f508",
+  "status": "PENDING",
+  "expires_at": "2026-07-04T04:15:07.082223Z",
+  "approved_at": null
+}

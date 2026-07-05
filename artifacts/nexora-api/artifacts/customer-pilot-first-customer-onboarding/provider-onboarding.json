@@ -1,0 +1,220 @@
+{
+  "KUBERNETES": {
+    "session_id": "c6f41a41-13a6-4bf4-82d5-e5087d55699c",
+    "status": "VALIDATED",
+    "readiness_verdict": "GO",
+    "registry_connection_id": "01d4b02d-9b91-4bea-b133-61f19b3f9496",
+    "lifecycle": "CONNECTED",
+    "provider_mode": "live",
+    "rbac_gaps": [],
+    "prohibited_granted": [],
+    "validation_summary": {
+      "ok": true,
+      "status": "VALIDATED",
+      "provider_mode": "live",
+      "read_checks": [
+        {
+          "permission": "apps/deployments:get",
+          "allowed": true
+        },
+        {
+          "permission": "apps/deployments:list",
+          "allowed": true
+        },
+        {
+          "permission": "apps/deployments:watch",
+          "allowed": true
+        },
+        {
+          "permission": "core/pods:get",
+          "allowed": true
+        },
+        {
+          "permission": "core/pods:list",
+          "allowed": true
+        },
+        {
+          "permission": "core/pods:watch",
+          "allowed": true
+        },
+        {
+          "permission": "core/events:get",
+          "allowed": true
+        },
+        {
+          "permission": "core/events:list",
+          "allowed": true
+        },
+        {
+          "permission": "core/events:watch",
+          "allowed": true
+        }
+      ],
+      "scale_checks": [
+        {
+          "permission": "apps/deployments/scale:get",
+          "allowed": true
+        },
+        {
+          "permission": "apps/deployments/scale:patch",
+          "allowed": true
+        },
+        {
+          "permission": "apps/deployments/scale:update",
+          "allowed": true
+        }
+      ],
+      "prohibited_granted": [],
+      "rbac_gaps": [],
+      "inventory": {
+        "namespace": "nexora-pilot",
+        "deployments": [
+          {
+            "name": "pilot-demo",
+            "replicas": 2
+          }
+        ],
+        "pods": [
+          {
+            "name": "pilot-demo-57c4b9d8f-rt6m6",
+            "phase": "Running"
+          },
+          {
+            "name": "pilot-demo-57c4b9d8f-z5f5w",
+            "phase": "Running"
+          }
+        ]
+      },
+      "capabilities": {
+        "read": true,
+        "kubernetes.workloads.read": true,
+        "kubernetes.workloads.write": true,
+        "kubernetes.workloads.scale": true
+      },
+      "errors": [],
+      "evidence_refs": {
+        "namespace": "nexora-pilot",
+        "deployment_count": 1,
+        "pod_count": 2
+      }
+    },
+    "evidence_refs": {
+      "namespace": "nexora-pilot",
+      "deployment_count": 1,
+      "pod_count": 2
+    },
+    "acknowledge_status": 200,
+    "acknowledge_detail": {}
+  },
+  "GITEA": {
+    "session_id": "92da673f-9223-45f0-8101-b767198e3a77",
+    "status": "VALIDATED",
+    "readiness_verdict": "INSUFFICIENT_EVIDENCE",
+    "registry_connection_id": "4672de14-789a-4669-9547-3e9986bfa139",
+    "lifecycle": "CONNECTED",
+    "provider_mode": "live",
+    "rbac_gaps": [],
+    "prohibited_granted": [],
+    "validation_summary": {
+      "ok": true,
+      "status": "VALIDATED",
+      "provider_mode": "live",
+      "connection_status": "CONNECTED",
+      "capabilities": {
+        "read": true,
+        "repository_metadata": true,
+        "repository_access": true,
+        "workflow_history": false
+      },
+      "missing_capabilities": [],
+      "insufficient_evidence": [
+        "workflow_history_unavailable"
+      ],
+      "provider_identity": {
+        "login": "pilot-admin",
+        "id": 1,
+        "name": "",
+        "organizations": [],
+        "repository_count": 1
+      },
+      "errors": [],
+      "warnings": [
+        "Token scopes not reported (fine-grained or app token).",
+        "Organizations not readable with this token."
+      ],
+      "evidence_refs": {
+        "repository": "pilot-admin/pilot-test",
+        "identity_fields": [
+          "login",
+          "id",
+          "name",
+          "organizations",
+          "repository_count"
+        ]
+      }
+    },
+    "evidence_refs": {
+      "repository": "pilot-admin/pilot-test",
+      "identity_fields": [
+        "login",
+        "id",
+        "name",
+        "organizations",
+        "repository_count"
+      ]
+    },
+    "acknowledge_status": 200,
+    "acknowledge_detail": {}
+  },
+  "PROMETHEUS": {
+    "session_id": "bf5df272-b31b-488e-a90c-57f18fdf04d5",
+    "status": "VALIDATED",
+    "readiness_verdict": "INSUFFICIENT_EVIDENCE",
+    "registry_connection_id": "024afa60-2c9e-4ca8-a959-3a968cc411ac",
+    "lifecycle": "CONNECTED",
+    "provider_mode": "live",
+    "rbac_gaps": [
+      "namespace_workload_metrics_unavailable"
+    ],
+    "prohibited_granted": [],
+    "validation_summary": {
+      "ok": true,
+      "status": "VALIDATED",
+      "provider_mode": "live",
+      "capabilities": {
+        "query_metrics": true,
+        "read": true
+      },
+      "missing_capabilities": [
+        "namespace_workload_metrics_unavailable"
+      ],
+      "insufficient_evidence": [
+        "namespace_workload_metrics_unavailable"
+      ],
+      "errors": [],
+      "warnings": [
+        "namespace_workload_metrics_unavailable"
+      ],
+      "evidence_refs": {
+        "endpoint_host": "customer-pilot-prometheus:9090",
+        "targets_up": 2,
+        "namespace_label": "nexora-pilot"
+      },
+      "buildinfo": {
+        "version": "2.54.1",
+        "revision": "e6cfa720fbe6280153fab13090a483dbd40bece3",
+        "branch": "HEAD",
+        "buildUser": "root@812ffd741951",
+        "buildDate": "20240827-10:59:03",
+        "goVersion": "go1.22.6"
+      }
+    },
+    "evidence_refs": {
+      "endpoint_host": "customer-pilot-prometheus:9090",
+      "targets_up": 2,
+      "namespace_label": "nexora-pilot"
+    },
+    "acknowledge_status": 200,
+    "acknowledge_detail": {}
+  }
+}

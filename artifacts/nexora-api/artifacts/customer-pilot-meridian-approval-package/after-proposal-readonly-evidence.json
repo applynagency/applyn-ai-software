@@ -1,0 +1,25 @@
+{
+  "captured_at": "2026-07-03T04:15:07.140465+00:00",
+  "provider_mutation": false,
+  "prometheus_error": "HTTPStatusError",
+  "deployment": {
+    "desired_replicas": 2,
+    "ready_replicas": 2,
+    "available_replicas": 2
+  },
+  "pods": [
+    {
+      "name": "[REDACTED]-57c4b9d8f-rt6m6",
+      "phase": "Running",
+      "ready": true,
+      "restarts": 0
+    },
+    {
+      "name": "[REDACTED]-57c4b9d8f-z5f5w",
+      "phase": "Running",
+      "ready": true,
+      "restarts": 0
+    }
+  ],
+  "events": []
+}

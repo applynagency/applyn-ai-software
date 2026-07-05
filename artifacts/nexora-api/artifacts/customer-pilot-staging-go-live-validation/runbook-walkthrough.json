@@ -1,0 +1,59 @@
+{
+  "completed": true,
+  "operator_role": "platform_operator",
+  "scenarios": [
+    {
+      "scenario": "redis_outage",
+      "runbook": "CUSTOMER_PILOT_ALERT_RESPONSE.md",
+      "mode": "simulated",
+      "completed": true,
+      "timestamp": "2026-07-02T17:36:28.056643+00:00"
+    },
+    {
+      "scenario": "worker_outage",
+      "runbook": "CUSTOMER_PILOT_ALERT_RESPONSE.md",
+      "mode": "simulated",
+      "completed": true,
+      "timestamp": "2026-07-02T17:36:28.056643+00:00"
+    },
+    {
+      "scenario": "stale_reminder_cron",
+      "runbook": "CUSTOMER_PILOT_NOTIFICATION_RECOVERY.md",
+      "mode": "documented",
+      "completed": true,
+      "timestamp": "2026-07-02T17:36:28.056643+00:00"
+    },
+    {
+      "scenario": "failed_notification_requeue",
+      "runbook": "CUSTOMER_PILOT_NOTIFICATION_RECOVERY.md",
+      "mode": "documented",
+      "completed": true,
+      "timestamp": "2026-07-02T17:36:28.056643+00:00"
+    },
+    {
+      "scenario": "alert_ack_resolution",
+      "runbook": "CUSTOMER_PILOT_ALERT_RESPONSE.md",
+      "mode": "simulated",
+      "completed": true,
+      "timestamp": "2026-07-02T17:36:28.056643+00:00"
+    },
+    {
+      "scenario": "backup_restore",
+      "runbook": "CUSTOMER_PILOT_BACKUP_RESTORE.md",
+      "mode": "executed_via_script",
+      "completed": true,
+      "timestamp": "2026-07-02T17:36:28.056643+00:00"
+    },
+    {
+      "scenario": "support_diagnostics",
+      "runbook": "CUSTOMER_PILOT_SUPPORT_DIAGNOSTICS.md",
+      "mode": "documented",
+      "completed": true,
+      "timestamp": "2026-07-02T17:36:28.056643+00:00"
+    }
+  ],
+  "gaps": [
+    "Configure internal alert receiver and complete live fire/resolve drill"
+  ],
+  "validated_at": "2026-07-02T17:36:28.056643+00:00"
+}

@@ -1,0 +1,146 @@
+{
+  "generated_at": "2026-07-03T20:14:04.408Z",
+  "base_url": "http://127.0.0.1:8000",
+  "credentials": {
+    "email": "browser-smoke-1783109644408@example.com",
+    "username": "bsmoke1783109644408"
+  },
+  "steps": [
+    {
+      "step": "00_register_api",
+      "status": "PASS",
+      "observed": "User registered via API"
+    },
+    {
+      "step": "01_load_login",
+      "status": "PASS",
+      "observed": "Login page loaded",
+      "screenshot": "/Users/applynagency/applyn-ai-software/artifacts/nexora-api/scripts/ui-smoke-01-login.png"
+    },
+    {
+      "step": "02_login",
+      "status": "PASS",
+      "observed": "Signed in successfully",
+      "screenshot": "/Users/applynagency/applyn-ai-software/artifacts/nexora-api/scripts/ui-smoke-02-after-login.png"
+    },
+    {
+      "step": "03_create_org",
+      "status": "WARN",
+      "observed": "Org may already exist or create prompt not shown"
+    },
+    {
+      "step": "04_dashboard_guide",
+      "status": "PASS",
+      "observed": "Ops command center with onboarding guide",
+      "screenshot": "/Users/applynagency/applyn-ai-software/artifacts/nexora-api/scripts/ui-smoke-04-dashboard.png"
+    },
+    {
+      "step": "05_dismiss_guide",
+      "status": "PASS",
+      "observed": "Quiet org — guide stays with setup hints"
+    },
+    {
+      "step": "06_sidebar_collapse",
+      "status": "PASS",
+      "observed": "Nav group toggled true → false"
+    },
+    {
+      "step": "route_/",
+      "status": "PASS",
+      "observed": "Dashboard: content OK"
+    },
+    {
+      "step": "route_/organizations",
+      "status": "PASS",
+      "observed": "Organizations: content OK"
+    },
+    {
+      "step": "route_/settings",
+      "status": "PASS",
+      "observed": "Settings: content OK"
+    },
+    {
+      "step": "route_/incidents",
+      "status": "PASS",
+      "observed": "Incidents: content OK"
+    },
+    {
+      "step": "route_/delivery",
+      "status": "PASS",
+      "observed": "Delivery: content OK"
+    },
+    {
+      "step": "route_/integrations/onboarding",
+      "status": "PASS",
+      "observed": "Integrations: content OK"
+    },
+    {
+      "step": "route_/connections-secrets",
+      "status": "PASS",
+      "observed": "Connections & Secrets: content OK"
+    },
+    {
+      "step": "route_/customer-onboarding",
+      "status": "PASS",
+      "observed": "Client Onboarding: content OK"
+    },
+    {
+      "step": "route_/monitoring",
+      "status": "PASS",
+      "observed": "Monitoring: content OK"
+    },
+    {
+      "step": "route_/service-health",
+      "status": "PASS",
+      "observed": "Service health: content OK"
+    },
+    {
+      "step": "route_/runbooks",
+      "status": "PASS",
+      "observed": "Runbooks: content OK"
+    },
+    {
+      "step": "route_/help/getting-started",
+      "status": "PASS",
+      "observed": "Getting started: content OK"
+    },
+    {
+      "step": "07_section_scroll",
+      "status": "PASS",
+      "observed": "Scroll after re-opening guide"
+    },
+    {
+      "step": "08_console_errors",
+      "status": "WARN",
+      "observed": "15 console error(s)"
+    },
+    {
+      "step": "09_network_failures",
+      "status": "PASS",
+      "observed": "0 unexpected API failure(s)"
+    }
+  ],
+  "console_errors": [
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+  ],
+  "network_failures": [],
+  "summary": {
+    "pass": 20,
+    "fail": 0,
+    "warn": 2
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "sprint": "66I",
+  "started_at": "2026-07-02T11:01:21.326741+00:00",
+  "organization_id": "41a17fb0-9d64-4e84-accf-0c81f6dc87c4",
+  "operation_id": "30d98614-5fc6-4410-a28c-e65a15eeabc7",
+  "approval_id": "9cbd4673-d64b-4ef2-a0d7-510483366be3",
+  "go_no_go_complete_only": "GO",
+  "mutation_attempted": true,
+  "mutation_executed": true,
+  "rollback_attempted": false,
+  "safety_confirmations": {
+    "direct_kubectl_used": false,
+    "direct_k8s_sdk_mutation_used": false,
+    "confirm_endpoint_only": true,
+    "customer_or_production_touched": false,
+    "complete_stage_advanced": false,
+    "second_operation_created": false
+  },
+  "pre_execution_gates": {
+    "passed": true,
+    "blockers": []
+  },
+  "execution_path": "pilot.confirm_live_operation\u2192LiveMutationGate\u2192k8s_ops.execute_write",
+  "source_mode": "LIVE",
+  "banner": "LIVE EXECUTED AND VERIFIED \u2014 INTERNAL NON-PRODUCTION PILOT",
+  "verification_status": "VERIFIED",
+  "final_operation_status": "SUCCEEDED",
+  "operation_count_after": 1,
+  "stage_transitions": {
+    "CONNECT": "COMPLETED",
+    "VALIDATE": "COMPLETED",
+    "READ_ONLY_ASSESSMENT": "COMPLETED",
+    "BASELINE_CAPTURE": "COMPLETED",
+    "PROPOSE_OPERATION": "COMPLETED",
+    "CUSTOMER_APPROVAL": "COMPLETED",
+    "EXECUTE": "COMPLETED",
+    "VERIFY": "COMPLETED",
+    "COMPLETE": "PENDING"
+  },
+  "redaction": {
+    "secrets_detected": false,
+    "patterns_matched": []
+  },
+  "completed_at": "2026-07-02T11:05:15.123496+00:00"
+}

@@ -1,0 +1,288 @@
+{
+  "version": "1.0",
+  "templates": [
+    {
+      "slug": "crm-workflow",
+      "name": "CRM Workflow",
+      "description": "Standard CRM software delivery workflow from planning through deployment.",
+      "industry": "CRM",
+      "workflow": {
+        "name": "CRM Delivery Workflow",
+        "description": "End-to-end CRM delivery process",
+        "status": "ACTIVE"
+      },
+      "stages": [
+        {
+          "name": "Planning",
+          "description": "Product planning and backlog refinement",
+          "sequence": 1,
+          "stage_type": "PLANNING",
+          "approval_required": false,
+          "teams": [{ "name": "Product Team", "team_type": "PRODUCT", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Design",
+          "description": "UI/UX design and review",
+          "sequence": 2,
+          "stage_type": "DESIGN",
+          "approval_required": false,
+          "teams": [{ "name": "UI/UX Team", "team_type": "UI_UX", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Development",
+          "description": "Frontend and backend implementation",
+          "sequence": 3,
+          "stage_type": "DEVELOPMENT",
+          "approval_required": false,
+          "teams": [
+            { "name": "Frontend Team", "team_type": "FRONTEND", "execution_order": 1, "is_required": true },
+            { "name": "Backend Team", "team_type": "BACKEND", "execution_order": 2, "is_required": true }
+          ]
+        },
+        {
+          "name": "Quality",
+          "description": "Testing and code review",
+          "sequence": 4,
+          "stage_type": "QUALITY",
+          "approval_required": false,
+          "teams": [{ "name": "QA Team", "team_type": "QA", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Approval",
+          "description": "Release approval gate",
+          "sequence": 5,
+          "stage_type": "APPROVAL",
+          "approval_required": true,
+          "teams": [{ "name": "Product Team", "team_type": "PRODUCT", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Deployment",
+          "description": "Production deployment",
+          "sequence": 6,
+          "stage_type": "DEPLOYMENT",
+          "approval_required": true,
+          "teams": [{ "name": "Deployment Team", "team_type": "DEPLOYMENT", "execution_order": 1, "is_required": true }]
+        }
+      ],
+      "rules": []
+    },
+    {
+      "slug": "healthcare-workflow",
+      "name": "Healthcare Workflow",
+      "description": "HIPAA-aware delivery workflow with compliance review.",
+      "industry": "Healthcare",
+      "workflow": {
+        "name": "Healthcare Delivery Workflow",
+        "description": "Regulated healthcare software delivery",
+        "status": "ACTIVE"
+      },
+      "stages": [
+        {
+          "name": "Planning",
+          "sequence": 1,
+          "stage_type": "PLANNING",
+          "approval_required": false,
+          "teams": [{ "name": "Product Team", "team_type": "PRODUCT", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Compliance Review",
+          "description": "HIPAA and regulatory compliance gate",
+          "sequence": 2,
+          "stage_type": "CUSTOM",
+          "approval_required": true,
+          "teams": [{ "name": "Compliance Team", "team_type": "COMPLIANCE", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Design",
+          "sequence": 3,
+          "stage_type": "DESIGN",
+          "approval_required": false,
+          "teams": [{ "name": "UI/UX Team", "team_type": "UI_UX", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Development",
+          "sequence": 4,
+          "stage_type": "DEVELOPMENT",
+          "approval_required": false,
+          "teams": [
+            { "name": "Frontend Team", "team_type": "FRONTEND", "execution_order": 1, "is_required": true },
+            { "name": "Backend Team", "team_type": "BACKEND", "execution_order": 2, "is_required": true }
+          ]
+        },
+        {
+          "name": "Quality",
+          "sequence": 5,
+          "stage_type": "QUALITY",
+          "approval_required": false,
+          "teams": [{ "name": "QA Team", "team_type": "QA", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Approval",
+          "sequence": 6,
+          "stage_type": "APPROVAL",
+          "approval_required": true,
+          "teams": [{ "name": "Product Team", "team_type": "PRODUCT", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Deployment",
+          "sequence": 7,
+          "stage_type": "DEPLOYMENT",
+          "approval_required": true,
+          "teams": [{ "name": "Deployment Team", "team_type": "DEPLOYMENT", "execution_order": 1, "is_required": true }]
+        }
+      ],
+      "rules": [
+        {
+          "rule_type": "HEALTHCARE_COMPLIANCE",
+          "configuration_json": {
+            "stage_name": "Compliance Review",
+            "description": "Compliance review required for healthcare workflows"
+          }
+        }
+      ]
+    },
+    {
+      "slug": "financial-workflow",
+      "name": "Financial Workflow",
+      "description": "Regulated financial services delivery with security and risk gates.",
+      "industry": "Financial Services",
+      "workflow": {
+        "name": "Financial Services Workflow",
+        "description": "Banking and fintech delivery process",
+        "status": "ACTIVE"
+      },
+      "stages": [
+        {
+          "name": "Planning",
+          "sequence": 1,
+          "stage_type": "PLANNING",
+          "approval_required": false,
+          "teams": [{ "name": "Product Team", "team_type": "PRODUCT", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Security Review",
+          "sequence": 2,
+          "stage_type": "CUSTOM",
+          "approval_required": true,
+          "teams": [{ "name": "Security Team", "team_type": "SECURITY", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Risk Review",
+          "sequence": 3,
+          "stage_type": "CUSTOM",
+          "approval_required": true,
+          "teams": [{ "name": "Compliance Team", "team_type": "COMPLIANCE", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Development",
+          "sequence": 4,
+          "stage_type": "DEVELOPMENT",
+          "approval_required": false,
+          "teams": [
+            { "name": "Frontend Team", "team_type": "FRONTEND", "execution_order": 1, "is_required": true },
+            { "name": "Backend Team", "team_type": "BACKEND", "execution_order": 2, "is_required": true }
+          ]
+        },
+        {
+          "name": "Quality",
+          "sequence": 5,
+          "stage_type": "QUALITY",
+          "approval_required": false,
+          "teams": [{ "name": "QA Team", "team_type": "QA", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Approval",
+          "sequence": 6,
+          "stage_type": "APPROVAL",
+          "approval_required": true,
+          "teams": [{ "name": "Product Team", "team_type": "PRODUCT", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Deployment",
+          "sequence": 7,
+          "stage_type": "DEPLOYMENT",
+          "approval_required": true,
+          "teams": [{ "name": "Deployment Team", "team_type": "DEPLOYMENT", "execution_order": 1, "is_required": true }]
+        }
+      ],
+      "rules": [
+        {
+          "rule_type": "FINANCIAL_SECURITY",
+          "configuration_json": { "stage_name": "Security Review" }
+        },
+        {
+          "rule_type": "FINANCIAL_RISK",
+          "configuration_json": { "stage_name": "Risk Review" }
+        },
+        {
+          "rule_type": "PRODUCTION_APPROVAL",
+          "configuration_json": { "stage_type": "DEPLOYMENT", "approval_required": true }
+        }
+      ]
+    },
+    {
+      "slug": "ecommerce-workflow",
+      "name": "E-Commerce Workflow",
+      "description": "High-velocity e-commerce delivery workflow.",
+      "industry": "E-Commerce",
+      "workflow": {
+        "name": "E-Commerce Delivery Workflow",
+        "description": "Online retail delivery process",
+        "status": "ACTIVE"
+      },
+      "stages": [
+        {
+          "name": "Planning",
+          "sequence": 1,
+          "stage_type": "PLANNING",
+          "approval_required": false,
+          "teams": [{ "name": "Product Team", "team_type": "PRODUCT", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Design",
+          "sequence": 2,
+          "stage_type": "DESIGN",
+          "approval_required": false,
+          "teams": [{ "name": "UI/UX Team", "team_type": "UI_UX", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Development",
+          "sequence": 3,
+          "stage_type": "DEVELOPMENT",
+          "approval_required": false,
+          "teams": [
+            { "name": "Frontend Team", "team_type": "FRONTEND", "execution_order": 1, "is_required": true },
+            { "name": "Backend Team", "team_type": "BACKEND", "execution_order": 2, "is_required": true }
+          ]
+        },
+        {
+          "name": "Quality",
+          "sequence": 4,
+          "stage_type": "QUALITY",
+          "approval_required": false,
+          "teams": [{ "name": "QA Team", "team_type": "QA", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Approval",
+          "sequence": 5,
+          "stage_type": "APPROVAL",
+          "approval_required": true,
+          "teams": [{ "name": "Product Team", "team_type": "PRODUCT", "execution_order": 1, "is_required": true }]
+        },
+        {
+          "name": "Deployment",
+          "sequence": 6,
+          "stage_type": "DEPLOYMENT",
+          "approval_required": true,
+          "teams": [{ "name": "Deployment Team", "team_type": "DEPLOYMENT", "execution_order": 1, "is_required": true }]
+        }
+      ],
+      "rules": [
+        {
+          "rule_type": "PRODUCTION_APPROVAL",
+          "configuration_json": { "stage_type": "DEPLOYMENT", "approval_required": true }
+        }
+      ]
+    }
+  ]
+}

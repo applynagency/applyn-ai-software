@@ -1,0 +1,78 @@
+{
+  "generatedAt": "2026-07-03T06:31:05.758Z",
+  "budgetPolicy": {
+    "maxRawKB_app.js": 950,
+    "maxBrotliKB_app.js": 180,
+    "initialBundleKB_brotli": 200,
+    "initialAssets": ["app.js", "styles.css"],
+    "lazyChunks": ["help.js", "pilot-operator.js"],
+    "budgetChanged": false
+  },
+  "violationBefore": {
+    "asset": "app.js",
+    "type": "asset-raw",
+    "message": "app.js raw 992.4KB exceeds 950KB budget",
+    "rawBytes": 1016198,
+    "rawKB": 992.4,
+    "overByKB": 42.4
+  },
+  "assetsAfter": {
+    "app.js": {
+      "raw": 970500,
+      "rawKB": 947.8,
+      "min": 803701,
+      "minKB": 784.9,
+      "gzip": 138594,
+      "gzipKB": 135.3,
+      "brotli": 107428,
+      "brotliKB": 104.9,
+      "withinRawBudget": true,
+      "headroomRawKB": 2.2
+    },
+    "pilot-operator.js": {
+      "raw": 48805,
+      "rawKB": 47.7,
+      "min": 39905,
+      "minKB": 39.0,
+      "gzip": 8204,
+      "gzipKB": 8.0,
+      "brotli": 7087,
+      "brotliKB": 6.9,
+      "lazy": true,
+      "maxBrotliKB": 80
+    },
+    "help.js": {
+      "raw": 35006,
+      "rawKB": 34.2,
+      "min": 26218,
+      "minKB": 25.6,
+      "gzip": 7258,
+      "gzipKB": 7.1,
+      "brotli": 6340,
+      "brotliKB": 6.2,
+      "lazy": true
+    },
+    "styles.css": {
+      "raw": 67979,
+      "rawKB": 66.4,
+      "min": 54303,
+      "minKB": 53.0,
+      "gzip": 10732,
+      "gzipKB": 10.5,
+      "brotli": 9434,
+      "brotliKB": 9.2
+    }
+  },
+  "initialBundle": {
+    "brotliBytes": 116862,
+    "brotliKB": 114.1,
+    "budgetKB": 200,
+    "withinBudget": true
+  },
+  "rootCause": {
+    "sprint": "68C",
+    "summary": "Sprint 68C added operator execution console and evidence UI (~400+ lines) inline in app.js: loadPilotExecutionConsole, loadPilotEvidencePage, renderPilotExecution, renderPilotEvidence, typed-confirmation handlers, and pilot operator event bindings.",
+    "remediation": "Extracted operator pilot surfaces into lazy-loaded pilot-operator.js chunk (mirroring help.js pattern). Token memory and access gates remain in app.js initial bundle."
+  },
+  "buildCommand": "node scripts/build-frontend.mjs"
+}

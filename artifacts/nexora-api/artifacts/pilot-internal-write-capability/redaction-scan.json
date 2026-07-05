@@ -1,0 +1,19 @@
+{
+  "scanned_at": "2026-07-02T10:05:01Z",
+  "artifact_directory": "artifacts/pilot-internal-write-capability",
+  "patterns_checked": [
+    "Bearer tokens",
+    "authorization headers",
+    "token/password/secret/api_key assignments",
+    "PEM blocks",
+    "kubeconfig literals",
+    "JWT-like strings"
+  ],
+  "violations_found": [],
+  "notes": [
+    "Service account credential is stored only in Nexora Secret Manager; not exported in artifacts.",
+    "kubectl-auth-can-i.txt contains only yes/no authorization results.",
+    "sa-kubeconfig-path.txt removed; replaced with sa-credential-reference.txt (redacted)."
+  ],
+  "status": "PASS"
+}

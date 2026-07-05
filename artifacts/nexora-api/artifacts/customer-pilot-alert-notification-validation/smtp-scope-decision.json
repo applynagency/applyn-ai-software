@@ -1,0 +1,6 @@
+{
+  "scope": "in_app_only",
+  "smtp_required": false,
+  "detail": "In-app notifications only for this deployment",
+  "customer_message": "Approval reminders and pilot communications are delivered in-app; email delivery is not enabled in this deployment."
+}

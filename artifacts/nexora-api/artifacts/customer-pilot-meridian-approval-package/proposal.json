@@ -1,0 +1,72 @@
+{
+  "id": "d1440973-a1d9-4c72-9c39-d992a08d5a97",
+  "action": "scale_deployment",
+  "resource_name": "pilot-demo",
+  "status": "PENDING_CONFIRMATION",
+  "preflight": {
+    "allowed": false,
+    "simulated": false,
+    "reason": "Approval policy not satisfied",
+    "reason_code": "APPROVAL_REQUIRED",
+    "remediation": "Complete approval workflow before execution.",
+    "correlation_id": "meridian-pilot-demo-scale-2-to-3-v1",
+    "missing_capabilities": [],
+    "lifecycle_state": "CONNECTED",
+    "provider_mode": "live",
+    "connection_id": "4d106712-0035-42f7-be12-451fc4a8c665",
+    "evidence_context": {
+      "connection_id": "4d106712-0035-42f7-be12-451fc4a8c665",
+      "state": "CONNECTED",
+      "provider_mode": "live",
+      "last_validated_at": "2026-07-03T04:15:06.984042+00:00",
+      "required_capabilities": [
+        "kubernetes.workloads.write"
+      ],
+      "missing_capabilities": [],
+      "preflight_status": "blocked",
+      "blocked_reason": "APPROVAL_REQUIRED",
+      "remediation_guidance": "Complete approval workflow before execution.",
+      "correlation_id": "meridian-pilot-demo-scale-2-to-3-v1",
+      "simulated": false
+    },
+    "execution_label": "LIVE-ELIGIBLE / NOT EXECUTED",
+    "live_eligible": true,
+    "proposal_phase": true,
+    "resource_name": "pilot-demo",
+    "resource_id": "nexora-pilot/pilot-demo",
+    "environment_id": "4cf39c21-2d00-45b8-b873-79f8fc9b548a",
+    "namespace": "nexora-pilot",
+    "action": "scale_deployment"
+  },
+  "result": {},
+  "verification": {},
+  "correlation_id": "meridian-pilot-demo-scale-2-to-3-v1",
+  "source_mode": "LIVE",
+  "verification_status": null,
+  "payload_hash": "01d4211b68133b9df33a64c43284509a60fb13ba489e4ba661228949a2c0f508",
+  "execution_label": "LIVE-ELIGIBLE / NOT EXECUTED",
+  "template_id": "scale_deployment",
+  "environment_id": "4cf39c21-2d00-45b8-b873-79f8fc9b548a",
+  "cluster_id": "4d106712-0035-42f7-be12-451fc4a8c665",
+  "params": {
+    "namespace": "nexora-pilot",
+    "replicas": 3,
+    "from_replicas": 2,
+    "risk_classification": "low",
+    "risk_explanation": "Reversible scale of one non-production deployment in customer-approved namespace; no image, config, secret, or network mutation.",
+    "verification_criteria": [
+      "Kubernetes desired, ready, and available replicas = 3",
+      "Three Ready pods with no rollout failure events in namespace",
+      "Pod restart count does not increase unexpectedly versus before-state",
+      "Prometheus kube_deployment_status_replicas_available query (supplemental only)"
+    ],
+    "failure_criteria": [
+      "rollout does not reach 3 available replicas within configured timeout",
+      "warning events show scheduling/image/probe failure",
+      "restart count increases unexpectedly"
+    ],
+    "rollback_trigger": "any verification failure or insufficient evidence",
+    "maintenance_window": "Saturday 02:00\u201304:00 UTC"
+  },
+  "rollback_plan": "Scale replicas from 3 back to 2 in namespace nexora-pilot"
+}

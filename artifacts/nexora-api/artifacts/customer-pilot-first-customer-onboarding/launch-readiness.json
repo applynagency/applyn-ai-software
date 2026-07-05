@@ -1,0 +1,139 @@
+{
+  "verdict": "GO",
+  "checks": [
+    {
+      "name": "pilot_feature_gating",
+      "passed": true,
+      "detail": "Pilot mode enabled",
+      "evidence_ref": {}
+    },
+    {
+      "name": "organization_allowlist",
+      "passed": true,
+      "detail": "Organization is pilot-eligible",
+      "evidence_ref": {}
+    },
+    {
+      "name": "enrollment_present",
+      "passed": true,
+      "detail": "Pilot enrollment exists",
+      "evidence_ref": {
+        "enrollment_id": "34853e15-9e0a-4eb1-859d-fadd3d37f6fb"
+      }
+    },
+    {
+      "name": "kill_switch_inactive",
+      "passed": true,
+      "detail": "Kill switch is not active",
+      "evidence_ref": {}
+    },
+    {
+      "name": "operation_limit",
+      "passed": true,
+      "detail": "Operation limit configured (2)",
+      "evidence_ref": {
+        "operation_limit": 2
+      }
+    },
+    {
+      "name": "integration_kubernetes",
+      "passed": true,
+      "detail": "KUBERNETES state=CONNECTED mode=live fresh=True",
+      "evidence_ref": {
+        "connection_id": "01d4b02d-9b91-4bea-b133-61f19b3f9496",
+        "lifecycle_state": "CONNECTED",
+        "provider_mode": "live"
+      }
+    },
+    {
+      "name": "kubernetes_write_capability",
+      "passed": true,
+      "detail": "Namespace-scoped workload write capability required for pilot scale",
+      "evidence_ref": {
+        "capabilities": [
+          "apply",
+          "deploy",
+          "query_logs",
+          "query_metrics",
+          "query_traces",
+          "read",
+          "sync_gitops",
+          "traffic_shift",
+          "write"
+        ]
+      }
+    },
+    {
+      "name": "kubernetes_rbac_evidence",
+      "passed": true,
+      "detail": "Onboarding validation evidence (redacted)",
+      "evidence_ref": {
+        "namespace_scoped": true,
+        "summary": "Onboarding validation evidence (redacted)",
+        "gaps": []
+      }
+    },
+    {
+      "name": "integration_github",
+      "passed": true,
+      "detail": "GITHUB state=CONNECTED mode=live fresh=True",
+      "evidence_ref": {
+        "connection_id": "4672de14-789a-4669-9547-3e9986bfa139",
+        "lifecycle_state": "CONNECTED",
+        "provider_mode": "live"
+      }
+    },
+    {
+      "name": "integration_prometheus",
+      "passed": true,
+      "detail": "PROMETHEUS state=CONNECTED mode=live fresh=True",
+      "evidence_ref": {
+        "connection_id": "024afa60-2c9e-4ca8-a959-3a968cc411ac",
+        "lifecycle_state": "CONNECTED",
+        "provider_mode": "live"
+      }
+    },
+    {
+      "name": "non_production_environment",
+      "passed": true,
+      "detail": "1 non-production environment(s) declared",
+      "evidence_ref": {}
+    },
+    {
+      "name": "no_production_target",
+      "passed": true,
+      "detail": "No production environment in scope",
+      "evidence_ref": {}
+    },
+    {
+      "name": "approval_contact",
+      "passed": true,
+      "detail": "Named approval contact configured",
+      "evidence_ref": {}
+    },
+    {
+      "name": "support_contact",
+      "passed": true,
+      "detail": "Support contact configured",
+      "evidence_ref": {}
+    },
+    {
+      "name": "backup_restore_readiness",
+      "passed": true,
+      "detail": "Backup/restore readiness acknowledged",
+      "evidence_ref": {}
+    }
+  ],
+  "failed_checks": [],
+  "insufficient_evidence": [],
+  "remediation_steps": [],
+  "minimum_rbac": [
+    "deployments:get,list,watch",
+    "deployments/scale:get,patch,update",
+    "pods:get,list,watch",
+    "events:get,list,watch"
+  ],
+  "evaluated_at": "2026-07-03T04:11:21.619622+00:00",
+  "read_only": true,
+  "operational_status": null
+}

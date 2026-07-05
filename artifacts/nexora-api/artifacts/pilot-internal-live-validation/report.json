@@ -1,0 +1,224 @@
+{
+  "started_at": "2026-07-02T09:00:26.736646+00:00",
+  "organization_id": "41a17fb0-9d64-4e84-accf-0c81f6dc87c4",
+  "providers": {
+    "KUBERNETES": {
+      "connection_id": "fbbd6caf-c54f-4d93-91f7-ee3dd397017d",
+      "registry_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+      "lifecycle_state": "CONNECTED",
+      "provider_mode": "live",
+      "health_score": 88,
+      "capabilities": {
+        "read": true,
+        "write": false,
+        "deploy": false,
+        "apply": false,
+        "query_metrics": false,
+        "query_logs": false,
+        "query_traces": false,
+        "traffic_shift": false,
+        "sync_gitops": false
+      },
+      "latency_ms": 213,
+      "failure_reason": null,
+      "last_validated_at": null,
+      "scope": {
+        "namespace": "nexora-pilot",
+        "repository": null,
+        "github_base_url": null,
+        "endpoint": null
+      }
+    },
+    "GITHUB": {
+      "connection_id": "a441372b-e182-4182-9c89-e5f5b75962f4",
+      "registry_id": "08503643-4ba6-4cef-86f3-1658bc0ca8b6",
+      "lifecycle_state": "CONNECTED",
+      "provider_mode": "live",
+      "health_score": 88,
+      "capabilities": {
+        "read": true,
+        "write": false,
+        "deploy": false,
+        "apply": false,
+        "query_metrics": false,
+        "query_logs": false,
+        "query_traces": false,
+        "traffic_shift": false,
+        "sync_gitops": false
+      },
+      "latency_ms": 55,
+      "failure_reason": null,
+      "last_validated_at": null,
+      "scope": {
+        "namespace": null,
+        "repository": "pilot-admin/pilot-test",
+        "github_base_url": "http://pilot-gitea:3000/api/v1",
+        "endpoint": null
+      }
+    },
+    "PROMETHEUS": {
+      "connection_id": "55ed4e3c-9d89-4b7b-a988-dc1aa9a73f11",
+      "registry_id": "4eacbdc9-1230-43cd-a941-0aa07efb6062",
+      "lifecycle_state": "CONNECTED",
+      "provider_mode": "live",
+      "health_score": 91,
+      "capabilities": {
+        "read": true,
+        "write": false,
+        "deploy": false,
+        "apply": false,
+        "query_metrics": true,
+        "query_logs": false,
+        "query_traces": false,
+        "traffic_shift": false,
+        "sync_gitops": false
+      },
+      "latency_ms": 5,
+      "failure_reason": null,
+      "last_validated_at": null,
+      "scope": {
+        "namespace": null,
+        "repository": null,
+        "github_base_url": null,
+        "endpoint": "http://pilot-prometheus:9090"
+      }
+    }
+  },
+  "stages": {
+    "CONNECT": {
+      "id": "abeb3f8e-b6fa-490d-bfb2-522cf988653a",
+      "stage_key": "CONNECT",
+      "title": "Connect integrations",
+      "status": "COMPLETED",
+      "owner_id": "915e1592-0447-44d7-a9a0-8faffce4ef1a",
+      "evidence": {},
+      "blockers": [],
+      "rollback_plan": null,
+      "outcome": null,
+      "started_at": "2026-07-02T09:00:27.448665Z",
+      "completed_at": "2026-07-02T09:00:27.448665Z"
+    },
+    "VALIDATE": {
+      "id": "2d1251d5-5375-4901-a9d5-8f2b1614a12d",
+      "stage_key": "VALIDATE",
+      "title": "Validate integration readiness",
+      "status": "COMPLETED",
+      "owner_id": "915e1592-0447-44d7-a9a0-8faffce4ef1a",
+      "evidence": {},
+      "blockers": [],
+      "rollback_plan": null,
+      "outcome": null,
+      "started_at": "2026-07-02T09:00:27.466339Z",
+      "completed_at": "2026-07-02T09:00:27.466339Z"
+    }
+  },
+  "redaction_violations": [],
+  "artifacts": {
+    "integration_dashboard_status": 200,
+    "evidence_pack_status": 200,
+    "integration_dashboard": {
+      "total": 6,
+      "connected": 5,
+      "degraded": 1,
+      "failed": 0,
+      "expired": 0,
+      "reauth_required": 0,
+      "last_validation": "2026-07-02T09:00:27.359170Z",
+      "capability_gaps": [
+        {
+          "connection_id": "4eacbdc9-1230-43cd-a941-0aa07efb6062",
+          "provider": "PROMETHEUS",
+          "missing": [
+            "write",
+            "deploy",
+            "apply",
+            "query_logs",
+            "query_traces",
+            "traffic_shift",
+            "sync_gitops"
+          ]
+        },
+        {
+          "connection_id": "08503643-4ba6-4cef-86f3-1658bc0ca8b6",
+          "provider": "GITHUB",
+          "missing": [
+            "write",
+            "deploy",
+            "apply",
+            "query_metrics",
+            "query_logs",
+            "query_traces",
+            "traffic_shift",
+            "sync_gitops"
+          ]
+        },
+        {
+          "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+          "provider": "KUBERNETES",
+          "missing": [
+            "write",
+            "deploy",
+            "apply",
+            "query_metrics",
+            "query_logs",
+            "query_traces",
+            "traffic_shift",
+            "sync_gitops"
+          ]
+        },
+        {
+          "connection_id": "47e1dcb5-cae1-4538-baed-f69acd9a4dfe",
+          "provider": "PROMETHEUS",
+          "missing": [
+            "write",
+            "deploy",
+            "apply",
+            "query_logs",
+            "query_traces",
+            "traffic_shift",
+            "sync_gitops"
+          ]
+        },
+        {
+          "connection_id": "d68c7d9c-4a09-4e10-b714-8fc2809e6ac9",
+          "provider": "GITHUB",
+          "missing": [
+            "read",
+            "write",
+            "deploy",
+            "apply",
+            "query_metrics",
+            "query_logs",
+            "query_traces",
+            "traffic_shift",
+            "sync_gitops"
+          ]
+        },
+        {
+          "connection_id": "f5531aa9-5d20-415e-a5e4-80df585f22e6",
+          "provider": "KUBERNETES",
+          "missing": [
+            "write",
+            "deploy",
+            "apply",
+            "query_metrics",
+            "query_logs",
+            "query_traces",
+            "traffic_shift",
+            "sync_gitops"
+          ]
+        }
+      ],
+      "upcoming_expiry": [],
+      "affected_features": [],
+      "remediation_hints": []
+    },
+    "evidence_pack_keys": [
+      "json_pack",
+      "markdown",
+      "html"
+    ]
+  },
+  "go_no_go": "GO",
+  "next_action": "Proceed to READ_ONLY_ASSESSMENT when customer-ready"
+}

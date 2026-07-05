@@ -1,0 +1,60 @@
+{
+  "prometheus_endpoint": "[REDACTED_URL]",
+  "metrics_endpoint": "[REDACTED_URL]",
+  "validated_at": "2026-07-02T18:01:59.281108+00:00",
+  "prometheus_healthy": true,
+  "scrape_targets": [
+    {
+      "job": "nexora-api",
+      "health": "up",
+      "last_scrape": "2026-07-02T18:01:51.854909756Z"
+    }
+  ],
+  "metrics_endpoint_status": 200,
+  "metrics_on_api": {
+    "nexora_customer_pilot_scheduler_healthy": true,
+    "nexora_customer_pilot_worker_healthy": true,
+    "nexora_customer_pilot_notification_deliveries_total": true,
+    "nexora_customer_pilot_notification_failures_total": true,
+    "nexora_customer_pilot_notification_queue_oldest_seconds": true,
+    "nexora_customer_pilot_deployment_healthy": true
+  },
+  "scrape_healthy": true,
+  "metric_query_results": {
+    "nexora_customer_pilot_scheduler_healthy": {
+      "present": true,
+      "series_count": 1
+    },
+    "nexora_customer_pilot_worker_healthy": {
+      "present": true,
+      "series_count": 1
+    },
+    "nexora_customer_pilot_notification_deliveries_total": {
+      "present": false,
+      "series_count": 0
+    },
+    "nexora_customer_pilot_notification_failures_total": {
+      "present": true,
+      "series_count": 1
+    },
+    "nexora_customer_pilot_notification_queue_oldest_seconds": {
+      "present": true,
+      "series_count": 1
+    },
+    "nexora_customer_pilot_deployment_healthy": {
+      "present": true,
+      "series_count": 1
+    }
+  },
+  "metrics_confirmed": {
+    "nexora_customer_pilot_scheduler_healthy": true,
+    "nexora_customer_pilot_worker_healthy": true,
+    "nexora_customer_pilot_notification_deliveries_total": true,
+    "nexora_customer_pilot_notification_failures_total": true,
+    "nexora_customer_pilot_notification_queue_oldest_seconds": true,
+    "nexora_customer_pilot_deployment_healthy": true
+  },
+  "metrics_present": true,
+  "alert_rules_valid": true,
+  "alert_rules_detail": "All required alerts present"
+}

@@ -1,0 +1,159 @@
+{
+  "immutable": true,
+  "package": {
+    "banner": "PROPOSED ONLY \u2014 NOT APPROVED \u2014 NOT EXECUTED",
+    "generated_at": "2026-07-03T04:15:07.084681+00:00",
+    "organization": {
+      "id": "86238c88-f8f6-44da-a335-50ce4ba807af",
+      "name": "Meridian Analytics Pilot"
+    },
+    "proposal": {
+      "operation_id": "d1440973-a1d9-4c72-9c39-d992a08d5a97",
+      "action": "scale_deployment",
+      "template_id": "scale_deployment",
+      "status": "AWAITING_APPROVAL",
+      "execution_label": "LIVE-ELIGIBLE / NOT EXECUTED",
+      "idempotency_key": "meridian-[REDACTED]-scale-2-to-3-v1",
+      "payload_hash": "01d4211b68133b9df33a64c43284509a60fb13ba489e4ba661228949a2c0f508"
+    },
+    "approval": {
+      "approval_id": "bc63be25-1fc0-4d4a-9b76-63c307e993ca",
+      "status": "PENDING",
+      "expires_at": "2026-07-04T04:15:07.082223+00:00",
+      "approver_name": "Meridian Pilot Approver",
+      "approver_email": "approver@customer.example",
+      "payload_hash": "01d4211b68133b9df33a64c43284509a60fb13ba489e4ba661228949a2c0f508"
+    },
+    "target": {
+      "integration_id": "4d106712-0035-42f7-be12-451fc4a8c665",
+      "namespace": "[REDACTED]",
+      "deployment": "[REDACTED]",
+      "environment": "meridian-staging-np",
+      "environment_tier": "non-production"
+    },
+    "change": {
+      "summary": "Meridian non-production pilot: scale deployment [REDACTED] from 2 to 3 replicas in namespace [REDACTED] (environment meridian-staging-np). Approval does not execute any change.",
+      "desired": {
+        "namespace": "[REDACTED]",
+        "replicas": 3,
+        "from_replicas": 2,
+        "risk_classification": "low",
+        "risk_explanation": "Reversible scale of one non-production deployment in customer-approved namespace; no image, config, secret, or network mutation.",
+        "verification_criteria": [
+          "Kubernetes desired, ready, and available replicas = 3",
+          "Three Ready pods with no rollout failure events in namespace",
+          "Pod restart count does not increase unexpectedly versus before-state",
+          "Prometheus kube_deployment_status_replicas_available query (supplemental only)"
+        ],
+        "failure_criteria": [
+          "rollout does not reach 3 available replicas within configured timeout",
+          "warning events show scheduling/image/probe failure",
+          "restart count increases unexpectedly"
+        ],
+        "rollback_trigger": "any verification failure or insufficient evidence",
+        "maintenance_window": "Saturday 02:00\u201304:00 UTC"
+      },
+      "rollback_plan": "Scale replicas from 3 back to 2 in namespace [REDACTED]",
+      "risk": "low",
+      "risk_explanation": "Reversible scale of one non-production deployment in customer-approved namespace; no image, config, secret, or network mutation."
+    },
+    "before_state": {
+      "resource_name": "[REDACTED]",
+      "environment_tier": "STAGING",
+      "params": {
+        "namespace": "[REDACTED]",
+        "replicas": 3,
+        "from_replicas": 2,
+        "risk_classification": "low",
+        "risk_explanation": "Reversible scale of one non-production deployment in customer-approved namespace; no image, config, secret, or network mutation.",
+        "verification_criteria": [
+          "Kubernetes desired, ready, and available replicas = 3",
+          "Three Ready pods with no rollout failure events in namespace",
+          "Pod restart count does not increase unexpectedly versus before-state",
+          "Prometheus kube_deployment_status_replicas_available query (supplemental only)"
+        ],
+        "failure_criteria": [
+          "rollout does not reach 3 available replicas within configured timeout",
+          "warning events show scheduling/image/probe failure",
+          "restart count increases unexpectedly"
+        ],
+        "rollback_trigger": "any verification failure or insufficient evidence",
+        "maintenance_window": "Saturday 02:00\u201304:00 UTC"
+      },
+      "captured": "pre_execution"
+    },
+    "baseline_hash": "dca58269c4db126228d76253d4230a8fd92d1f730945cb1250ec653988da5116",
+    "verification_criteria": [
+      "Kubernetes desired, ready, and available replicas = 3",
+      "Three Ready pods with no rollout failure events in namespace",
+      "Pod restart count does not increase unexpectedly versus before-state",
+      "Prometheus kube_deployment_status_replicas_available query (supplemental only)"
+    ],
+    "verification_plan": [
+      "Kubernetes desired, ready, and available replicas = 3",
+      "Three Ready pods with no rollout failure events in namespace",
+      "Pod restart count does not increase unexpectedly versus before-state",
+      "Prometheus kube_deployment_status_replicas_available query (supplemental only)"
+    ],
+    "failure_criteria": [
+      "rollout does not reach 3 available replicas within configured timeout",
+      "warning events show scheduling/image/probe failure",
+      "restart count increases unexpectedly"
+    ],
+    "rollback_trigger": "any verification failure or insufficient evidence",
+    "maintenance_window": null,
+    "evidence_limitations": [],
+    "integration_readiness": null,
+    "preflight": {
+      "allowed": false,
+      "simulated": false,
+      "reason": "Approval policy not satisfied",
+      "reason_code": "APPROVAL_REQUIRED",
+      "remediation": "Complete approval workflow before execution.",
+      "correlation_id": "meridian-[REDACTED]-scale-2-to-3-v1",
+      "missing_capabilities": [],
+      "lifecycle_state": "CONNECTED",
+      "provider_mode": "live",
+      "connection_id": "4d106712-0035-42f7-be12-451fc4a8c665",
+      "evidence_context": {
+        "connection_id": "4d106712-0035-42f7-be12-451fc4a8c665",
+        "state": "CONNECTED",
+        "provider_mode": "live",
+        "last_validated_at": "2026-07-03T04:15:06.984042+00:00",
+        "required_capabilities": [
+          "kubernetes.workloads.write"
+        ],
+        "missing_capabilities": [],
+        "preflight_status": "blocked",
+        "blocked_reason": "APPROVAL_REQUIRED",
+        "remediation_guidance": "Complete approval workflow before execution.",
+        "correlation_id": "meridian-[REDACTED]-scale-2-to-3-v1",
+        "simulated": false
+      },
+      "execution_label": "LIVE-ELIGIBLE / NOT EXECUTED",
+      "live_eligible": true,
+      "proposal_phase": true,
+      "resource_name": "[REDACTED]",
+      "resource_id": "[REDACTED]/[REDACTED]",
+      "environment_id": "4cf39c21-2d00-45b8-b873-79f8fc9b548a",
+      "namespace": "[REDACTED]",
+      "action": "scale_deployment"
+    },
+    "safety_statements": [
+      "Approval alone does not execute any infrastructure mutation.",
+      "A separate typed confirmation and execution step is required after approval.",
+      "This package documents a proposed reversible scale operation only."
+    ],
+    "enrollment": {
+      "id": "34853e15-9e0a-4eb1-859d-fadd3d37f6fb",
+      "kill_switch": false,
+      "operation_count": 0,
+      "operation_limit": 2
+    }
+  },
+  "markdown": "# Pilot Approval Package\n\n**PROPOSED ONLY \u2014 NOT APPROVED \u2014 NOT EXECUTED**\n\nGenerated: 2026-07-03T04:15:07.084681+00:00\n\n## Proposal\n- Operation ID: `d1440973-a1d9-4c72-9c39-d992a08d5a97`\n- Action: `scale_deployment`\n- Status: `AWAITING_APPROVAL`\n- Execution label: `LIVE-ELIGIBLE / NOT EXECUTED`\n- Idempotency key: `meridian-[REDACTED]-scale-2-to-3-v1`\n- Payload hash: `01d4211b68133b9df33a64c43284509a60fb13ba489e4ba661228949a2c0f508`\n\n## Pending approval\n- Approval ID: `bc63be25-1fc0-4d4a-9b76-63c307e993ca`\n- Status: `PENDING`\n- Expires: 2026-07-04T04:15:07.082223+00:00\n- Approver: Meridian Pilot Approver <approver@customer.example>\n\n## Target\n- Deployment: `[REDACTED]` in `[REDACTED]`\n- Environment: meridian-staging-np (non-production)\n- Integration: `4d106712-0035-42f7-be12-451fc4a8c665`\n\n## Change\nMeridian non-production pilot: scale deployment [REDACTED] from 2 to 3 replicas in namespace [REDACTED] (environment meridian-staging-np). Approval does not execute any change.\n\n**Rollback:** Scale replicas from 3 back to 2 in namespace [REDACTED]\n\n**Baseline hash:** `dca58269c4db126228d76253d4230a8fd92d1f730945cb1250ec653988da5116`\n\n## Verification plan\n- Kubernetes desired, ready, and available replicas = 3\n- Three Ready pods with no rollout failure events in namespace\n- Pod restart count does not increase unexpectedly versus before-state\n- Prometheus kube_deployment_status_replicas_available query (supplemental only)\n\n## Verification criteria\n\n## Safety statements\n- Approval alone does not execute any infrastructure mutation.\n- A separate typed confirmation and execution step is required after approval.\n- This package documents a proposed reversible scale operation only.",
+  "html": "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Pilot Approval Package</title></head><body><h1 style='color:#b45309'>PROPOSED ONLY \u2014 NOT APPROVED \u2014 NOT EXECUTED</h1><pre># Pilot Approval Package<br><br>**PROPOSED ONLY \u2014 NOT APPROVED \u2014 NOT EXECUTED**<br><br>Generated: 2026-07-03T04:15:07.084681+00:00<br><br>## Proposal<br>- Operation ID: `d1440973-a1d9-4c72-9c39-d992a08d5a97`<br>- Action: `scale_deployment`<br>- Status: `AWAITING_APPROVAL`<br>- Execution label: `LIVE-ELIGIBLE / NOT EXECUTED`<br>- Idempotency key: `meridian-[REDACTED]-scale-2-to-3-v1`<br>- Payload hash: `01d4211b68133b9df33a64c43284509a60fb13ba489e4ba661228949a2c0f508`<br><br>## Pending approval<br>- Approval ID: `bc63be25-1fc0-4d4a-9b76-63c307e993ca`<br>- Status: `PENDING`<br>- Expires: 2026-07-04T04:15:07.082223+00:00<br>- Approver: Meridian Pilot Approver &lt;approver@customer.example&gt;<br><br>## Target<br>- Deployment: `[REDACTED]` in `[REDACTED]`<br>- Environment: meridian-staging-np (non-production)<br>- Integration: `4d106712-0035-42f7-be12-451fc4a8c665`<br><br>## Change<br>Meridian non-production pilot: scale deployment [REDACTED] from 2 to 3 replicas in namespace [REDACTED] (environment meridian-staging-np). Approval does not execute any change.<br><br>**Rollback:** Scale replicas from 3 back to 2 in namespace [REDACTED]<br><br>**Baseline hash:** `dca58269c4db126228d76253d4230a8fd92d1f730945cb1250ec653988da5116`<br><br>## Verification plan<br>- Kubernetes desired, ready, and available replicas = 3<br>- Three Ready pods with no rollout failure events in namespace<br>- Pod restart count does not increase unexpectedly versus before-state<br>- Prometheus kube_deployment_status_replicas_available query (supplemental only)<br><br>## Verification criteria<br><br>## Safety statements<br>- Approval alone does not execute any infrastructure mutation.<br>- A separate typed confirmation and execution step is required after approval.<br>- This package documents a proposed reversible scale operation only.</pre></body></html>",
+  "payload_hash": "01d4211b68133b9df33a64c43284509a60fb13ba489e4ba661228949a2c0f508",
+  "rollback_plan_hash": "2d3c0745d32b5ff366b2fe556302a188c9ddaf5c5d8b7947f0d2036f329988db",
+  "expires_at": "2026-07-04T04:15:07.082223+00:00"
+}

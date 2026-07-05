@@ -1,0 +1,239 @@
+{
+  "banner": "APPROVED FOR INTERNAL PILOT \u2014 NOT EXECUTED \u2014 TYPED CONFIRMATION REQUIRED",
+  "pilot_audit_entries": [
+    {
+      "action": "pilot.approval_decided",
+      "resource_type": "pilot_approval",
+      "resource_id": "9cbd4673-d64b-4ef2-a0d7-510483366be3",
+      "created_at": "2026-07-02T10:39:03.147041+00:00",
+      "details": {
+        "operation_id": "30d98614-5fc6-4410-a28c-e65a15eeabc7",
+        "approve": true,
+        "approver_name": "Internal Pilot Approver",
+        "approver_email": "pilot-approver@nexora.internal",
+        "payload_hash": "5d69df027a2f5038e26f295678194ef0570d39440a74482ee1ea80c6dcbbb11e",
+        "decision_rationale": "Internal pilot approval for controlled non-production execution-readiness validation. Execution remains separately gated by typed confirmation."
+      }
+    },
+    {
+      "action": "pilot.baseline.refresh",
+      "resource_type": "pilot_scorecard",
+      "resource_id": "54858a38-17a7-442c-b2e3-fd2aa6773525",
+      "created_at": "2026-07-02T10:24:12.601840+00:00",
+      "details": {
+        "baseline_hash": "3a069634725200a94f276fd7085e70f2b20fadc862404dd639a1e01d348efcfa",
+        "assessment_id": "6174c585-2704-4629-a97d-3e8221a8a052"
+      }
+    },
+    {
+      "action": "pilot.baseline.refresh",
+      "resource_type": "pilot_scorecard",
+      "resource_id": "62603510-fe37-41a6-a760-100ea96e2dfe",
+      "created_at": "2026-07-02T10:22:36.175734+00:00",
+      "details": {
+        "baseline_hash": "c01ac2cb1a20b7a1535d4749bd67977a9e0e7dfa3616c020179846f082223319",
+        "assessment_id": "6174c585-2704-4629-a97d-3e8221a8a052"
+      }
+    },
+    {
+      "action": "pilot.baseline.refresh",
+      "resource_type": "pilot_scorecard",
+      "resource_id": "e3517429-acc2-41ec-8af1-da6c79401adb",
+      "created_at": "2026-07-02T10:21:23.716227+00:00",
+      "details": {
+        "baseline_hash": "5ef69142b7a80677e15dbc1dc02d2fa2a74669dc68c11d6063d5dda389c25efc",
+        "assessment_id": "6174c585-2704-4629-a97d-3e8221a8a052"
+      }
+    },
+    {
+      "action": "pilot.baseline.refresh",
+      "resource_type": "pilot_scorecard",
+      "resource_id": "5a29d5d5-fa73-4a15-aab6-c60bad1ad8e4",
+      "created_at": "2026-07-02T10:20:17.520985+00:00",
+      "details": {
+        "baseline_hash": "613c94ddc18d60048c0ddd0ba71f937dca81316b4ab324d66c4a74f96d782577",
+        "assessment_id": "6174c585-2704-4629-a97d-3e8221a8a052"
+      }
+    },
+    {
+      "action": "pilot.baseline.refresh",
+      "resource_type": "pilot_scorecard",
+      "resource_id": "7fbb58d9-608f-4ee3-872a-febad76c1eae",
+      "created_at": "2026-07-02T10:19:38.555256+00:00",
+      "details": {
+        "baseline_hash": "2dfcdc26d2a4115ec1c79481776f13f3bf6bdd2d78fa5bc16ade1867172f254a",
+        "assessment_id": "6174c585-2704-4629-a97d-3e8221a8a052"
+      }
+    },
+    {
+      "action": "pilot.baseline.refresh",
+      "resource_type": "pilot_scorecard",
+      "resource_id": "2955cb27-c8c8-4124-b548-05b96e77d076",
+      "created_at": "2026-07-02T10:05:01.672504+00:00",
+      "details": {
+        "baseline_hash": "bb1673e120a66f62fa8c8333464652b369f8ed00f112ee080c1be9e7a26eacf0",
+        "assessment_id": "6174c585-2704-4629-a97d-3e8221a8a052"
+      }
+    },
+    {
+      "action": "pilot.assessment.run",
+      "resource_type": "pilot_assessment",
+      "resource_id": "6174c585-2704-4629-a97d-3e8221a8a052",
+      "created_at": "2026-07-02T10:05:01.655953+00:00",
+      "details": {
+        "source_modes": {
+          "KUBERNETES": "live",
+          "PROMETHEUS": "live",
+          "GITHUB": "live"
+        },
+        "finding_count": 4
+      }
+    },
+    {
+      "action": "pilot.baseline.refresh",
+      "resource_type": "pilot_scorecard",
+      "resource_id": "ab1f8fce-1920-4a31-acee-ead16febe3fd",
+      "created_at": "2026-07-02T10:02:55.650538+00:00",
+      "details": {
+        "baseline_hash": "f4955b4aec9b5d15f3bf72c1444c105b0fe707f7febf6eb6040a5bda5064cff3",
+        "assessment_id": "4039f080-bbeb-4311-b36d-a43ddd3de9da"
+      }
+    },
+    {
+      "action": "pilot.assessment.run",
+      "resource_type": "pilot_assessment",
+      "resource_id": "4039f080-bbeb-4311-b36d-a43ddd3de9da",
+      "created_at": "2026-07-02T10:02:55.634847+00:00",
+      "details": {
+        "source_modes": {
+          "KUBERNETES": "live",
+          "PROMETHEUS": "live",
+          "GITHUB": "live"
+        },
+        "finding_count": 4
+      }
+    },
+    {
+      "action": "pilot.baseline.refresh",
+      "resource_type": "pilot_scorecard",
+      "resource_id": "f3b9fb2b-6b0d-4629-b753-9573e06b6dac",
+      "created_at": "2026-07-02T09:59:03.397901+00:00",
+      "details": {
+        "baseline_hash": "e4e9015d628a44a8948a3e5925d59798748371b9acfe160093ed9f9f5c53af64",
+        "assessment_id": "8381e26f-cd17-414c-82c0-3aca49a92bb2"
+      }
+    },
+    {
+      "action": "pilot.assessment.run",
+      "resource_type": "pilot_assessment",
+      "resource_id": "8381e26f-cd17-414c-82c0-3aca49a92bb2",
+      "created_at": "2026-07-02T09:59:03.380791+00:00",
+      "details": {
+        "source_modes": {
+          "KUBERNETES": "live",
+          "PROMETHEUS": "live",
+          "GITHUB": "live"
+        },
+        "finding_count": 4
+      }
+    },
+    {
+      "action": "pilot.baseline.refresh",
+      "resource_type": "pilot_scorecard",
+      "resource_id": "146f41bb-2a31-4c34-9554-223452bf2f2c",
+      "created_at": "2026-07-02T09:57:40.653031+00:00",
+      "details": {
+        "baseline_hash": "ed83518622b563a8ebbb60f886443dfa1031e68fc5b3b2b15224a67a920d617b",
+        "assessment_id": "e35ca3ac-fcb7-4c62-a5c5-04bef3d8607f"
+      }
+    },
+    {
+      "action": "pilot.assessment.run",
+      "resource_type": "pilot_assessment",
+      "resource_id": "e35ca3ac-fcb7-4c62-a5c5-04bef3d8607f",
+      "created_at": "2026-07-02T09:57:40.636081+00:00",
+      "details": {
+        "source_modes": {
+          "KUBERNETES": "live",
+          "PROMETHEUS": "live",
+          "GITHUB": "live"
+        },
+        "finding_count": 4
+      }
+    },
+    {
+      "action": "pilot.baseline.refresh",
+      "resource_type": "pilot_scorecard",
+      "resource_id": "49602178-e3ac-4795-8baa-23e6a8374362",
+      "created_at": "2026-07-02T09:40:48.740815+00:00",
+      "details": {
+        "baseline_hash": "eaf9d7f8c011a46ec43cc487397252f92fbb3c7ccd01ab94856bee5ea679ee51",
+        "assessment_id": "f73834d6-b61c-453d-9e35-44f3e39d54ad"
+      }
+    },
+    {
+      "action": "pilot.assessment.run",
+      "resource_type": "pilot_assessment",
+      "resource_id": "f73834d6-b61c-453d-9e35-44f3e39d54ad",
+      "created_at": "2026-07-02T09:40:48.725766+00:00",
+      "details": {
+        "source_modes": {
+          "PROMETHEUS": "live",
+          "GITHUB": "live",
+          "KUBERNETES": "live"
+        },
+        "finding_count": 4
+      }
+    },
+    {
+      "action": "pilot.baseline.capture",
+      "resource_type": "pilot_scorecard",
+      "resource_id": "cc1fbc36-c590-4be9-81d8-fcd771961be5",
+      "created_at": "2026-07-02T09:26:30.082115+00:00",
+      "details": {
+        "baseline_hash": "3ddea418972798f7104bf0cc0895d9081be950be2f1d9ee533c78fd95980ce67",
+        "assessment_id": "5a1636f1-baca-492a-93de-cb732473f708"
+      }
+    },
+    {
+      "action": "pilot.assessment.run",
+      "resource_type": "pilot_assessment",
+      "resource_id": "5a1636f1-baca-492a-93de-cb732473f708",
+      "created_at": "2026-07-02T09:26:30.066979+00:00",
+      "details": {
+        "source_modes": {
+          "PROMETHEUS": "live",
+          "GITHUB": "live",
+          "KUBERNETES": "live"
+        },
+        "finding_count": 6
+      }
+    },
+    {
+      "action": "pilot.baseline.capture",
+      "resource_type": "pilot_scorecard",
+      "resource_id": "b3464090-58de-4710-affd-0a46b7af6f3e",
+      "created_at": "2026-07-02T09:23:42.906709+00:00",
+      "details": {
+        "baseline_hash": "f14b045b2283011a6a4c51b447bd4876b7a19f2441da35e818edf50f478dff77",
+        "assessment_id": "203c3f74-90bf-4d4d-8f56-6b0f37bff46e"
+      }
+    },
+    {
+      "action": "pilot.assessment.run",
+      "resource_type": "pilot_assessment",
+      "resource_id": "203c3f74-90bf-4d4d-8f56-6b0f37bff46e",
+      "created_at": "2026-07-02T09:23:42.888907+00:00",
+      "details": {
+        "source_modes": {
+          "PROMETHEUS": "live",
+          "GITHUB": "live",
+          "KUBERNETES": "live"
+        },
+        "finding_count": 5
+      }
+    }
+  ],
+  "approval_decided": true,
+  "live_operation_confirmed": false
+}

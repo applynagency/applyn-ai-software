@@ -1,0 +1,904 @@
+{
+  "json_pack": {
+    "enrollment": {
+      "id": "2c0ce636-4f82-420d-8321-8a4c6f1ed754",
+      "execution_status": "IN_PROGRESS",
+      "kill_switch": false
+    },
+    "readiness": {
+      "enrollment_id": "2c0ce636-4f82-420d-8321-8a4c6f1ed754",
+      "status": "DRAFT",
+      "readiness_score": 0,
+      "completed_items": 0,
+      "total_items": 0,
+      "blockers": [],
+      "checklist": [],
+      "live_operations_enabled": false,
+      "onboarding_path_id": null
+    },
+    "assessment": {
+      "id": "6174c585-2704-4629-a97d-3e8221a8a052",
+      "status": "COMPLETED",
+      "summary": {
+        "findings": [
+          {
+            "finding_id": "k8s-collection-failed",
+            "title": "Kubernetes evidence unavailable",
+            "description": "Could not complete read-only Kubernetes collection.",
+            "source": "KUBERNETES",
+            "source_mode": "live",
+            "confidence": "INSUFFICIENT_EVIDENCE",
+            "risk": "MEDIUM",
+            "evidence": [
+              {
+                "error": "namespaces_unreadable"
+              }
+            ],
+            "gaps": [
+              "kubernetes_collection_failed"
+            ],
+            "recommendation": null
+          },
+          {
+            "finding_id": "github-repo-metadata",
+            "title": "Repository pilot-admin/pilot-test metadata captured",
+            "description": "Default branch: main.",
+            "source": "GITHUB",
+            "source_mode": "live",
+            "confidence": "HIGH",
+            "risk": "INFO",
+            "evidence": [
+              {
+                "type": "repository_metadata",
+                "metadata": {
+                  "full_name": "pilot-admin/pilot-test",
+                  "default_branch": "main",
+                  "visibility": "private",
+                  "open_issues": 0,
+                  "pushed_at": null,
+                  "size": 28
+                },
+                "recent_commits": [
+                  {
+                    "sha": "e6697175bf55",
+                    "message": "Sprint 66F: add infra/pilot-demo/rbac/rolebinding.yaml\n",
+                    "author": "pilot-admin",
+                    "date": "2026-07-02T09:55:22Z"
+                  },
+                  {
+                    "sha": "8c9895ce5b99",
+                    "message": "Sprint 66F: add infra/pilot-demo/rbac/role.yaml\n",
+                    "author": "pilot-admin",
+                    "date": "2026-07-02T09:55:21Z"
+                  },
+                  {
+                    "sha": "b5cf8ab3c159",
+                    "message": "Sprint 66F: add infra/pilot-demo/rbac/serviceaccount.yaml\n",
+                    "author": "pilot-admin",
+                    "date": "2026-07-02T09:55:21Z"
+                  },
+                  {
+                    "sha": "f50e7c926645",
+                    "message": "Sprint 66E: add infra/pilot-demo/service.yaml\n",
+                    "author": "pilot-admin",
+                    "date": "2026-07-02T09:38:10Z"
+                  },
+                  {
+                    "sha": "0d1e6aa5f8e5",
+                    "message": "Sprint 66E: add infra/pilot-demo/deployment.yaml\n",
+                    "author": "pilot-admin",
+                    "date": "2026-07-02T09:38:10Z"
+                  }
+                ]
+              }
+            ],
+            "gaps": [
+              "workflows_unavailable",
+              "workflow_runs_unavailable",
+              "branch_protection_not_readable"
+            ],
+            "recommendation": null
+          },
+          {
+            "finding_id": "github-pipelines-insufficient",
+            "title": "Pipeline run history not available",
+            "description": "Workflow definitions or runs could not be read with current token scope.",
+            "source": "GITHUB",
+            "source_mode": "live",
+            "confidence": "INSUFFICIENT_EVIDENCE",
+            "risk": "INFO",
+            "evidence": [
+              {
+                "workflows": []
+              }
+            ],
+            "gaps": [
+              "workflow_runs_unavailable"
+            ],
+            "recommendation": null
+          },
+          {
+            "finding_id": "prometheus-health",
+            "title": "Prometheus endpoint healthy",
+            "description": "Build info and target summary collected via read-only API.",
+            "source": "PROMETHEUS",
+            "source_mode": "live",
+            "confidence": "HIGH",
+            "risk": "INFO",
+            "evidence": [
+              {
+                "type": "prometheus_health",
+                "buildinfo": {
+                  "version": "2.54.1",
+                  "revision": "e6cfa720fbe6280153fab13090a483dbd40bece3",
+                  "branch": "HEAD",
+                  "buildUser": "root@812ffd741951",
+                  "buildDate": "20240827-10:59:03",
+                  "goVersion": "go1.22.6"
+                },
+                "targets": {
+                  "total": 2,
+                  "up": 2,
+                  "down": 0,
+                  "jobs": [
+                    "kube-state-metrics",
+                    "prometheus"
+                  ]
+                },
+                "queries": [
+                  {
+                    "name": "up",
+                    "expression": "up",
+                    "series_count": 2,
+                    "sample": [
+                      {
+                        "metric": {
+                          "__name__": "up",
+                          "job": "prometheus"
+                        },
+                        "value": [
+                          1782986701.639,
+                          "1"
+                        ]
+                      },
+                      {
+                        "metric": {
+                          "__name__": "up",
+                          "job": "kube-state-metrics"
+                        },
+                        "value": [
+                          1782986701.639,
+                          "1"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "prometheus_ready",
+                    "expression": "prometheus_ready",
+                    "series_count": 1,
+                    "sample": [
+                      {
+                        "metric": {
+                          "__name__": "prometheus_ready",
+                          "job": "prometheus"
+                        },
+                        "value": [
+                          1782986701.643,
+                          "1"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "kube_pod_container_status_restarts_total",
+                    "expression": "kube_pod_container_status_restarts_total{namespace=\"nexora-pilot\"}",
+                    "series_count": 1,
+                    "sample": [
+                      {
+                        "metric": {
+                          "__name__": "kube_pod_container_status_restarts_total",
+                          "job": "kube-state-metrics",
+                          "namespace": "nexora-pilot",
+                          "pod": "pilot-demo-57c4b9d8f-rt6m6"
+                        },
+                        "value": [
+                          1782986701.646,
+                          "0"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "kube_deployment_status_replicas_available",
+                    "expression": "kube_deployment_status_replicas_available{namespace=\"nexora-pilot\"}",
+                    "series_count": 1,
+                    "sample": [
+                      {
+                        "metric": {
+                          "__name__": "kube_deployment_status_replicas_available",
+                          "deployment": "pilot-demo",
+                          "job": "kube-state-metrics",
+                          "namespace": "nexora-pilot"
+                        },
+                        "value": [
+                          1782986701.649,
+                          "1"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "gaps": [],
+            "recommendation": null
+          }
+        ],
+        "gaps": [
+          "branch_protection_not_readable",
+          "kubernetes_collection_failed",
+          "workflow_runs_unavailable",
+          "workflows_unavailable"
+        ],
+        "integration_health": {
+          "total": 6,
+          "connected": 5,
+          "source_mode": "live"
+        },
+        "kubernetes": {
+          "error": "namespaces_unreadable",
+          "status": 403,
+          "source_mode": "live"
+        },
+        "github": {
+          "source_mode": "live",
+          "repository": "pilot-admin/pilot-test",
+          "metadata": {
+            "full_name": "pilot-admin/pilot-test",
+            "default_branch": "main",
+            "visibility": "private",
+            "open_issues": 0,
+            "pushed_at": null,
+            "size": 28
+          },
+          "recent_commits": [
+            {
+              "sha": "e6697175bf55",
+              "message": "Sprint 66F: add infra/pilot-demo/rbac/rolebinding.yaml\n",
+              "author": "pilot-admin",
+              "date": "2026-07-02T09:55:22Z"
+            },
+            {
+              "sha": "8c9895ce5b99",
+              "message": "Sprint 66F: add infra/pilot-demo/rbac/role.yaml\n",
+              "author": "pilot-admin",
+              "date": "2026-07-02T09:55:21Z"
+            },
+            {
+              "sha": "b5cf8ab3c159",
+              "message": "Sprint 66F: add infra/pilot-demo/rbac/serviceaccount.yaml\n",
+              "author": "pilot-admin",
+              "date": "2026-07-02T09:55:21Z"
+            },
+            {
+              "sha": "f50e7c926645",
+              "message": "Sprint 66E: add infra/pilot-demo/service.yaml\n",
+              "author": "pilot-admin",
+              "date": "2026-07-02T09:38:10Z"
+            },
+            {
+              "sha": "0d1e6aa5f8e5",
+              "message": "Sprint 66E: add infra/pilot-demo/deployment.yaml\n",
+              "author": "pilot-admin",
+              "date": "2026-07-02T09:38:10Z"
+            }
+          ],
+          "workflows": [],
+          "workflow_runs": [],
+          "branch_protection": null,
+          "releases": [],
+          "gaps": [
+            "workflows_unavailable",
+            "workflow_runs_unavailable",
+            "branch_protection_not_readable"
+          ]
+        },
+        "prometheus": {
+          "source_mode": "live",
+          "endpoint": "http://pilot-prometheus:9090",
+          "queries": [
+            {
+              "name": "up",
+              "expression": "up",
+              "series_count": 2,
+              "sample": [
+                {
+                  "metric": {
+                    "__name__": "up",
+                    "job": "prometheus"
+                  },
+                  "value": [
+                    1782986701.639,
+                    "1"
+                  ]
+                },
+                {
+                  "metric": {
+                    "__name__": "up",
+                    "job": "kube-state-metrics"
+                  },
+                  "value": [
+                    1782986701.639,
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "prometheus_ready",
+              "expression": "prometheus_ready",
+              "series_count": 1,
+              "sample": [
+                {
+                  "metric": {
+                    "__name__": "prometheus_ready",
+                    "job": "prometheus"
+                  },
+                  "value": [
+                    1782986701.643,
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "kube_pod_container_status_restarts_total",
+              "expression": "kube_pod_container_status_restarts_total{namespace=\"nexora-pilot\"}",
+              "series_count": 1,
+              "sample": [
+                {
+                  "metric": {
+                    "__name__": "kube_pod_container_status_restarts_total",
+                    "job": "kube-state-metrics",
+                    "namespace": "nexora-pilot",
+                    "pod": "pilot-demo-57c4b9d8f-rt6m6"
+                  },
+                  "value": [
+                    1782986701.646,
+                    "0"
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "kube_deployment_status_replicas_available",
+              "expression": "kube_deployment_status_replicas_available{namespace=\"nexora-pilot\"}",
+              "series_count": 1,
+              "sample": [
+                {
+                  "metric": {
+                    "__name__": "kube_deployment_status_replicas_available",
+                    "deployment": "pilot-demo",
+                    "job": "kube-state-metrics",
+                    "namespace": "nexora-pilot"
+                  },
+                  "value": [
+                    1782986701.649,
+                    "1"
+                  ]
+                }
+              ]
+            }
+          ],
+          "buildinfo": {
+            "version": "2.54.1",
+            "revision": "e6cfa720fbe6280153fab13090a483dbd40bece3",
+            "branch": "HEAD",
+            "buildUser": "root@812ffd741951",
+            "buildDate": "20240827-10:59:03",
+            "goVersion": "go1.22.6"
+          },
+          "targets": {
+            "total": 2,
+            "up": 2,
+            "down": 0,
+            "jobs": [
+              "kube-state-metrics",
+              "prometheus"
+            ]
+          },
+          "gaps": []
+        },
+        "connection_ids": {
+          "KUBERNETES": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+          "GITHUB": "08503643-4ba6-4cef-86f3-1658bc0ca8b6",
+          "PROMETHEUS": "4eacbdc9-1230-43cd-a941-0aa07efb6062"
+        }
+      },
+      "recommendations": [
+        {
+          "priority": "MEDIUM",
+          "action": "Evidence gap: Kubernetes evidence unavailable \u2014 review KUBERNETES integration scope",
+          "evidence": [
+            {
+              "error": "namespaces_unreadable"
+            }
+          ],
+          "source_mode": "live"
+        },
+        {
+          "priority": "MEDIUM",
+          "action": "Evidence gap: Repository pilot-admin/pilot-test metadata captured \u2014 review GITHUB integration scope",
+          "evidence": [
+            {
+              "type": "repository_metadata",
+              "metadata": {
+                "full_name": "pilot-admin/pilot-test",
+                "default_branch": "main",
+                "visibility": "private",
+                "open_issues": 0,
+                "pushed_at": null,
+                "size": 28
+              },
+              "recent_commits": [
+                {
+                  "sha": "e6697175bf55",
+                  "message": "Sprint 66F: add infra/pilot-demo/rbac/rolebinding.yaml\n",
+                  "author": "pilot-admin",
+                  "date": "2026-07-02T09:55:22Z"
+                },
+                {
+                  "sha": "8c9895ce5b99",
+                  "message": "Sprint 66F: add infra/pilot-demo/rbac/role.yaml\n",
+                  "author": "pilot-admin",
+                  "date": "2026-07-02T09:55:21Z"
+                },
+                {
+                  "sha": "b5cf8ab3c159",
+                  "message": "Sprint 66F: add infra/pilot-demo/rbac/serviceaccount.yaml\n",
+                  "author": "pilot-admin",
+                  "date": "2026-07-02T09:55:21Z"
+                },
+                {
+                  "sha": "f50e7c926645",
+                  "message": "Sprint 66E: add infra/pilot-demo/service.yaml\n",
+                  "author": "pilot-admin",
+                  "date": "2026-07-02T09:38:10Z"
+                },
+                {
+                  "sha": "0d1e6aa5f8e5",
+                  "message": "Sprint 66E: add infra/pilot-demo/deployment.yaml\n",
+                  "author": "pilot-admin",
+                  "date": "2026-07-02T09:38:10Z"
+                }
+              ]
+            }
+          ],
+          "source_mode": "live"
+        },
+        {
+          "priority": "MEDIUM",
+          "action": "Evidence gap: Pipeline run history not available \u2014 review GITHUB integration scope",
+          "evidence": [
+            {
+              "workflows": []
+            }
+          ],
+          "source_mode": "live"
+        }
+      ],
+      "source_modes": {
+        "KUBERNETES": "live",
+        "PROMETHEUS": "live",
+        "GITHUB": "live"
+      },
+      "created_at": "2026-07-02T10:05:01.650539Z",
+      "export_markdown": "# Pilot Read-Only Assessment\n\nAssessment ID: 6174c585-2704-4629-a97d-3e8221a8a052\n\n## Findings\n\n- **Kubernetes evidence unavailable** (risk=MEDIUM, confidence=INSUFFICIENT_EVIDENCE)\n- **Repository pilot-admin/pilot-test metadata captured** (risk=INFO, confidence=HIGH)\n- **Pipeline run history not available** (risk=INFO, confidence=INSUFFICIENT_EVIDENCE)\n- **Prometheus endpoint healthy** (risk=INFO, confidence=HIGH)\n\n## Recommendations\n\n- **MEDIUM**: Evidence gap: Kubernetes evidence unavailable \u2014 review KUBERNETES integration scope _(source: live)_\n- **MEDIUM**: Evidence gap: Repository pilot-admin/pilot-test metadata captured \u2014 review GITHUB integration scope _(source: live)_\n- **MEDIUM**: Evidence gap: Pipeline run history not available \u2014 review GITHUB integration scope _(source: live)_"
+    },
+    "scorecard": {
+      "scores": {
+        "setup_readiness": 0,
+        "visibility": 100,
+        "operational_maturity": 100,
+        "automation_readiness": 100,
+        "risk": 0,
+        "value_realized": 0
+      },
+      "metrics": {
+        "integration_connection_success_rate": 1.0,
+        "finding_count": 4,
+        "insufficient_evidence_count": 2,
+        "baseline_hash": "bb1673e120a66f62fa8c8333464652b369f8ed00f112ee080c1be9e7a26eacf0"
+      },
+      "insufficient_data": [
+        "branch_protection_not_readable",
+        "kubernetes_collection_failed",
+        "workflow_runs_unavailable",
+        "workflows_unavailable"
+      ],
+      "created_at": "2026-07-02T10:05:01.669588Z"
+    },
+    "baseline": {
+      "current": {
+        "captured_at": "2026-07-02T10:05:01.668674+00:00",
+        "workload": {
+          "name": "pilot-demo",
+          "namespace": "nexora-pilot",
+          "deployments": [],
+          "pods": []
+        },
+        "deployment_readiness": [],
+        "pod_readiness": [],
+        "total_restarts": 0,
+        "recent_events": [],
+        "pipeline_status": [],
+        "repository_default_branch": "main",
+        "prometheus_targets": {
+          "total": 2,
+          "up": 2,
+          "down": 0,
+          "jobs": [
+            "kube-state-metrics",
+            "prometheus"
+          ]
+        },
+        "prometheus_queries": [
+          {
+            "name": "up",
+            "expression": "up",
+            "series_count": 2,
+            "sample": [
+              {
+                "metric": {
+                  "__name__": "up",
+                  "job": "prometheus"
+                },
+                "value": [
+                  1782986701.639,
+                  "1"
+                ]
+              },
+              {
+                "metric": {
+                  "__name__": "up",
+                  "job": "kube-state-metrics"
+                },
+                "value": [
+                  1782986701.639,
+                  "1"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "prometheus_ready",
+            "expression": "prometheus_ready",
+            "series_count": 1,
+            "sample": [
+              {
+                "metric": {
+                  "__name__": "prometheus_ready",
+                  "job": "prometheus"
+                },
+                "value": [
+                  1782986701.643,
+                  "1"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "kube_pod_container_status_restarts_total",
+            "expression": "kube_pod_container_status_restarts_total{namespace=\"nexora-pilot\"}",
+            "series_count": 1,
+            "sample": [
+              {
+                "metric": {
+                  "__name__": "kube_pod_container_status_restarts_total",
+                  "job": "kube-state-metrics",
+                  "namespace": "nexora-pilot",
+                  "pod": "pilot-demo-57c4b9d8f-rt6m6"
+                },
+                "value": [
+                  1782986701.646,
+                  "0"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "kube_deployment_status_replicas_available",
+            "expression": "kube_deployment_status_replicas_available{namespace=\"nexora-pilot\"}",
+            "series_count": 1,
+            "sample": [
+              {
+                "metric": {
+                  "__name__": "kube_deployment_status_replicas_available",
+                  "deployment": "pilot-demo",
+                  "job": "kube-state-metrics",
+                  "namespace": "nexora-pilot"
+                },
+                "value": [
+                  1782986701.649,
+                  "1"
+                ]
+              }
+            ]
+          }
+        ],
+        "integration_health": [
+          {
+            "provider": "KUBERNETES",
+            "lifecycle_state": "CONNECTED",
+            "provider_mode": "live",
+            "last_validated_at": "2026-07-02T10:05:00.575090+00:00"
+          },
+          {
+            "provider": "PROMETHEUS",
+            "lifecycle_state": "CONNECTED",
+            "provider_mode": "live",
+            "last_validated_at": "2026-07-02T09:00:27.359170+00:00"
+          },
+          {
+            "provider": "GITHUB",
+            "lifecycle_state": "CONNECTED",
+            "provider_mode": "live",
+            "last_validated_at": "2026-07-02T09:00:27.337423+00:00"
+          },
+          {
+            "provider": "PROMETHEUS",
+            "lifecycle_state": "CONNECTED",
+            "provider_mode": "live",
+            "last_validated_at": "2026-07-02T08:55:31.533591+00:00"
+          },
+          {
+            "provider": "KUBERNETES",
+            "lifecycle_state": "CONNECTED",
+            "provider_mode": "live",
+            "last_validated_at": "2026-07-02T08:55:31.468871+00:00"
+          }
+        ],
+        "hash": "bb1673e120a66f62fa8c8333464652b369f8ed00f112ee080c1be9e7a26eacf0",
+        "assessment_id": "6174c585-2704-4629-a97d-3e8221a8a052"
+      },
+      "history": [
+        {
+          "hash": "3ddea418972798f7104bf0cc0895d9081be950be2f1d9ee533c78fd95980ce67",
+          "captured_at": "2026-07-02T09:26:30.078800+00:00",
+          "assessment_id": "5a1636f1-baca-492a-93de-cb732473f708"
+        },
+        {
+          "hash": "eaf9d7f8c011a46ec43cc487397252f92fbb3c7ccd01ab94856bee5ea679ee51",
+          "captured_at": "2026-07-02T09:40:48.737004+00:00",
+          "assessment_id": "f73834d6-b61c-453d-9e35-44f3e39d54ad"
+        },
+        {
+          "hash": "ed83518622b563a8ebbb60f886443dfa1031e68fc5b3b2b15224a67a920d617b",
+          "captured_at": "2026-07-02T09:57:40.648860+00:00",
+          "assessment_id": "e35ca3ac-fcb7-4c62-a5c5-04bef3d8607f"
+        },
+        {
+          "hash": "e4e9015d628a44a8948a3e5925d59798748371b9acfe160093ed9f9f5c53af64",
+          "captured_at": "2026-07-02T09:59:03.393788+00:00",
+          "assessment_id": "8381e26f-cd17-414c-82c0-3aca49a92bb2"
+        },
+        {
+          "hash": "f4955b4aec9b5d15f3bf72c1444c105b0fe707f7febf6eb6040a5bda5064cff3",
+          "captured_at": "2026-07-02T10:02:55.646831+00:00",
+          "assessment_id": "4039f080-bbeb-4311-b36d-a43ddd3de9da"
+        }
+      ]
+    },
+    "stages": [
+      {
+        "id": "abeb3f8e-b6fa-490d-bfb2-522cf988653a",
+        "stage_key": "CONNECT",
+        "title": "Connect integrations",
+        "status": "COMPLETED",
+        "owner_id": "915e1592-0447-44d7-a9a0-8faffce4ef1a",
+        "evidence": {},
+        "blockers": [],
+        "rollback_plan": null,
+        "outcome": null,
+        "started_at": "2026-07-02T09:00:27.448665Z",
+        "completed_at": "2026-07-02T09:00:27.448665Z"
+      },
+      {
+        "id": "2d1251d5-5375-4901-a9d5-8f2b1614a12d",
+        "stage_key": "VALIDATE",
+        "title": "Validate integration readiness",
+        "status": "COMPLETED",
+        "owner_id": "915e1592-0447-44d7-a9a0-8faffce4ef1a",
+        "evidence": {},
+        "blockers": [],
+        "rollback_plan": null,
+        "outcome": null,
+        "started_at": "2026-07-02T09:00:27.466339Z",
+        "completed_at": "2026-07-02T09:00:27.466339Z"
+      },
+      {
+        "id": "ae62f555-3e53-421a-ae5f-349b5c17404c",
+        "stage_key": "READ_ONLY_ASSESSMENT",
+        "title": "Run read-only assessment",
+        "status": "COMPLETED",
+        "owner_id": "915e1592-0447-44d7-a9a0-8faffce4ef1a",
+        "evidence": {
+          "assessment_id": "203c3f74-90bf-4d4d-8f56-6b0f37bff46e",
+          "source_modes": {
+            "PROMETHEUS": "live",
+            "GITHUB": "live",
+            "KUBERNETES": "live"
+          },
+          "finding_count": 5
+        },
+        "blockers": [],
+        "rollback_plan": null,
+        "outcome": "Read-only assessment completed with live evidence",
+        "started_at": "2026-07-02T09:23:42.889689Z",
+        "completed_at": "2026-07-02T09:23:42.889689Z"
+      },
+      {
+        "id": "2700f31d-2b0c-48cc-abeb-311253ab1b0a",
+        "stage_key": "BASELINE_CAPTURE",
+        "title": "Capture pilot baseline",
+        "status": "COMPLETED",
+        "owner_id": "915e1592-0447-44d7-a9a0-8faffce4ef1a",
+        "evidence": {
+          "scorecard_id": "b3464090-58de-4710-affd-0a46b7af6f3e",
+          "baseline_hash": "f14b045b2283011a6a4c51b447bd4876b7a19f2441da35e818edf50f478dff77",
+          "assessment_id": "203c3f74-90bf-4d4d-8f56-6b0f37bff46e"
+        },
+        "blockers": [],
+        "rollback_plan": null,
+        "outcome": "Pilot baseline captured from live assessment",
+        "started_at": "2026-07-02T09:23:42.907377Z",
+        "completed_at": "2026-07-02T09:23:42.907377Z"
+      },
+      {
+        "id": "72a684bf-98aa-4df4-858b-25b45979d7c9",
+        "stage_key": "PROPOSE_OPERATION",
+        "title": "Propose safe live operation",
+        "status": "PENDING",
+        "owner_id": null,
+        "evidence": {},
+        "blockers": [],
+        "rollback_plan": null,
+        "outcome": null,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "id": "d8032510-ed60-4712-8763-b5dace62db7c",
+        "stage_key": "CUSTOMER_APPROVAL",
+        "title": "Obtain customer approval",
+        "status": "PENDING",
+        "owner_id": null,
+        "evidence": {},
+        "blockers": [],
+        "rollback_plan": null,
+        "outcome": null,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "id": "a66acbd3-29f5-4ac8-9737-15149b4c4bb3",
+        "stage_key": "EXECUTE",
+        "title": "Execute approved operation",
+        "status": "PENDING",
+        "owner_id": null,
+        "evidence": {},
+        "blockers": [],
+        "rollback_plan": null,
+        "outcome": null,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "id": "063bf887-1294-4c52-ae0a-1910194fe272",
+        "stage_key": "VERIFY",
+        "title": "Verify post-operation health",
+        "status": "PENDING",
+        "owner_id": null,
+        "evidence": {},
+        "blockers": [],
+        "rollback_plan": null,
+        "outcome": null,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "id": "2ce1218a-8166-412f-8153-67b570c0aad2",
+        "stage_key": "COMPLETE",
+        "title": "Complete pilot",
+        "status": "PENDING",
+        "owner_id": null,
+        "evidence": {},
+        "blockers": [],
+        "rollback_plan": null,
+        "outcome": null,
+        "started_at": null,
+        "completed_at": null
+      }
+    ],
+    "operation": null,
+    "approval": null,
+    "blockers": [],
+    "recommendations": [
+      {
+        "priority": "MEDIUM",
+        "action": "Evidence gap: Kubernetes evidence unavailable \u2014 review KUBERNETES integration scope",
+        "evidence": [
+          {
+            "error": "namespaces_unreadable"
+          }
+        ],
+        "source_mode": "live"
+      },
+      {
+        "priority": "MEDIUM",
+        "action": "Evidence gap: Repository pilot-admin/pilot-test metadata captured \u2014 review GITHUB integration scope",
+        "evidence": [
+          {
+            "type": "repository_metadata",
+            "metadata": {
+              "full_name": "pilot-admin/pilot-test",
+              "default_branch": "main",
+              "visibility": "private",
+              "open_issues": 0,
+              "pushed_at": null,
+              "size": 28
+            },
+            "recent_commits": [
+              {
+                "sha": "e6697175bf55",
+                "message": "Sprint 66F: add infra/pilot-demo/rbac/rolebinding.yaml\n",
+                "author": "pilot-admin",
+                "date": "2026-07-02T09:55:22Z"
+              },
+              {
+                "sha": "8c9895ce5b99",
+                "message": "Sprint 66F: add infra/pilot-demo/rbac/role.yaml\n",
+                "author": "pilot-admin",
+                "date": "2026-07-02T09:55:21Z"
+              },
+              {
+                "sha": "b5cf8ab3c159",
+                "message": "Sprint 66F: add infra/pilot-demo/rbac/serviceaccount.yaml\n",
+                "author": "pilot-admin",
+                "date": "2026-07-02T09:55:21Z"
+              },
+              {
+                "sha": "f50e7c926645",
+                "message": "Sprint 66E: add infra/pilot-demo/service.yaml\n",
+                "author": "pilot-admin",
+                "date": "2026-07-02T09:38:10Z"
+              },
+              {
+                "sha": "0d1e6aa5f8e5",
+                "message": "Sprint 66E: add infra/pilot-demo/deployment.yaml\n",
+                "author": "pilot-admin",
+                "date": "2026-07-02T09:38:10Z"
+              }
+            ]
+          }
+        ],
+        "source_mode": "live"
+      },
+      {
+        "priority": "MEDIUM",
+        "action": "Evidence gap: Pipeline run history not available \u2014 review GITHUB integration scope",
+        "evidence": [
+          {
+            "workflows": []
+          }
+        ],
+        "source_mode": "live"
+      }
+    ],
+    "exported_at": "2026-07-02T10:05:01.681459+00:00",
+    "redacted": true
+  },
+  "markdown": "# Pilot Evidence Pack\n\nExported: 2026-07-02T10:05:01.681459+00:00\n\n## Execution status: IN_PROGRESS\n\n## Stage timeline\n- CONNECT: COMPLETED \u2014 \n- VALIDATE: COMPLETED \u2014 \n- READ_ONLY_ASSESSMENT: COMPLETED \u2014 Read-only assessment completed with live evidence\n- BASELINE_CAPTURE: COMPLETED \u2014 Pilot baseline captured from live assessment\n- PROPOSE_OPERATION: PENDING \u2014 \n- CUSTOMER_APPROVAL: PENDING \u2014 \n- EXECUTE: PENDING \u2014 \n- VERIFY: PENDING \u2014 \n- COMPLETE: PENDING \u2014 \n\n## Assessment\n- Assessment ID: 6174c585-2704-4629-a97d-3e8221a8a052\n- Finding: Kubernetes evidence unavailable (KUBERNETES, INSUFFICIENT_EVIDENCE)\n- Finding: Repository pilot-admin/pilot-test metadata captured (GITHUB, HIGH)\n- Finding: Pipeline run history not available (GITHUB, INSUFFICIENT_EVIDENCE)\n- Finding: Prometheus endpoint healthy (PROMETHEUS, HIGH)\n\n## Baseline\n- Captured at: None\n- Hash: ...\n- Total pod restarts: None\n\n## Scorecard\n- setup_readiness: 0\n- visibility: 100\n- operational_maturity: 100\n- automation_readiness: 100\n- risk: 0\n- value_realized: 0",
+  "html": "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Pilot Evidence Pack</title></head><body><h1>Pilot Evidence Pack</h1><p>Exported: 2026-07-02T10:05:01.681459+00:00</p><h2>Execution status: IN_PROGRESS</h2><h2>Stage timeline</h2><p>- CONNECT: COMPLETED \u2014 </p><p>- VALIDATE: COMPLETED \u2014 </p><p>- READ_ONLY_ASSESSMENT: COMPLETED \u2014 Read-only assessment completed with live evidence</p><p>- BASELINE_CAPTURE: COMPLETED \u2014 Pilot baseline captured from live assessment</p><p>- PROPOSE_OPERATION: PENDING \u2014 </p><p>- CUSTOMER_APPROVAL: PENDING \u2014 </p><p>- EXECUTE: PENDING \u2014 </p><p>- VERIFY: PENDING \u2014 </p><p>- COMPLETE: PENDING \u2014 </p><h2>Assessment</h2><p>- Assessment ID: 6174c585-2704-4629-a97d-3e8221a8a052</p><p>- Finding: Kubernetes evidence unavailable (KUBERNETES, INSUFFICIENT_EVIDENCE)</p><p>- Finding: Repository pilot-admin/pilot-test metadata captured (GITHUB, HIGH)</p><p>- Finding: Pipeline run history not available (GITHUB, INSUFFICIENT_EVIDENCE)</p><p>- Finding: Prometheus endpoint healthy (PROMETHEUS, HIGH)</p><h2>Baseline</h2><p>- Captured at: None</p><p>- Hash: ...</p><p>- Total pod restarts: None</p><h2>Scorecard</h2><p>- setup_readiness: 0</p><p>- visibility: 100</p><p>- operational_maturity: 100</p><p>- automation_readiness: 100</p><p>- risk: 0</p><p>- value_realized: 0</p></body></html>"
+}

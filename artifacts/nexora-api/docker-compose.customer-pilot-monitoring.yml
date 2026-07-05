@@ -1,0 +1,67 @@
+# Customer Pilot operational monitoring (Sprint 67G).
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.customer-pilot-monitoring.yml up -d
+
+services:
+  api:
+    environment:
+      - PILOT_ALERT_TEST_ENABLED=true
+      - PILOT_ALERT_WEBHOOK_URL=http://customer-pilot-alert-receiver:9191/webhook
+      - PILOT_67G_ARTIFACT_DIR=/app/artifacts/customer-pilot-alert-notification-validation
+      - PILOT_CUSTOMER_PILOT_PROMETHEUS_ENDPOINT=http://customer-pilot-prometheus:9090
+      - PILOT_EMAIL_NOTIFICATIONS_ENABLED=false
+
+  customer-pilot-alert-receiver:
+    build:
+      context: ../..
+      dockerfile: artifacts/nexora-api/Dockerfile
+    command: ["python", "scripts/pilot_alert_receiver.py"]
+    environment:
+      - PILOT_ALERT_RECEIPT_PATH=/data/alert-receiver-receipt.json
+      - PILOT_ALERT_CHANNEL=internal_webhook
+    volumes:
+      - ./artifacts/customer-pilot-alert-notification-validation:/data
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9191/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  customer-pilot-alertmanager:
+    image: prom/alertmanager:v0.27.0
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --web.external-url=http://localhost:9093
+    volumes:
+      - ./deploy/monitoring/alertmanager-customer-pilot.yml:/etc/alertmanager/alertmanager.yml:ro
+    depends_on:
+      customer-pilot-alert-receiver:
+        condition: service_healthy
+    networks:
+      - default
+
+  customer-pilot-prometheus:
+    image: prom/prometheus:v2.54.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-lifecycle
+    volumes:
+      - ./deploy/monitoring/prometheus-customer-pilot.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/monitoring/customer-pilot-alerts.yml:/etc/prometheus/rules/customer-pilot-alerts.yml:ro
+      - ./deploy/monitoring/customer-pilot-alerts-test.yml:/etc/prometheus/rules/customer-pilot-alerts-test.yml:ro
+    depends_on:
+      - customer-pilot-alertmanager
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+networks:
+  default:
+    name: nexora-api_default
+    external: true

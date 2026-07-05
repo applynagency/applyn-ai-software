@@ -1,0 +1,51 @@
+{
+  "captured_at": "2026-07-02T11:01:21.538336+00:00",
+  "replicas_available_query": {
+    "status": "success",
+    "data": {
+      "resultType": "vector",
+      "result": [
+        {
+          "metric": {
+            "__name__": "kube_deployment_status_replicas_available",
+            "deployment": "pilot-demo",
+            "instance": "pilot-k3s:30801",
+            "job": "kube-state-metrics",
+            "namespace": "nexora-pilot"
+          },
+          "value": [
+            1782990081.576,
+            "1"
+          ]
+        }
+      ]
+    }
+  },
+  "restarts_query": {
+    "status": "success",
+    "data": {
+      "resultType": "vector",
+      "result": [
+        {
+          "metric": {
+            "__name__": "kube_pod_container_status_restarts_total",
+            "container": "pilot-demo",
+            "instance": "pilot-k3s:30801",
+            "job": "kube-state-metrics",
+            "namespace": "nexora-pilot",
+            "pod": "pilot-demo-57c4b9d8f-rt6m6",
+            "uid": "7d6e483c-3134-4d60-be5d-4e5d368df8e8"
+          },
+          "value": [
+            1782990081.586,
+            "0"
+          ]
+        }
+      ]
+    }
+  },
+  "targets": {
+    "active": 2,
+    "healthy": 2
+  }
+}

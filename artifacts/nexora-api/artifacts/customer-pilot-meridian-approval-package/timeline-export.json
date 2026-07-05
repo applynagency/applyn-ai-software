@@ -1,0 +1,377 @@
+{
+  "json": {
+    "events": [
+      {
+        "id": "audit-d5c9b279-8928-41b5-aabf-bcb627591679",
+        "timestamp": "2026-07-03T04:15:07.116321+00:00",
+        "event_type": "COMMUNICATION_SENT",
+        "title": "Pilot update sent",
+        "description": "Pilot update sent",
+        "status": "INFO",
+        "actor_type": "PLATFORM_OPERATOR",
+        "metadata": {
+          "category": "APPROVAL_REQUEST",
+          "operation_id": null
+        },
+        "deep_link": "/customer-pilot",
+        "operation_id": null
+      },
+      {
+        "id": "delivery-b6c2f37e-721f-4b05-96a6-b3472b2d861b",
+        "timestamp": "2026-07-03T04:15:07.115883+00:00",
+        "event_type": "NOTIFICATION_DELIVERY",
+        "title": "Notification delivered",
+        "description": "Notification delivered successfully.",
+        "status": "INFO",
+        "actor_type": "SYSTEM",
+        "metadata": {
+          "channel": "in_app",
+          "status": "delivered"
+        },
+        "deep_link": "/customer-pilot/communications",
+        "operation_id": null
+      },
+      {
+        "id": "comm-d40b0531-40ae-4f69-9874-f5c82ff583d9",
+        "timestamp": "2026-07-03T04:15:07.112019+00:00",
+        "event_type": "APPROVAL_REQUEST",
+        "title": "Approval required",
+        "description": "A proposed pilot operation requires your review and approval before any platform operator can proceed.",
+        "status": "INFO",
+        "actor_type": "PLATFORM_OPERATOR",
+        "metadata": {},
+        "deep_link": "/customer-pilot/approval",
+        "operation_id": null
+      },
+      {
+        "id": "pkg-f8cccb9a-6ed2-48c5-a125-a62107108020",
+        "timestamp": "2026-07-03T04:15:07.084928+00:00",
+        "event_type": "APPROVAL_PACKAGE_SNAPSHOT",
+        "title": "Approval package snapshot stored",
+        "description": "Immutable approval package snapshot recorded.",
+        "status": "INFO",
+        "actor_type": "SYSTEM",
+        "metadata": {
+          "payload_hash": "01d4211b68133b9df33a64c43284509a60fb13ba489e4ba661228949a2c0f508"
+        },
+        "deep_link": "/customer-pilot/approval",
+        "operation_id": "d1440973-a1d9-4c72-9c39-d992a08d5a97"
+      },
+      {
+        "id": "op-status-d1440973-a1d9-4c72-9c39-d992a08d5a97-AWAITING_APPROVAL",
+        "timestamp": "2026-07-03T04:15:07.083361+00:00",
+        "event_type": "OPERATION_STATUS_CHANGED",
+        "title": "Operation status updated",
+        "description": "Operation status is now AWAITING_APPROVAL.",
+        "status": "AWAITING_CUSTOMER_APPROVAL",
+        "actor_type": "SYSTEM",
+        "metadata": {
+          "operation_status": "AWAITING_APPROVAL"
+        },
+        "deep_link": "/customer-pilot/execution",
+        "operation_id": "d1440973-a1d9-4c72-9c39-d992a08d5a97"
+      },
+      {
+        "id": "approval-bc63be25-1fc0-4d4a-9b76-63c307e993ca",
+        "timestamp": "2026-07-03T04:15:07.082517+00:00",
+        "event_type": "APPROVAL_PACKAGE_CREATED",
+        "title": "Approval package available",
+        "description": "An immutable approval package was created for review.",
+        "status": "AWAITING_CUSTOMER_APPROVAL",
+        "actor_type": "PLATFORM_OPERATOR",
+        "metadata": {
+          "approval_id": "bc63be25-1fc0-4d4a-9b76-63c307e993ca"
+        },
+        "deep_link": "/customer-pilot/approval",
+        "operation_id": "d1440973-a1d9-4c72-9c39-d992a08d5a97"
+      },
+      {
+        "id": "stage-e0424e71-fd4f-460b-a080-468a8b77e9fa",
+        "timestamp": "2026-07-03T04:15:07.074663+00:00",
+        "event_type": "STAGE_COMPLETED",
+        "title": "Propose safe live operation",
+        "description": "Pilot stage PROPOSE_OPERATION marked COMPLETED.",
+        "status": "COMPLETED",
+        "actor_type": "PLATFORM_OPERATOR",
+        "metadata": {
+          "stage_key": "PROPOSE_OPERATION",
+          "outcome": "Proposed scale_deployment on [REDACTED]"
+        },
+        "deep_link": "/customer-pilot",
+        "operation_id": null
+      },
+      {
+        "id": "op-d1440973-a1d9-4c72-9c39-d992a08d5a97",
+        "timestamp": "2026-07-03T04:15:07.067566+00:00",
+        "event_type": "OPERATION_PROPOSED",
+        "title": "Operation proposed",
+        "description": "Proposed operation: scale_deployment on [REDACTED].",
+        "status": "AWAITING_CUSTOMER_APPROVAL",
+        "actor_type": "PLATFORM_OPERATOR",
+        "metadata": {
+          "action": "scale_deployment",
+          "resource_name": "[REDACTED]"
+        },
+        "deep_link": "/customer-pilot/operation",
+        "operation_id": "d1440973-a1d9-4c72-9c39-d992a08d5a97"
+      },
+      {
+        "id": "audit-d4a6d1d4-2956-4e96-b46a-c79125266071",
+        "timestamp": "2026-07-03T04:11:21.904690+00:00",
+        "event_type": "COMMUNICATION_SENT",
+        "title": "Pilot update sent",
+        "description": "Pilot update sent",
+        "status": "INFO",
+        "actor_type": "PLATFORM_OPERATOR",
+        "metadata": {
+          "category": "PILOT_STATUS_UPDATE",
+          "operation_id": null
+        },
+        "deep_link": "/customer-pilot",
+        "operation_id": null
+      },
+      {
+        "id": "delivery-099b05a8-3ca9-4e77-8aaa-714f3133ac49",
+        "timestamp": "2026-07-03T04:11:21.904059+00:00",
+        "event_type": "NOTIFICATION_DELIVERY",
+        "title": "Notification delivered",
+        "description": "Notification delivered successfully.",
+        "status": "INFO",
+        "actor_type": "SYSTEM",
+        "metadata": {
+          "channel": "in_app",
+          "status": "delivered"
+        },
+        "deep_link": "/customer-pilot/communications",
+        "operation_id": null
+      },
+      {
+        "id": "comm-173b4ef0-0a49-4b3d-adee-9112e979b65e",
+        "timestamp": "2026-07-03T04:11:21.898473+00:00",
+        "event_type": "PILOT_STATUS_UPDATE",
+        "title": "Pilot status update",
+        "description": "Your scoped non-production pilot status has been updated. Review the latest timeline in the Customer Pilot portal.",
+        "status": "INFO",
+        "actor_type": "PLATFORM_OPERATOR",
+        "metadata": {},
+        "deep_link": "/customer-pilot",
+        "operation_id": null
+      },
+      {
+        "id": "audit-942643d0-b06e-40e2-a4e0-1f9570bcf803",
+        "timestamp": "2026-07-02T18:31:14.331204+00:00",
+        "event_type": "COMMUNICATION_SENT",
+        "title": "Pilot update sent",
+        "description": "Pilot update sent",
+        "status": "INFO",
+        "actor_type": "PLATFORM_OPERATOR",
+        "metadata": {
+          "category": "PILOT_STATUS_UPDATE",
+          "operation_id": null
+        },
+        "deep_link": "/customer-pilot",
+        "operation_id": null
+      },
+      {
+        "id": "delivery-32940833-a561-4231-9458-59be46e2ce85",
+        "timestamp": "2026-07-02T18:31:14.330608+00:00",
+        "event_type": "NOTIFICATION_DELIVERY",
+        "title": "Notification delivered",
+        "description": "Notification delivered successfully.",
+        "status": "INFO",
+        "actor_type": "SYSTEM",
+        "metadata": {
+          "channel": "in_app",
+          "status": "delivered"
+        },
+        "deep_link": "/customer-pilot/communications",
+        "operation_id": null
+      },
+      {
+        "id": "comm-e9c3a1d6-9ee2-4cf6-b7c7-5763be284161",
+        "timestamp": "2026-07-02T18:31:14.325322+00:00",
+        "event_type": "PILOT_STATUS_UPDATE",
+        "title": "Pilot status update",
+        "description": "Your scoped non-production pilot status has been updated. Review the latest timeline in the Customer Pilot portal.",
+        "status": "INFO",
+        "actor_type": "PLATFORM_OPERATOR",
+        "metadata": {},
+        "deep_link": "/customer-pilot",
+        "operation_id": null
+      },
+      {
+        "id": "stage-9bf0438d-c799-46e3-b17e-52ea3a7f1638",
+        "timestamp": "2026-07-02T18:31:14.292325+00:00",
+        "event_type": "STAGE_COMPLETED",
+        "title": "Capture pilot baseline",
+        "description": "Pilot stage BASELINE_CAPTURE marked COMPLETED.",
+        "status": "COMPLETED",
+        "actor_type": "PLATFORM_OPERATOR",
+        "metadata": {
+          "stage_key": "BASELINE_CAPTURE",
+          "outcome": "Pilot baseline captured from live assessment"
+        },
+        "deep_link": "/customer-pilot",
+        "operation_id": null
+      },
+      {
+        "id": "stage-4f6233e7-f3fa-44c7-ad2b-a6281c652384",
+        "timestamp": "2026-07-02T18:31:14.279173+00:00",
+        "event_type": "STAGE_COMPLETED",
+        "title": "Run read-only assessment",
+        "description": "Pilot stage READ_ONLY_ASSESSMENT marked COMPLETED.",
+        "status": "COMPLETED",
+        "actor_type": "PLATFORM_OPERATOR",
+        "metadata": {
+          "stage_key": "READ_ONLY_ASSESSMENT",
+          "outcome": "Read-only assessment completed with live evidence"
+        },
+        "deep_link": "/customer-pilot",
+        "operation_id": null
+      },
+      {
+        "id": "audit-093b37d5-c91b-46c4-b559-5c0b9fe08096",
+        "timestamp": "2026-07-02T18:28:42.801685+00:00",
+        "event_type": "COMMUNICATION_SENT",
+        "title": "Pilot update sent",
+        "description": "Pilot update sent",
+        "status": "INFO",
+        "actor_type": "PLATFORM_OPERATOR",
+        "metadata": {
+          "category": "PILOT_STATUS_UPDATE",
+          "operation_id": null
+        },
+        "deep_link": "/customer-pilot",
+        "operation_id": null
+      },
+      {
+        "id": "delivery-d156b7f9-7bbe-4676-bc42-54f2d34764b0",
+        "timestamp": "2026-07-02T18:28:42.801082+00:00",
+        "event_type": "NOTIFICATION_DELIVERY",
+        "title": "Notification delivered",
+        "description": "Notification delivered successfully.",
+        "status": "INFO",
+        "actor_type": "SYSTEM",
+        "metadata": {
+          "channel": "in_app",
+          "status": "delivered"
+        },
+        "deep_link": "/customer-pilot/communications",
+        "operation_id": null
+      },
+      {
+        "id": "comm-711f1e97-2cce-42ba-9669-02955f7c1447",
+        "timestamp": "2026-07-02T18:28:42.795301+00:00",
+        "event_type": "PILOT_STATUS_UPDATE",
+        "title": "Pilot status update",
+        "description": "Your scoped non-production pilot status has been updated. Review the latest timeline in the Customer Pilot portal.",
+        "status": "INFO",
+        "actor_type": "PLATFORM_OPERATOR",
+        "metadata": {},
+        "deep_link": "/customer-pilot",
+        "operation_id": null
+      },
+      {
+        "id": "stage-70bf0a47-e1b8-4b29-92d8-6125719e5f94",
+        "timestamp": "2026-07-02T18:28:42.743205+00:00",
+        "event_type": "STAGE_COMPLETED",
+        "title": "Validate integration readiness",
+        "description": "Pilot stage VALIDATE marked COMPLETED.",
+        "status": "COMPLETED",
+        "actor_type": "PLATFORM_OPERATOR",
+        "metadata": {
+          "stage_key": "VALIDATE",
+          "outcome": "Integration readiness validated"
+        },
+        "deep_link": "/customer-pilot",
+        "operation_id": null
+      },
+      {
+        "id": "stage-43d19042-c853-4c7a-849d-13ca6270c43d",
+        "timestamp": "2026-07-02T18:28:42.706838+00:00",
+        "event_type": "STAGE_COMPLETED",
+        "title": "Connect integrations",
+        "description": "Pilot stage CONNECT marked COMPLETED.",
+        "status": "COMPLETED",
+        "actor_type": "PLATFORM_OPERATOR",
+        "metadata": {
+          "stage_key": "CONNECT",
+          "outcome": "Onboarding path k8s-github-prometheus started"
+        },
+        "deep_link": "/customer-pilot",
+        "operation_id": null
+      }
+    ],
+    "stage_summary": [
+      {
+        "stage_key": "CONNECT",
+        "title": "Connect integrations",
+        "status": "COMPLETED",
+        "outcome": "Onboarding path k8s-github-prometheus started",
+        "completed_at": "2026-07-02T18:28:42.706838+00:00"
+      },
+      {
+        "stage_key": "VALIDATE",
+        "title": "Validate integration readiness",
+        "status": "COMPLETED",
+        "outcome": "Integration readiness validated",
+        "completed_at": "2026-07-02T18:28:42.743205+00:00"
+      },
+      {
+        "stage_key": "READ_ONLY_ASSESSMENT",
+        "title": "Run read-only assessment",
+        "status": "COMPLETED",
+        "outcome": "Read-only assessment completed with live evidence",
+        "completed_at": "2026-07-02T18:31:14.279173+00:00"
+      },
+      {
+        "stage_key": "BASELINE_CAPTURE",
+        "title": "Capture pilot baseline",
+        "status": "COMPLETED",
+        "outcome": "Pilot baseline captured from live assessment",
+        "completed_at": "2026-07-02T18:31:14.292325+00:00"
+      },
+      {
+        "stage_key": "PROPOSE_OPERATION",
+        "title": "Propose safe live operation",
+        "status": "COMPLETED",
+        "outcome": "Proposed scale_deployment on [REDACTED]",
+        "completed_at": "2026-07-03T04:15:07.074663+00:00"
+      },
+      {
+        "stage_key": "CUSTOMER_APPROVAL",
+        "title": "Obtain customer approval",
+        "status": "PENDING",
+        "outcome": null,
+        "completed_at": null
+      },
+      {
+        "stage_key": "EXECUTE",
+        "title": "Execute approved operation",
+        "status": "PENDING",
+        "outcome": null,
+        "completed_at": null
+      },
+      {
+        "stage_key": "VERIFY",
+        "title": "Verify post-operation health",
+        "status": "PENDING",
+        "outcome": null,
+        "completed_at": null
+      },
+      {
+        "stage_key": "COMPLETE",
+        "title": "Complete pilot",
+        "status": "PENDING",
+        "outcome": null,
+        "completed_at": null
+      }
+    ]
+  },
+  "markdown": "# Customer Pilot Timeline \u2014 Meridian Analytics Pilot\n\nGenerated at 2026-07-03T04:15:07.137195+00:00\n\n## Pilot update sent \u2014 2026-07-03T04:15:07.116321+00:00\n- **Type:** COMMUNICATION_SENT\n- **Status:** INFO\n- **Actor:** PLATFORM_OPERATOR\n- Pilot update sent\n\n## Notification delivered \u2014 2026-07-03T04:15:07.115883+00:00\n- **Type:** NOTIFICATION_DELIVERY\n- **Status:** INFO\n- **Actor:** SYSTEM\n- Notification delivered successfully.\n\n## Approval required \u2014 2026-07-03T04:15:07.112019+00:00\n- **Type:** APPROVAL_REQUEST\n- **Status:** INFO\n- **Actor:** PLATFORM_OPERATOR\n- A proposed pilot operation requires your review and approval before any platform operator can proceed.\n\n## Approval package snapshot stored \u2014 2026-07-03T04:15:07.084928+00:00\n- **Type:** APPROVAL_PACKAGE_SNAPSHOT\n- **Status:** INFO\n- **Actor:** SYSTEM\n- Immutable approval package snapshot recorded.\n\n## Operation status updated \u2014 2026-07-03T04:15:07.083361+00:00\n- **Type:** OPERATION_STATUS_CHANGED\n- **Status:** AWAITING_CUSTOMER_APPROVAL\n- **Actor:** SYSTEM\n- Operation status is now AWAITING_APPROVAL.\n\n## Approval package available \u2014 2026-07-03T04:15:07.082517+00:00\n- **Type:** APPROVAL_PACKAGE_CREATED\n- **Status:** AWAITING_CUSTOMER_APPROVAL\n- **Actor:** PLATFORM_OPERATOR\n- An immutable approval package was created for review.\n\n## Propose safe live operation \u2014 2026-07-03T04:15:07.074663+00:00\n- **Type:** STAGE_COMPLETED\n- **Status:** COMPLETED\n- **Actor:** PLATFORM_OPERATOR\n- Pilot stage PROPOSE_OPERATION marked COMPLETED.\n\n## Operation proposed \u2014 2026-07-03T04:15:07.067566+00:00\n- **Type:** OPERATION_PROPOSED\n- **Status:** AWAITING_CUSTOMER_APPROVAL\n- **Actor:** PLATFORM_OPERATOR\n- Proposed operation: scale_deployment on [REDACTED].\n\n## Pilot update sent \u2014 2026-07-03T04:11:21.904690+00:00\n- **Type:** COMMUNICATION_SENT\n- **Status:** INFO\n- **Actor:** PLATFORM_OPERATOR\n- Pilot update sent\n\n## Notification delivered \u2014 2026-07-03T04:11:21.904059+00:00\n- **Type:** NOTIFICATION_DELIVERY\n- **Status:** INFO\n- **Actor:** SYSTEM\n- Notification delivered successfully.\n\n## Pilot status update \u2014 2026-07-03T04:11:21.898473+00:00\n- **Type:** PILOT_STATUS_UPDATE\n- **Status:** INFO\n- **Actor:** PLATFORM_OPERATOR\n- Your scoped non-production pilot status has been updated. Review the latest timeline in the Customer Pilot portal.\n\n## Pilot update sent \u2014 2026-07-02T18:31:14.331204+00:00\n- **Type:** COMMUNICATION_SENT\n- **Status:** INFO\n- **Actor:** PLATFORM_OPERATOR\n- Pilot update sent\n\n## Notification delivered \u2014 2026-07-02T18:31:14.330608+00:00\n- **Type:** NOTIFICATION_DELIVERY\n- **Status:** INFO\n- **Actor:** SYSTEM\n- Notification delivered successfully.\n\n## Pilot status update \u2014 2026-07-02T18:31:14.325322+00:00\n- **Type:** PILOT_STATUS_UPDATE\n- **Status:** INFO\n- **Actor:** PLATFORM_OPERATOR\n- Your scoped non-production pilot status has been updated. Review the latest timeline in the Customer Pilot portal.\n\n## Capture pilot baseline \u2014 2026-07-02T18:31:14.292325+00:00\n- **Type:** STAGE_COMPLETED\n- **Status:** COMPLETED\n- **Actor:** PLATFORM_OPERATOR\n- Pilot stage BASELINE_CAPTURE marked COMPLETED.\n\n## Run read-only assessment \u2014 2026-07-02T18:31:14.279173+00:00\n- **Type:** STAGE_COMPLETED\n- **Status:** COMPLETED\n- **Actor:** PLATFORM_OPERATOR\n- Pilot stage READ_ONLY_ASSESSMENT marked COMPLETED.\n\n## Pilot update sent \u2014 2026-07-02T18:28:42.801685+00:00\n- **Type:** COMMUNICATION_SENT\n- **Status:** INFO\n- **Actor:** PLATFORM_OPERATOR\n- Pilot update sent\n\n## Notification delivered \u2014 2026-07-02T18:28:42.801082+00:00\n- **Type:** NOTIFICATION_DELIVERY\n- **Status:** INFO\n- **Actor:** SYSTEM\n- Notification delivered successfully.\n\n## Pilot status update \u2014 2026-07-02T18:28:42.795301+00:00\n- **Type:** PILOT_STATUS_UPDATE\n- **Status:** INFO\n- **Actor:** PLATFORM_OPERATOR\n- Your scoped non-production pilot status has been updated. Review the latest timeline in the Customer Pilot portal.\n\n## Validate integration readiness \u2014 2026-07-02T18:28:42.743205+00:00\n- **Type:** STAGE_COMPLETED\n- **Status:** COMPLETED\n- **Actor:** PLATFORM_OPERATOR\n- Pilot stage VALIDATE marked COMPLETED.\n\n## Connect integrations \u2014 2026-07-02T18:28:42.706838+00:00\n- **Type:** STAGE_COMPLETED\n- **Status:** COMPLETED\n- **Actor:** PLATFORM_OPERATOR\n- Pilot stage CONNECT marked COMPLETED.\n",
+  "html": "<html><body><h1>Customer Pilot Timeline \u2014 Meridian Analytics Pilot</h1><table border='1' cellpadding='4'><thead><tr><th>Time</th><th>Type</th><th>Title</th><th>Status</th><th>Actor</th></tr></thead><tbody><tr><td>2026-07-03T04:15:07.116321+00:00</td><td>COMMUNICATION_SENT</td><td>Pilot update sent</td><td>INFO</td><td>PLATFORM_OPERATOR</td></tr><tr><td>2026-07-03T04:15:07.115883+00:00</td><td>NOTIFICATION_DELIVERY</td><td>Notification delivered</td><td>INFO</td><td>SYSTEM</td></tr><tr><td>2026-07-03T04:15:07.112019+00:00</td><td>APPROVAL_REQUEST</td><td>Approval required</td><td>INFO</td><td>PLATFORM_OPERATOR</td></tr><tr><td>2026-07-03T04:15:07.084928+00:00</td><td>APPROVAL_PACKAGE_SNAPSHOT</td><td>Approval package snapshot stored</td><td>INFO</td><td>SYSTEM</td></tr><tr><td>2026-07-03T04:15:07.083361+00:00</td><td>OPERATION_STATUS_CHANGED</td><td>Operation status updated</td><td>AWAITING_CUSTOMER_APPROVAL</td><td>SYSTEM</td></tr><tr><td>2026-07-03T04:15:07.082517+00:00</td><td>APPROVAL_PACKAGE_CREATED</td><td>Approval package available</td><td>AWAITING_CUSTOMER_APPROVAL</td><td>PLATFORM_OPERATOR</td></tr><tr><td>2026-07-03T04:15:07.074663+00:00</td><td>STAGE_COMPLETED</td><td>Propose safe live operation</td><td>COMPLETED</td><td>PLATFORM_OPERATOR</td></tr><tr><td>2026-07-03T04:15:07.067566+00:00</td><td>OPERATION_PROPOSED</td><td>Operation proposed</td><td>AWAITING_CUSTOMER_APPROVAL</td><td>PLATFORM_OPERATOR</td></tr><tr><td>2026-07-03T04:11:21.904690+00:00</td><td>COMMUNICATION_SENT</td><td>Pilot update sent</td><td>INFO</td><td>PLATFORM_OPERATOR</td></tr><tr><td>2026-07-03T04:11:21.904059+00:00</td><td>NOTIFICATION_DELIVERY</td><td>Notification delivered</td><td>INFO</td><td>SYSTEM</td></tr><tr><td>2026-07-03T04:11:21.898473+00:00</td><td>PILOT_STATUS_UPDATE</td><td>Pilot status update</td><td>INFO</td><td>PLATFORM_OPERATOR</td></tr><tr><td>2026-07-02T18:31:14.331204+00:00</td><td>COMMUNICATION_SENT</td><td>Pilot update sent</td><td>INFO</td><td>PLATFORM_OPERATOR</td></tr><tr><td>2026-07-02T18:31:14.330608+00:00</td><td>NOTIFICATION_DELIVERY</td><td>Notification delivered</td><td>INFO</td><td>SYSTEM</td></tr><tr><td>2026-07-02T18:31:14.325322+00:00</td><td>PILOT_STATUS_UPDATE</td><td>Pilot status update</td><td>INFO</td><td>PLATFORM_OPERATOR</td></tr><tr><td>2026-07-02T18:31:14.292325+00:00</td><td>STAGE_COMPLETED</td><td>Capture pilot baseline</td><td>COMPLETED</td><td>PLATFORM_OPERATOR</td></tr><tr><td>2026-07-02T18:31:14.279173+00:00</td><td>STAGE_COMPLETED</td><td>Run read-only assessment</td><td>COMPLETED</td><td>PLATFORM_OPERATOR</td></tr><tr><td>2026-07-02T18:28:42.801685+00:00</td><td>COMMUNICATION_SENT</td><td>Pilot update sent</td><td>INFO</td><td>PLATFORM_OPERATOR</td></tr><tr><td>2026-07-02T18:28:42.801082+00:00</td><td>NOTIFICATION_DELIVERY</td><td>Notification delivered</td><td>INFO</td><td>SYSTEM</td></tr><tr><td>2026-07-02T18:28:42.795301+00:00</td><td>PILOT_STATUS_UPDATE</td><td>Pilot status update</td><td>INFO</td><td>PLATFORM_OPERATOR</td></tr><tr><td>2026-07-02T18:28:42.743205+00:00</td><td>STAGE_COMPLETED</td><td>Validate integration readiness</td><td>COMPLETED</td><td>PLATFORM_OPERATOR</td></tr><tr><td>2026-07-02T18:28:42.706838+00:00</td><td>STAGE_COMPLETED</td><td>Connect integrations</td><td>COMPLETED</td><td>PLATFORM_OPERATOR</td></tr></tbody></table></body></html>",
+  "pdf_base64": "JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFs0IDAgUiA2IDAgUiA4IDAgUiAxMCAwIFJdIC9Db3VudCA0ID4+CmVuZG9iagozIDAgb2JqCjw8IC9UeXBlIC9Gb250IC9TdWJ0eXBlIC9UeXBlMSAvQmFzZUZvbnQgL0hlbHZldGljYSA+PgplbmRvYmoKNCAwIG9iago8PCAvVHlwZSAvUGFnZSAvUGFyZW50IDIgMCBSIC9NZWRpYUJveCBbMCAwIDYxMiA3OTJdIC9Db250ZW50cyA1IDAgUiAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSAzIDAgUiA+PiA+PiA+PgplbmRvYmoKNSAwIG9iago8PCAvTGVuZ3RoIDE5MTUgPj4Kc3RyZWFtCkJUCi9GMSAxMCBUZgoxNCBUTAo1NCA3NDAgVGQKL0YxIDIwIFRmCihDdXN0b21lciBQaWxvdCBUaW1lbGluZSA/IE1lcmlkaWFuIEFuYWx5dGljcyBQaWxvdCkgVGoKVCoKL0YxIDEwIFRmCigpIFRqClQqCigpIFRqClQqCihHZW5lcmF0ZWQgYXQgMjAyNi0wNy0wM1QwNDoxNTowNy4xMzcxOTUrMDA6MDApIFRqClQqCigpIFRqClQqCigpIFRqClQqCi9GMSAxNSBUZgooUGlsb3QgdXBkYXRlIHNlbnQgPyAyMDI2LTA3LTAzVDA0OjE1OjA3LjExNjMyMSswMDowMCkgVGoKVCoKL0YxIDEwIFRmCjEyIDAgVGQKKD8gKipUeXBlOioqIENPTU1VTklDQVRJT05fU0VOVCkgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyAqKlN0YXR1czoqKiBJTkZPKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/ICoqQWN0b3I6KiogUExBVEZPUk1fT1BFUkFUT1IpIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gUGlsb3QgdXBkYXRlIHNlbnQpIFRqCi0xMiAwIFRkClQqCigpIFRqClQqCigpIFRqClQqCi9GMSAxNSBUZgooTm90aWZpY2F0aW9uIGRlbGl2ZXJlZCA/IDIwMjYtMDctMDNUMDQ6MTU6MDcuMTE1ODgzKzAwOjAwKSBUagpUKgovRjEgMTAgVGYKMTIgMCBUZAooPyAqKlR5cGU6KiogTk9USUZJQ0FUSU9OX0RFTElWRVJZKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/ICoqU3RhdHVzOioqIElORk8pIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gKipBY3RvcjoqKiBTWVNURU0pIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gTm90aWZpY2F0aW9uIGRlbGl2ZXJlZCBzdWNjZXNzZnVsbHkuKSBUagotMTIgMCBUZApUKgooKSBUagpUKgooKSBUagpUKgovRjEgMTUgVGYKKEFwcHJvdmFsIHJlcXVpcmVkID8gMjAyNi0wNy0wM1QwNDoxNTowNy4xMTIwMTkrMDA6MDApIFRqClQqCi9GMSAxMCBUZgoxMiAwIFRkCig/ICoqVHlwZToqKiBBUFBST1ZBTF9SRVFVRVNUKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/ICoqU3RhdHVzOioqIElORk8pIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gKipBY3RvcjoqKiBQTEFURk9STV9PUEVSQVRPUikgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyBBIHByb3Bvc2VkIHBpbG90IG9wZXJhdGlvbiByZXF1aXJlcyB5b3VyIHJldmlldyBhbmQgYXBwcm92YWwgYmVmb3JlIGFueSBwbGF0Zm9ybSkgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooICBvcGVyYXRvciBjYW4gcHJvY2VlZC4pIFRqCi0xMiAwIFRkClQqCigpIFRqClQqCigpIFRqClQqCi9GMSAxNSBUZgooQXBwcm92YWwgcGFja2FnZSBzbmFwc2hvdCBzdG9yZWQgPyAyMDI2LTA3LTAzVDA0OjE1OjA3LjA4NDkyOCswMDowMCkgVGoKVCoKL0YxIDEwIFRmCjEyIDAgVGQKKD8gKipUeXBlOioqIEFQUFJPVkFMX1BBQ0tBR0VfU05BUFNIT1QpIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gKipTdGF0dXM6KiogSU5GTykgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyAqKkFjdG9yOioqIFNZU1RFTSkgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyBJbW11dGFibGUgYXBwcm92YWwgcGFja2FnZSBzbmFwc2hvdCByZWNvcmRlZC4pIFRqCi0xMiAwIFRkClQqCigpIFRqClQqCigpIFRqClQqCi9GMSAxNSBUZgooT3BlcmF0aW9uIHN0YXR1cyB1cGRhdGVkID8gMjAyNi0wNy0wM1QwNDoxNTowNy4wODMzNjErMDA6MDApIFRqClQqCi9GMSAxMCBUZgoxMiAwIFRkCig/ICoqVHlwZToqKiBPUEVSQVRJT05fU1RBVFVTX0NIQU5HRUQpIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gKipTdGF0dXM6KiogQVdBSVRJTkdfQ1VTVE9NRVJfQVBQUk9WQUwpIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gKipBY3RvcjoqKiBTWVNURU0pIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gT3BlcmF0aW9uIHN0YXR1cyBpcyBub3cgQVdBSVRJTkdfQVBQUk9WQUwuKSBUagotMTIgMCBUZApUKgooKSBUagpUKgooKSBUagpUKgpFVAplbmRzdHJlYW0KZW5kb2JqCjYgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA2MTIgNzkyXSAvQ29udGVudHMgNyAwIFIgL1Jlc291cmNlcyA8PCAvRm9udCA8PCAvRjEgMyAwIFIgPj4gPj4gPj4KZW5kb2JqCjcgMCBvYmoKPDwgL0xlbmd0aCAyMTQ3ID4+CnN0cmVhbQpCVAovRjEgMTAgVGYKMTQgVEwKNTQgNzQwIFRkCi9GMSAxNSBUZgooQXBwcm92YWwgcGFja2FnZSBhdmFpbGFibGUgPyAyMDI2LTA3LTAzVDA0OjE1OjA3LjA4MjUxNyswMDowMCkgVGoKVCoKL0YxIDEwIFRmCjEyIDAgVGQKKD8gKipUeXBlOioqIEFQUFJPVkFMX1BBQ0tBR0VfQ1JFQVRFRCkgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyAqKlN0YXR1czoqKiBBV0FJVElOR19DVVNUT01FUl9BUFBST1ZBTCkgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyAqKkFjdG9yOioqIFBMQVRGT1JNX09QRVJBVE9SKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/IEFuIGltbXV0YWJsZSBhcHByb3ZhbCBwYWNrYWdlIHdhcyBjcmVhdGVkIGZvciByZXZpZXcuKSBUagotMTIgMCBUZApUKgooKSBUagpUKgooKSBUagpUKgovRjEgMTUgVGYKKFByb3Bvc2Ugc2FmZSBsaXZlIG9wZXJhdGlvbiA/IDIwMjYtMDctMDNUMDQ6MTU6MDcuMDc0NjYzKzAwOjAwKSBUagpUKgovRjEgMTAgVGYKMTIgMCBUZAooPyAqKlR5cGU6KiogU1RBR0VfQ09NUExFVEVEKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/ICoqU3RhdHVzOioqIENPTVBMRVRFRCkgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyAqKkFjdG9yOioqIFBMQVRGT1JNX09QRVJBVE9SKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/IFBpbG90IHN0YWdlIFBST1BPU0VfT1BFUkFUSU9OIG1hcmtlZCBDT01QTEVURUQuKSBUagotMTIgMCBUZApUKgooKSBUagpUKgooKSBUagpUKgovRjEgMTUgVGYKKE9wZXJhdGlvbiBwcm9wb3NlZCA/IDIwMjYtMDctMDNUMDQ6MTU6MDcuMDY3NTY2KzAwOjAwKSBUagpUKgovRjEgMTAgVGYKMTIgMCBUZAooPyAqKlR5cGU6KiogT1BFUkFUSU9OX1BST1BPU0VEKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/ICoqU3RhdHVzOioqIEFXQUlUSU5HX0NVU1RPTUVSX0FQUFJPVkFMKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/ICoqQWN0b3I6KiogUExBVEZPUk1fT1BFUkFUT1IpIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gUHJvcG9zZWQgb3BlcmF0aW9uOiBzY2FsZV9kZXBsb3ltZW50IG9uIFtSRURBQ1RFRF0uKSBUagotMTIgMCBUZApUKgooKSBUagpUKgooKSBUagpUKgovRjEgMTUgVGYKKFBpbG90IHVwZGF0ZSBzZW50ID8gMjAyNi0wNy0wM1QwNDoxMToyMS45MDQ2OTArMDA6MDApIFRqClQqCi9GMSAxMCBUZgoxMiAwIFRkCig/ICoqVHlwZToqKiBDT01NVU5JQ0FUSU9OX1NFTlQpIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gKipTdGF0dXM6KiogSU5GTykgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyAqKkFjdG9yOioqIFBMQVRGT1JNX09QRVJBVE9SKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/IFBpbG90IHVwZGF0ZSBzZW50KSBUagotMTIgMCBUZApUKgooKSBUagpUKgooKSBUagpUKgovRjEgMTUgVGYKKE5vdGlmaWNhdGlvbiBkZWxpdmVyZWQgPyAyMDI2LTA3LTAzVDA0OjExOjIxLjkwNDA1OSswMDowMCkgVGoKVCoKL0YxIDEwIFRmCjEyIDAgVGQKKD8gKipUeXBlOioqIE5PVElGSUNBVElPTl9ERUxJVkVSWSkgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyAqKlN0YXR1czoqKiBJTkZPKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/ICoqQWN0b3I6KiogU1lTVEVNKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/IE5vdGlmaWNhdGlvbiBkZWxpdmVyZWQgc3VjY2Vzc2Z1bGx5LikgVGoKLTEyIDAgVGQKVCoKKCkgVGoKVCoKKCkgVGoKVCoKL0YxIDE1IFRmCihQaWxvdCBzdGF0dXMgdXBkYXRlID8gMjAyNi0wNy0wM1QwNDoxMToyMS44OTg0NzMrMDA6MDApIFRqClQqCi9GMSAxMCBUZgoxMiAwIFRkCig/ICoqVHlwZToqKiBQSUxPVF9TVEFUVVNfVVBEQVRFKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/ICoqU3RhdHVzOioqIElORk8pIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gKipBY3RvcjoqKiBQTEFURk9STV9PUEVSQVRPUikgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyBZb3VyIHNjb3BlZCBub24tcHJvZHVjdGlvbiBwaWxvdCBzdGF0dXMgaGFzIGJlZW4gdXBkYXRlZC4gUmV2aWV3IHRoZSBsYXRlc3QgdGltZWxpbmUgaW4pIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKCAgdGhlIEN1c3RvbWVyIFBpbG90IHBvcnRhbC4pIFRqCi0xMiAwIFRkClQqCigpIFRqClQqCigpIFRqClQqCkVUCmVuZHN0cmVhbQplbmRvYmoKOCAwIG9iago8PCAvVHlwZSAvUGFnZSAvUGFyZW50IDIgMCBSIC9NZWRpYUJveCBbMCAwIDYxMiA3OTJdIC9Db250ZW50cyA5IDAgUiAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSAzIDAgUiA+PiA+PiA+PgplbmRvYmoKOSAwIG9iago8PCAvTGVuZ3RoIDIwNTMgPj4Kc3RyZWFtCkJUCi9GMSAxMCBUZgoxNCBUTAo1NCA3NDAgVGQKL0YxIDE1IFRmCihQaWxvdCB1cGRhdGUgc2VudCA/IDIwMjYtMDctMDJUMTg6MzE6MTQuMzMxMjA0KzAwOjAwKSBUagpUKgovRjEgMTAgVGYKMTIgMCBUZAooPyAqKlR5cGU6KiogQ09NTVVOSUNBVElPTl9TRU5UKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/ICoqU3RhdHVzOioqIElORk8pIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gKipBY3RvcjoqKiBQTEFURk9STV9PUEVSQVRPUikgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyBQaWxvdCB1cGRhdGUgc2VudCkgVGoKLTEyIDAgVGQKVCoKKCkgVGoKVCoKKCkgVGoKVCoKL0YxIDE1IFRmCihOb3RpZmljYXRpb24gZGVsaXZlcmVkID8gMjAyNi0wNy0wMlQxODozMToxNC4zMzA2MDgrMDA6MDApIFRqClQqCi9GMSAxMCBUZgoxMiAwIFRkCig/ICoqVHlwZToqKiBOT1RJRklDQVRJT05fREVMSVZFUlkpIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gKipTdGF0dXM6KiogSU5GTykgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyAqKkFjdG9yOioqIFNZU1RFTSkgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyBOb3RpZmljYXRpb24gZGVsaXZlcmVkIHN1Y2Nlc3NmdWxseS4pIFRqCi0xMiAwIFRkClQqCigpIFRqClQqCigpIFRqClQqCi9GMSAxNSBUZgooUGlsb3Qgc3RhdHVzIHVwZGF0ZSA/IDIwMjYtMDctMDJUMTg6MzE6MTQuMzI1MzIyKzAwOjAwKSBUagpUKgovRjEgMTAgVGYKMTIgMCBUZAooPyAqKlR5cGU6KiogUElMT1RfU1RBVFVTX1VQREFURSkgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyAqKlN0YXR1czoqKiBJTkZPKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/ICoqQWN0b3I6KiogUExBVEZPUk1fT1BFUkFUT1IpIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gWW91ciBzY29wZWQgbm9uLXByb2R1Y3Rpb24gcGlsb3Qgc3RhdHVzIGhhcyBiZWVuIHVwZGF0ZWQuIFJldmlldyB0aGUgbGF0ZXN0IHRpbWVsaW5lIGluKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCiggIHRoZSBDdXN0b21lciBQaWxvdCBwb3J0YWwuKSBUagotMTIgMCBUZApUKgooKSBUagpUKgooKSBUagpUKgovRjEgMTUgVGYKKENhcHR1cmUgcGlsb3QgYmFzZWxpbmUgPyAyMDI2LTA3LTAyVDE4OjMxOjE0LjI5MjMyNSswMDowMCkgVGoKVCoKL0YxIDEwIFRmCjEyIDAgVGQKKD8gKipUeXBlOioqIFNUQUdFX0NPTVBMRVRFRCkgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyAqKlN0YXR1czoqKiBDT01QTEVURUQpIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gKipBY3RvcjoqKiBQTEFURk9STV9PUEVSQVRPUikgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyBQaWxvdCBzdGFnZSBCQVNFTElORV9DQVBUVVJFIG1hcmtlZCBDT01QTEVURUQuKSBUagotMTIgMCBUZApUKgooKSBUagpUKgooKSBUagpUKgovRjEgMTUgVGYKKFJ1biByZWFkLW9ubHkgYXNzZXNzbWVudCA/IDIwMjYtMDctMDJUMTg6MzE6MTQuMjc5MTczKzAwOjAwKSBUagpUKgovRjEgMTAgVGYKMTIgMCBUZAooPyAqKlR5cGU6KiogU1RBR0VfQ09NUExFVEVEKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/ICoqU3RhdHVzOioqIENPTVBMRVRFRCkgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyAqKkFjdG9yOioqIFBMQVRGT1JNX09QRVJBVE9SKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/IFBpbG90IHN0YWdlIFJFQURfT05MWV9BU1NFU1NNRU5UIG1hcmtlZCBDT01QTEVURUQuKSBUagotMTIgMCBUZApUKgooKSBUagpUKgooKSBUagpUKgovRjEgMTUgVGYKKFBpbG90IHVwZGF0ZSBzZW50ID8gMjAyNi0wNy0wMlQxODoyODo0Mi44MDE2ODUrMDA6MDApIFRqClQqCi9GMSAxMCBUZgoxMiAwIFRkCig/ICoqVHlwZToqKiBDT01NVU5JQ0FUSU9OX1NFTlQpIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gKipTdGF0dXM6KiogSU5GTykgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyAqKkFjdG9yOioqIFBMQVRGT1JNX09QRVJBVE9SKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/IFBpbG90IHVwZGF0ZSBzZW50KSBUagotMTIgMCBUZApUKgooKSBUagpUKgooKSBUagpUKgpFVAplbmRzdHJlYW0KZW5kb2JqCjEwIDAgb2JqCjw8IC9UeXBlIC9QYWdlIC9QYXJlbnQgMiAwIFIgL01lZGlhQm94IFswIDAgNjEyIDc5Ml0gL0NvbnRlbnRzIDExIDAgUiAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSAzIDAgUiA+PiA+PiA+PgplbmRvYmoKMTEgMCBvYmoKPDwgL0xlbmd0aCAxNDE4ID4+CnN0cmVhbQpCVAovRjEgMTAgVGYKMTQgVEwKNTQgNzQwIFRkCi9GMSAxNSBUZgooTm90aWZpY2F0aW9uIGRlbGl2ZXJlZCA/IDIwMjYtMDctMDJUMTg6Mjg6NDIuODAxMDgyKzAwOjAwKSBUagpUKgovRjEgMTAgVGYKMTIgMCBUZAooPyAqKlR5cGU6KiogTk9USUZJQ0FUSU9OX0RFTElWRVJZKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/ICoqU3RhdHVzOioqIElORk8pIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gKipBY3RvcjoqKiBTWVNURU0pIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gTm90aWZpY2F0aW9uIGRlbGl2ZXJlZCBzdWNjZXNzZnVsbHkuKSBUagotMTIgMCBUZApUKgooKSBUagpUKgooKSBUagpUKgovRjEgMTUgVGYKKFBpbG90IHN0YXR1cyB1cGRhdGUgPyAyMDI2LTA3LTAyVDE4OjI4OjQyLjc5NTMwMSswMDowMCkgVGoKVCoKL0YxIDEwIFRmCjEyIDAgVGQKKD8gKipUeXBlOioqIFBJTE9UX1NUQVRVU19VUERBVEUpIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gKipTdGF0dXM6KiogSU5GTykgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyAqKkFjdG9yOioqIFBMQVRGT1JNX09QRVJBVE9SKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/IFlvdXIgc2NvcGVkIG5vbi1wcm9kdWN0aW9uIHBpbG90IHN0YXR1cyBoYXMgYmVlbiB1cGRhdGVkLiBSZXZpZXcgdGhlIGxhdGVzdCB0aW1lbGluZSBpbikgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooICB0aGUgQ3VzdG9tZXIgUGlsb3QgcG9ydGFsLikgVGoKLTEyIDAgVGQKVCoKKCkgVGoKVCoKKCkgVGoKVCoKL0YxIDE1IFRmCihWYWxpZGF0ZSBpbnRlZ3JhdGlvbiByZWFkaW5lc3MgPyAyMDI2LTA3LTAyVDE4OjI4OjQyLjc0MzIwNSswMDowMCkgVGoKVCoKL0YxIDEwIFRmCjEyIDAgVGQKKD8gKipUeXBlOioqIFNUQUdFX0NPTVBMRVRFRCkgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyAqKlN0YXR1czoqKiBDT01QTEVURUQpIFRqCi0xMiAwIFRkClQqCjEyIDAgVGQKKD8gKipBY3RvcjoqKiBQTEFURk9STV9PUEVSQVRPUikgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyBQaWxvdCBzdGFnZSBWQUxJREFURSBtYXJrZWQgQ09NUExFVEVELikgVGoKLTEyIDAgVGQKVCoKKCkgVGoKVCoKKCkgVGoKVCoKL0YxIDE1IFRmCihDb25uZWN0IGludGVncmF0aW9ucyA/IDIwMjYtMDctMDJUMTg6Mjg6NDIuNzA2ODM4KzAwOjAwKSBUagpUKgovRjEgMTAgVGYKMTIgMCBUZAooPyAqKlR5cGU6KiogU1RBR0VfQ09NUExFVEVEKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/ICoqU3RhdHVzOioqIENPTVBMRVRFRCkgVGoKLTEyIDAgVGQKVCoKMTIgMCBUZAooPyAqKkFjdG9yOioqIFBMQVRGT1JNX09QRVJBVE9SKSBUagotMTIgMCBUZApUKgoxMiAwIFRkCig/IFBpbG90IHN0YWdlIENPTk5FQ1QgbWFya2VkIENPTVBMRVRFRC4pIFRqCi0xMiAwIFRkClQqCkVUCmVuZHN0cmVhbQplbmRvYmoKeHJlZgowIDEyCjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAxNSAwMDAwMCBuIAowMDAwMDAwMDY0IDAwMDAwIG4gCjAwMDAwMDAxNDAgMDAwMDAgbiAKMDAwMDAwMDIxMCAwMDAwMCBuIAowMDAwMDAwMzM2IDAwMDAwIG4gCjAwMDAwMDIzMDIgMDAwMDAgbiAKMDAwMDAwMjQyOCAwMDAwMCBuIAowMDAwMDA0NjI2IDAwMDAwIG4gCjAwMDAwMDQ3NTIgMDAwMDAgbiAKMDAwMDAwNjg1NiAwMDAwMCBuIAowMDAwMDA2OTg0IDAwMDAwIG4gCnRyYWlsZXIKPDwgL1NpemUgMTIgL1Jvb3QgMSAwIFIgPj4Kc3RhcnR4cmVmCjg0NTQKJSVFT0Y=",
+  "redacted": true,
+  "export_blocked": false,
+  "block_reason": null
+}

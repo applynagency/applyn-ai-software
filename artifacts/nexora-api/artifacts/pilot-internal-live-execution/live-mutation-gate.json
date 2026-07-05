@@ -1,0 +1,15 @@
+{
+  "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+  "state": "CONNECTED",
+  "provider_mode": "live",
+  "last_validated_at": "2026-07-02T11:01:22.400417+00:00",
+  "required_capabilities": [
+    "kubernetes.workloads.write"
+  ],
+  "missing_capabilities": [],
+  "preflight_status": "passed",
+  "blocked_reason": null,
+  "remediation_guidance": null,
+  "correlation_id": null,
+  "simulated": false
+}

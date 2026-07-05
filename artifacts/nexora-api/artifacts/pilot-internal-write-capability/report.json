@@ -1,0 +1,247 @@
+{
+  "sprint": "66F",
+  "started_at": "2026-07-02T10:04:59.640129+00:00",
+  "organization_id": "41a17fb0-9d64-4e84-accf-0c81f6dc87c4",
+  "kubernetes_registry_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+  "bootstrap_actions": [
+    "scripts/pilot_sprint66f_rbac_bootstrap.sh",
+    "scripts/pilot_sprint66f_gitea_commit.sh"
+  ],
+  "nexora_actions": [
+    "PUT /v1/credentials/7f8f7f88-e0a9-4aac-815c-a077588bb259 (namespace-scoped SA kubeconfig)",
+    "POST /v1/integrations/connections/bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8/validate",
+    "GET /v1/integrations/connections/bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8/capabilities",
+    "LiveMutationGate.preflight_mutation (approval_satisfied=false)",
+    "POST /v1/pilot/assessment/run",
+    "POST /v1/pilot/baseline/refresh"
+  ],
+  "safety_confirmations": {
+    "pilot_stage_advanced": false,
+    "pilot_proposal_created": false,
+    "customer_approval_created": false,
+    "pilot_operation_executed": false,
+    "nexora_mutation_executed": false,
+    "customer_or_production_touched": false,
+    "explicit_simulation_used": false
+  },
+  "go_no_go_propose_operation": "GO",
+  "pilot_stages": {
+    "CONNECT": "COMPLETED",
+    "VALIDATE": "COMPLETED",
+    "READ_ONLY_ASSESSMENT": "COMPLETED",
+    "BASELINE_CAPTURE": "COMPLETED",
+    "PROPOSE_OPERATION": "PENDING",
+    "CUSTOMER_APPROVAL": "PENDING",
+    "EXECUTE": "PENDING",
+    "VERIFY": "PENDING",
+    "COMPLETE": "PENDING"
+  },
+  "credential_update": {
+    "credential_id": "7f8f7f88-e0a9-4aac-815c-a077588bb259",
+    "namespace": "nexora-pilot"
+  },
+  "validation": {
+    "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+    "lifecycle_state": "CONNECTED",
+    "provider_mode": "live",
+    "health_score": 91,
+    "capabilities": {
+      "read": true,
+      "write": true,
+      "deploy": false,
+      "apply": false,
+      "query_metrics": false,
+      "query_logs": false,
+      "query_traces": false,
+      "traffic_shift": false,
+      "sync_gitops": false
+    },
+    "failure_reason": null,
+    "latency_ms": 116,
+    "guidance": "Connection validated successfully."
+  },
+  "capabilities": {
+    "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+    "capabilities": {
+      "read": true,
+      "write": true,
+      "deploy": false,
+      "apply": false,
+      "query_metrics": false,
+      "query_logs": false,
+      "query_traces": false,
+      "traffic_shift": false,
+      "sync_gitops": false
+    },
+    "provider_mode": "live",
+    "lifecycle_state": "CONNECTED",
+    "write_allowed": true
+  },
+  "health": {
+    "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+    "lifecycle_state": "CONNECTED",
+    "provider_mode": "live",
+    "health_score": 91,
+    "consecutive_failures": 0,
+    "last_validated_at": "2026-07-02T10:05:00.575090Z",
+    "last_successful_at": "2026-07-02T10:05:00.575091Z",
+    "failure_reason": null,
+    "reauth_required": false
+  },
+  "preflight": {
+    "allowed": false,
+    "simulated": false,
+    "reason": "Approval policy not satisfied",
+    "reason_code": "APPROVAL_REQUIRED",
+    "remediation": "Complete approval workflow before execution.",
+    "idempotency_key": "sprint66f-pilot-demo-scale-1-to-2-v1",
+    "readiness_context": null
+  },
+  "assessment_summary": {
+    "export_markdown_path": "/tmp/pilot-internal-write-capability/assessment.md",
+    "findings_count": 0
+  },
+  "baseline": {
+    "scores": {
+      "setup_readiness": 0,
+      "visibility": 100,
+      "operational_maturity": 100,
+      "automation_readiness": 100,
+      "risk": 0,
+      "value_realized": 0
+    },
+    "metrics": {
+      "integration_connection_success_rate": 1.0,
+      "finding_count": 4,
+      "insufficient_evidence_count": 2,
+      "baseline_hash": "bb1673e120a66f62fa8c8333464652b369f8ed00f112ee080c1be9e7a26eacf0"
+    },
+    "insufficient_data": [
+      "branch_protection_not_readable",
+      "kubernetes_collection_failed",
+      "workflow_runs_unavailable",
+      "workflows_unavailable"
+    ],
+    "created_at": "2026-07-02T10:05:01.669588Z"
+  },
+  "evidence_pack_path": "/tmp/pilot-internal-write-capability/evidence_pack.json",
+  "diagnostics_path": "/tmp/pilot-internal-write-capability/diagnostics.json",
+  "rbac_granted": {
+    "scope": "namespace nexora-pilot",
+    "service_account": "nexora-pilot-operator",
+    "rules": [
+      {
+        "apiGroups": [
+          "apps"
+        ],
+        "resources": [
+          "deployments"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "apps"
+        ],
+        "resources": [
+          "deployments/scale"
+        ],
+        "verbs": [
+          "get",
+          "patch",
+          "update"
+        ]
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "pods"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "events"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      }
+    ]
+  },
+  "manifest_paths": {
+    "repo": "pilot-admin/pilot-test",
+    "paths": [
+      "infra/pilot-demo/rbac/serviceaccount.yaml",
+      "infra/pilot-demo/rbac/role.yaml",
+      "infra/pilot-demo/rbac/rolebinding.yaml"
+    ],
+    "local": [
+      "deploy/pilot-internal/k8s/infra/pilot-demo/rbac/serviceaccount.yaml",
+      "deploy/pilot-internal/k8s/infra/pilot-demo/rbac/role.yaml",
+      "deploy/pilot-internal/k8s/infra/pilot-demo/rbac/rolebinding.yaml"
+    ]
+  },
+  "preflight_expectation": {
+    "operation": "scale_deployment",
+    "target": "pilot-demo",
+    "namespace": "nexora-pilot",
+    "from_replicas": 1,
+    "to_replicas": 2,
+    "rollback": "scale 2 -> 1",
+    "environment": "non-production",
+    "idempotency_key": "sprint66f-pilot-demo-scale-1-to-2-v1",
+    "approval_satisfied": false
+  },
+  "remaining_blocker": "Approval policy not satisfied",
+  "workload_health": {
+    "deployment": {},
+    "pods": [],
+    "events_sample": [],
+    "prometheus_queries": {},
+    "baseline_hash": null,
+    "baseline_history_preserved": false
+  },
+  "blockers": [],
+  "completed_at": "2026-07-02T10:05:01.700232+00:00",
+  "redaction_violations": [],
+  "artifact_paths": {
+    "directory": "artifacts/pilot-internal-write-capability",
+    "kubectl_auth_can_i": "artifacts/pilot-internal-write-capability/kubectl-auth-can-i.txt",
+    "report": "artifacts/pilot-internal-write-capability/report.json",
+    "redaction_scan": "artifacts/pilot-internal-write-capability/redaction-scan.json",
+    "evidence_pack": "artifacts/pilot-internal-write-capability/evidence_pack.json",
+    "diagnostics": "artifacts/pilot-internal-write-capability/diagnostics.json",
+    "assessment": "artifacts/pilot-internal-write-capability/assessment.md"
+  },
+  "validation_permissions": [
+    "namespace:scoped:nexora-pilot",
+    "deployments:get",
+    "deployments:list",
+    "deployments:watch",
+    "scale:get",
+    "scale:patch",
+    "scale:update",
+    "pods:get",
+    "pods:list",
+    "pods:watch",
+    "events:get",
+    "events:list",
+    "events:watch"
+  ]
+}

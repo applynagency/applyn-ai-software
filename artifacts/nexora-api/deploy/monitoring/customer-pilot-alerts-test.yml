@@ -1,0 +1,15 @@
+# Internal-only alert delivery test rule (Sprint 67G).
+# Loaded only in staging Prometheus; does not affect production alerts.
+groups:
+  - name: customer-pilot-alert-test
+    rules:
+      - alert: CustomerPilotAlertDeliveryTest
+        expr: nexora_customer_pilot_alert_test_signal == 1
+        for: 0m
+        labels:
+          severity: info
+          component: customer-pilot
+          test_only: "true"
+        annotations:
+          summary: "Customer pilot internal alert delivery test"
+          description: "Controlled staging signal for webhook receipt validation."

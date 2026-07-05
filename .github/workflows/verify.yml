@@ -94,7 +94,7 @@ jobs:
       - name: Start stack
         working-directory: artifacts/nexora-api
         run: |
-          docker compose up -d
+          docker compose up -d --remove-orphans
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:8000/nexora-api/health >/dev/null; then
               exit 0
@@ -109,11 +109,15 @@ jobs:
         env:
           SMOKE_BASE_URL: http://localhost:8000/nexora-api
           SMOKE_ALLOW_AGENT_FAILURE: "1"
+          NEXORA_UI_BASE: http://127.0.0.1:8000
         run: |
           python3 -m pip install httpx
           python3 scripts/smoke_test.py
           node scripts/smoke-lazy-routes.mjs
           node scripts/smoke-p0-p2-pass.mjs
+          npm install
+          npx playwright install chromium --with-deps
+          node scripts/smoke-phase1-ui.mjs
 
       - name: Tear down
         if: always()

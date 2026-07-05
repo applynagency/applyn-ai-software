@@ -1,0 +1,50 @@
+{
+  "sprint": "66K",
+  "executed_at": "2026-07-02T12:00:00Z",
+  "environment": "docker compose api (SQLite test DB)",
+  "suites": {
+    "test_pilot_readiness.py": {
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    "test_pilot_execution.py": {
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    "test_pilot_rollback_safety.py": {
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    "test_live_preflight_enforcement.py": {
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    "test_integration_readiness.py": {
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    "test_postgres_migration_chain.py": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 1
+    },
+    "test_pilot_reliability_hardening.py": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    "combined_pilot_and_live_preflight": {
+      "passed": 67,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "all_pilot_stable": true,
+  "postgres_migration_chain_passes": true,
+  "new_alembic_migration": false
+}

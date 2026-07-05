@@ -1,0 +1,30 @@
+{
+  "completed": true,
+  "status_code": 200,
+  "detail": {
+    "scores": {
+      "setup_readiness": 38,
+      "visibility": 100,
+      "operational_maturity": 100,
+      "automation_readiness": 100,
+      "risk": 0,
+      "value_realized": 38
+    },
+    "metrics": {
+      "integration_connection_success_rate": 1.0,
+      "time_to_first_assessment_hours": 9.71,
+      "finding_count": 5,
+      "insufficient_evidence_count": 3,
+      "baseline_hash": "dca58269c4db126228d76253d4230a8fd92d1f730945cb1250ec653988da5116"
+    },
+    "insufficient_data": [
+      "branch_protection_not_readable",
+      "kubernetes_collection_failed",
+      "namespace_workload_metrics_unavailable",
+      "workflow_runs_unavailable",
+      "workflows_unavailable"
+    ],
+    "created_at": "2026-07-03T04:11:21.859088Z"
+  },
+  "error": null
+}

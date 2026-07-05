@@ -1,0 +1,52 @@
+[
+  {
+    "type": "requestfailed",
+    "url": "http://localhost:8000/nexora-api/v1/workflows/f5b66919-f223-4933-99e9-e6f8dce4c2ca/execute",
+    "method": "POST",
+    "failure": {
+      "errorText": "net::ERR_ABORTED"
+    },
+    "ts": "2026-06-17T10:10:25.243Z"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:8000/nexora-api/v1/agents/deployment/run",
+    "status": 422,
+    "method": "POST",
+    "body": "{\"detail\":\"No human-approved approval run found. Approve via /v1/approval/{artifact_id}/approve first.\",\"error_type\":\"ValidationError\"}",
+    "ts": "2026-06-17T10:10:28.480Z"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:8000/nexora-api/v1/agents/approval/run",
+    "status": 422,
+    "method": "POST",
+    "body": "{\"detail\":\"No completed Full Stack Assembly run found. Run Full Stack Assembly first.\",\"error_type\":\"ValidationError\"}",
+    "ts": "2026-06-17T10:10:28.499Z"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:8000/nexora-api/v1/agents/fullstack-assembly/run",
+    "status": 422,
+    "method": "POST",
+    "body": "{\"detail\":\"No completed Frontend Execution run found for this requirement. Run Frontend Execution first.\",\"error_type\":\"ValidationError\"}",
+    "ts": "2026-06-17T10:10:28.513Z"
+  },
+  {
+    "type": "requestfailed",
+    "url": "http://localhost:8000/nexora-api/v1/workflows/f5b66919-f223-4933-99e9-e6f8dce4c2ca/execute",
+    "method": "POST",
+    "failure": {
+      "errorText": "net::ERR_ABORTED"
+    },
+    "ts": "2026-06-17T10:10:31.524Z"
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:8000/nexora-api/v1/regeneration",
+    "status": 422,
+    "method": "POST",
+    "body": "{\"detail\":\"Regeneration failed at backend_architect: No completed Business Analyst run found for this requirement. Run Business Analyst first.\",\"error_type\":\"ValidationError\"}",
+    "ts": "2026-06-17T10:10:37.763Z"
+  }
+]

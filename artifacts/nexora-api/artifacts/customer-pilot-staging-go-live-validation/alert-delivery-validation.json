@@ -1,0 +1,12 @@
+{
+  "status": "DELIVERED",
+  "delivered": true,
+  "firing_observed": true,
+  "resolution_observed": true,
+  "duplicate_prevented": true,
+  "rule_name": "CustomerPilotAlertDeliveryTest",
+  "channel": "internal_webhook",
+  "fired_at": "2026-07-02T18:03:58.471764+00:00",
+  "resolved_at": "2026-07-02T18:02:58.471541+00:00",
+  "validated_at": "2026-07-02T18:03:59.675136+00:00"
+}

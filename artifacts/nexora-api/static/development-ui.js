@@ -6776,6 +6776,58 @@ function renderAiToolForm() {
   `;
 }
 
+function renderAiToolConnectionPanel(tool) {
+  if (!tool) return "";
+  const canWrite = canWriteResources();
+  const status = state.aiToolConnStatus;
+  const verify = state.aiToolVerifyResult;
+  const creds = state.aiToolCredentials || [];
+  const matching = creds.filter((c) => c.provider === tool.provider && c.is_active !== false);
+  const attached = status && status.attached;
+  const supportsReal = status ? status.supports_real_connection : false;
+  return `
+    <div class="ai-run-panel" style="margin-top:14px;">
+      <h4>${escapeHtml(tool.name)} — Connection</h4>
+      <p class="muted" style="font-size:12px;">
+        Attach a customer-owned, encrypted credential (managed in Settings) so this tool performs <strong>real read-only</strong> investigation. Secrets are never stored on the tool — only a reference to the encrypted credential.
+      </p>
+      <div style="margin:8px 0;">
+        Mode: ${status ? (status.mode === "REAL" ? `<span class="badge status-completed">Live (real credentials)</span>` : `<span class="badge status-pending">Simulated</span>`) : `<span class="muted">…</span>`}
+      </div>
+
+      ${!supportsReal ? `<p class="muted" style="font-size:12px;">${escapeHtml(tool.provider)} runs in simulated mode in this release.</p>` : `
+        ${attached ? `
+          <div class="ai-tool-chip" style="margin-bottom:10px;">
+            Credential: <strong>${escapeHtml(status.credential_name || status.credential_id)}</strong>
+            ${canWrite ? `<button class="ai-tool-x" data-detach-credential="${status.credential_id}" data-tool-id="${tool.id}" title="Detach">×</button>` : ""}
+          </div>
+          ${canWrite ? `<button class="btn btn-primary" data-verify-tool="${tool.id}" ${state.aiToolConnBusy ? "disabled" : ""}>${state.aiToolConnBusy ? "Verifying…" : "Verify Connection"}</button>` : ""}
+        ` : `
+          ${matching.length === 0
+            ? `<p class="muted" style="font-size:12px;">No active ${escapeHtml(tool.provider)} credential found. Create one in <strong>Settings → Infrastructure Credentials</strong> first.</p>`
+            : `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+                <select id="ai-tool-cred-select" data-tool-id="${tool.id}" style="flex:1;min-width:200px;">
+                  <option value="">Select a ${escapeHtml(tool.provider)} credential…</option>
+                  ${matching.map((c) => `<option value="${c.id}" ${state.aiToolConnSelectId === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`).join("")}
+                </select>
+                ${canWrite ? `<button class="btn btn-primary" data-attach-credential="${tool.id}" ${state.aiToolConnBusy || !state.aiToolConnSelectId ? "disabled" : ""}>Attach Credential</button>` : ""}
+              </div>`}
+        `}
+      `}
+
+      ${verify ? `
+        <div class="ai-tool-result" style="margin-top:12px;">
+          ${verify.connected
+            ? `<span class="badge status-completed">Connected</span> <span class="muted" style="font-size:12px;">${escapeHtml(verify.provider)}</span>
+               <pre class="ai-run-response">${escapeHtml(JSON.stringify(verify.details || {}, null, 2))}</pre>`
+            : `<span class="badge status-failed">Not connected</span>
+               <p class="muted" style="font-size:12px;color:#991b1b;">${escapeHtml(verify.error || "Connection failed.")}</p>`}
+        </div>
+      ` : ""}
+    </div>
+  `;
+}
+
 function renderAiTools() {
   const canWrite = canWriteResources();
   const tools = state.aiTools || [];

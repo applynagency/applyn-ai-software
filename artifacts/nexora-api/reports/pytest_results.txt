@@ -1,0 +1,6 @@
+
+=========================== short test summary info ============================
+ERROR app/tests/test_approval_execution.py
+ERROR app/tests/test_fullstack_assembly_execution.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!
+2 errors in 1.01s

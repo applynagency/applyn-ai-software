@@ -1,0 +1,30 @@
+{
+  "allowed": false,
+  "simulated": false,
+  "reason": "Approval policy not satisfied",
+  "reason_code": "APPROVAL_REQUIRED",
+  "remediation": "Complete approval workflow before execution.",
+  "correlation_id": "sprint66g-pilot-demo-scale-1-to-2-v1",
+  "missing_capabilities": [],
+  "lifecycle_state": "CONNECTED",
+  "provider_mode": "live",
+  "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+  "evidence_context": {
+    "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+    "state": "CONNECTED",
+    "provider_mode": "live",
+    "last_validated_at": "2026-07-02T10:24:12.564079+00:00",
+    "required_capabilities": [
+      "kubernetes.workloads.write"
+    ],
+    "missing_capabilities": [],
+    "preflight_status": "blocked",
+    "blocked_reason": "APPROVAL_REQUIRED",
+    "remediation_guidance": "Complete approval workflow before execution.",
+    "correlation_id": "sprint66g-pilot-demo-scale-1-to-2-v1",
+    "simulated": false
+  },
+  "execution_label": "LIVE-ELIGIBLE / NOT EXECUTED",
+  "live_eligible": true,
+  "proposal_phase": true
+}

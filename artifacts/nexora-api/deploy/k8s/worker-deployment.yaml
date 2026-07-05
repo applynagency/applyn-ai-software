@@ -1,0 +1,145 @@
+# Background worker pods. Drain the default job queue (on-demand jobs). Scale
+# horizontally — Arq + the durable Job table guarantee a job runs on exactly one
+# worker, and cron(unique=True) keeps periodic jobs single-fired across replicas.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexora-worker
+  namespace: nexora
+  labels:
+    app.kubernetes.io/name: nexora-worker
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: nexora
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nexora-worker
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nexora-worker
+        app.kubernetes.io/component: worker
+        app.kubernetes.io/part-of: nexora
+    spec:
+      # Allow long-running jobs to finish (worker draining) before the pod dies.
+      terminationGracePeriodSeconds: 120
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: nexora-worker
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: worker
+          image: nexora/api:latest
+          imagePullPolicy: IfNotPresent
+          command: ["arq", "app.jobs.worker.WorkerSettings"]
+          env:
+            - name: JOB_WORKER_QUEUE
+              value: "nexora:jobs"     # default queue (on-demand jobs)
+            - name: JOB_CRON_ENABLED
+              value: "false"           # cron owned by the dedicated scheduler pod
+          envFrom:
+            - configMapRef:
+                name: nexora-config
+            - secretRef:
+                name: nexora-secrets
+          # Liveness via a lightweight Redis ping baked into Arq's health check
+          # file; we use a simple process check here.
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pgrep -f 'arq app.jobs.worker' > /dev/null"]
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+---
+# Dedicated high-priority worker (drains nexora:jobs:high first). No cron here.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexora-worker-high
+  namespace: nexora
+  labels:
+    app.kubernetes.io/name: nexora-worker-high
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: nexora
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nexora-worker-high
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nexora-worker-high
+        app.kubernetes.io/component: worker
+        app.kubernetes.io/part-of: nexora
+    spec:
+      terminationGracePeriodSeconds: 120
+      containers:
+        - name: worker
+          image: nexora/api:latest
+          command: ["arq", "app.jobs.worker.WorkerSettings"]
+          env:
+            - name: JOB_WORKER_QUEUE
+              value: "nexora:jobs:high"
+          envFrom:
+            - configMapRef:
+                name: nexora-config
+            - secretRef:
+                name: nexora-secrets
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nexora-worker
+  namespace: nexora
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nexora-worker
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: nexora-worker
+  namespace: nexora
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nexora-worker

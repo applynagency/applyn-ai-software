@@ -1,0 +1,16 @@
+{
+  "valid": true,
+  "detail": "pg_restore --list succeeded (2290 entries); isolated restore to nexora_restore_validate",
+  "table_count": 2290,
+  "pilot_table_entries": 93,
+  "isolated_restore": true,
+  "restore_database": "nexora_restore_validate",
+  "migration_revision_after_restore": "0039_customer_pilot_operations",
+  "pilot_tables_in_restore": 15,
+  "rpo_rto_observation": {
+    "backup_duration_seconds": 1,
+    "restore_duration_seconds": 2,
+    "note": "Observed timings from internal staging db container; active DB not overwritten"
+  },
+  "validated_at": "2026-07-02T17:35:29.073970+00:00"
+}

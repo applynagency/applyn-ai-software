@@ -1,0 +1,16 @@
+# Customer Pilot staging Alertmanager (Sprint 67G).
+global:
+  resolve_timeout: 1m
+
+route:
+  receiver: internal-webhook
+  group_by: ["alertname"]
+  group_wait: 5s
+  group_interval: 1m
+  repeat_interval: 1h
+
+receivers:
+  - name: internal-webhook
+    webhook_configs:
+      - url: http://customer-pilot-alert-receiver:9191/webhook
+        send_resolved: true

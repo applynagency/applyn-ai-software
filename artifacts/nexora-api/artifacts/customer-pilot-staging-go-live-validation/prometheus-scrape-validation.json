@@ -1,0 +1,16 @@
+{
+  "metrics_endpoint_status": 200,
+  "metrics_present": true,
+  "metrics_found": [
+    "nexora_customer_pilot_scheduler_healthy",
+    "nexora_customer_pilot_worker_healthy",
+    "nexora_customer_pilot_notification_deliveries_total"
+  ],
+  "metrics_missing": [],
+  "alert_rules_valid": true,
+  "alert_rules_detail": "All required alerts present",
+  "alert_rules_path": "deploy/monitoring/customer-pilot-alerts.yml",
+  "prometheus_scrape_configured": "INSUFFICIENT_EVIDENCE",
+  "detail": "API /metrics exposes pilot gauges; external Prometheus scrape not mutated in this sprint",
+  "validated_at": "2026-07-02T17:36:27.505276+00:00"
+}

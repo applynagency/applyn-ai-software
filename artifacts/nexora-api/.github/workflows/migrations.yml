@@ -1,0 +1,70 @@
+name: Database Migrations
+
+# Validates that the Alembic migrations apply cleanly to a fresh database and
+# that the schema is owned by migrations (the app no longer runs create_all()).
+on:
+  push:
+    paths:
+      - "artifacts/nexora-api/alembic/**"
+      - "artifacts/nexora-api/app/models/**"
+      - "artifacts/nexora-api/app/database/**"
+      - "artifacts/nexora-api/.github/workflows/migrations.yml"
+  pull_request:
+    paths:
+      - "artifacts/nexora-api/alembic/**"
+      - "artifacts/nexora-api/app/models/**"
+      - "artifacts/nexora-api/app/database/**"
+
+defaults:
+  run:
+    working-directory: artifacts/nexora-api
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: nexora
+          POSTGRES_PASSWORD: nexora
+          POSTGRES_DB: nexora
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nexora"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://nexora:nexora@localhost:5432/nexora
+      ENVIRONMENT: ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Apply migrations (upgrade head)
+        run: alembic upgrade head
+
+      - name: Verify database is at head revision
+        run: python -m app.database.migration_check
+
+      - name: Detect model/migration drift
+        # Fails if the ORM models define schema not captured by a migration.
+        run: alembic check
+
+      - name: Verify a clean downgrade/upgrade round-trip
+        run: |
+          alembic downgrade base
+          alembic upgrade head
+          python -m app.database.migration_check

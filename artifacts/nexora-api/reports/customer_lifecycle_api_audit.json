@@ -1,0 +1,149 @@
+{
+  "generated_at": "2026-06-17T09:57:53.552890Z",
+  "checks": [
+    {
+      "name": "register",
+      "path": "/v1/auth/register",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "login",
+      "path": "/v1/auth/login",
+      "method": "POST",
+      "status": 401,
+      "ok": false,
+      "detail": "Invalid email or password"
+    },
+    {
+      "name": "create_organization",
+      "path": "/v1/organizations",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "switch_organization",
+      "path": "/v1/organizations/efe43668-919a-429d-bfee-9b7176d31659/switch",
+      "method": "POST",
+      "status": 200,
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "create_workspace",
+      "path": "/v1/workspaces",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "create_project",
+      "path": "/v1/projects",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "create_requirement",
+      "path": "/v1/requirements",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "applications_versions_list",
+      "path": "/v1/application-versions?project_id=e52e0241-3e3a-476a-9973-e14d21525514",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "builds_list",
+      "path": "/v1/workflow-executions",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "deployments_list",
+      "path": "/v1/deployments",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "releases_list",
+      "path": "/v1/releases?project_id=e52e0241-3e3a-476a-9973-e14d21525514",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "change_requests_list",
+      "path": "/v1/change-requests?requirement_id=6d1ab8b4-4934-4abb-b132-d90884d87165",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "change_request_create",
+      "path": "/v1/change-requests",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "regeneration_execute",
+      "path": "/v1/regeneration",
+      "method": "POST",
+      "status": 422,
+      "ok": false,
+      "detail": "Regeneration failed at backend_architect: No completed Business Analyst run found for this requirement. Run Business Analyst first."
+    },
+    {
+      "name": "deployments_run_wrong_endpoint",
+      "path": "/v1/deployments/run",
+      "method": "POST",
+      "status": 405,
+      "ok": false,
+      "detail": "Method Not Allowed"
+    },
+    {
+      "name": "switch_org_wrong_endpoint",
+      "path": "/v1/auth/switch-organization",
+      "method": "POST",
+      "status": 405,
+      "ok": false,
+      "detail": "Method Not Allowed"
+    },
+    {
+      "name": "applications_versions_no_auth",
+      "path": "/v1/application-versions?project_id=e52e0241-3e3a-476a-9973-e14d21525514",
+      "method": "GET",
+      "status": 401,
+      "ok": false,
+      "detail": "Could not validate credentials"
+    },
+    {
+      "name": "application_versions_wrong_org",
+      "path": "/v1/application-versions?project_id=e52e0241-3e3a-476a-9973-e14d21525514",
+      "method": "GET",
+      "status": 404,
+      "ok": false,
+      "detail": "Workspace with id 'c5f914c1-d461-4a97-8d75-108879ec8c9a' not found"
+    }
+  ]
+}

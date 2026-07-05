@@ -1,0 +1,48 @@
+{
+  "captured_at": "2026-07-02T10:39:59.312772+00:00",
+  "banner": "APPROVED FOR INTERNAL PILOT \u2014 NOT EXECUTED \u2014 TYPED CONFIRMATION REQUIRED",
+  "prometheus_replicas_available": {
+    "status": "success",
+    "data": {
+      "resultType": "vector",
+      "result": [
+        {
+          "metric": {
+            "__name__": "kube_deployment_status_replicas_available",
+            "deployment": "pilot-demo",
+            "instance": "pilot-k3s:30801",
+            "job": "kube-state-metrics",
+            "namespace": "nexora-pilot"
+          },
+          "value": [
+            1782988799.316,
+            "1"
+          ]
+        }
+      ]
+    }
+  },
+  "prometheus_restarts": {
+    "status": "success",
+    "data": {
+      "resultType": "vector",
+      "result": [
+        {
+          "metric": {
+            "__name__": "kube_pod_container_status_restarts_total",
+            "container": "pilot-demo",
+            "instance": "pilot-k3s:30801",
+            "job": "kube-state-metrics",
+            "namespace": "nexora-pilot",
+            "pod": "pilot-demo-57c4b9d8f-rt6m6",
+            "uid": "7d6e483c-3134-4d60-be5d-4e5d368df8e8"
+          },
+          "value": [
+            1782988799.319,
+            "0"
+          ]
+        }
+      ]
+    }
+  }
+}

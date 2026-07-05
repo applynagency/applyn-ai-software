@@ -1,0 +1,74 @@
+{
+  "sprint": "68B",
+  "started_at": "2026-07-03T04:15:06.549779+00:00",
+  "organization_id": "86238c88-f8f6-44da-a335-50ce4ba807af",
+  "organization_name": "Meridian Analytics Pilot",
+  "enrollment_id": "34853e15-9e0a-4eb1-859d-fadd3d37f6fb",
+  "decision": "READY FOR CUSTOMER APPROVAL",
+  "provider_mutation": false,
+  "execution_performed": false,
+  "typed_confirmation_issued": false,
+  "counts": {
+    "proposals": 1,
+    "approval_packages": 1,
+    "pending_approvals": 1,
+    "executed_operations": 0
+  },
+  "stages_before": {
+    "CONNECT": "COMPLETED",
+    "VALIDATE": "COMPLETED",
+    "READ_ONLY_ASSESSMENT": "COMPLETED",
+    "BASELINE_CAPTURE": "COMPLETED",
+    "PROPOSE_OPERATION": "PENDING",
+    "CUSTOMER_APPROVAL": "PENDING",
+    "EXECUTE": "PENDING",
+    "VERIFY": "PENDING",
+    "COMPLETE": "PENDING"
+  },
+  "integration_readiness": {
+    "verdict": "GO",
+    "failed_checks": []
+  },
+  "kubernetes_validation": {
+    "connection_id": "4d106712-0035-42f7-be12-451fc4a8c665",
+    "lifecycle_state": "CONNECTED",
+    "provider_mode": "live",
+    "scale_capable": true
+  },
+  "proposal": {
+    "id": "d1440973-a1d9-4c72-9c39-d992a08d5a97",
+    "status": "PENDING_CONFIRMATION",
+    "payload_hash": "01d4211b68133b9df33a64c43284509a60fb13ba489e4ba661228949a2c0f508",
+    "correlation_id": "meridian-pilot-demo-scale-2-to-3-v1",
+    "execution_label": "LIVE-ELIGIBLE / NOT EXECUTED"
+  },
+  "approval": {
+    "id": "bc63be25-1fc0-4d4a-9b76-63c307e993ca",
+    "status": "PENDING",
+    "expires_at": "2026-07-04T04:15:07.082223Z",
+    "payload_hash": "01d4211b68133b9df33a64c43284509a60fb13ba489e4ba661228949a2c0f508",
+    "approver_name": "Meridian Pilot Approver",
+    "approver_email": "approver@customer.example"
+  },
+  "rollback_plan_hash": "2d3c0745d32b5ff366b2fe556302a188c9ddaf5c5d8b7947f0d2036f329988db",
+  "payload_hash_match": true,
+  "approval_package_id": "bc63be25-1fc0-4d4a-9b76-63c307e993ca",
+  "communication_sent": true,
+  "stages_final": {
+    "CONNECT": "COMPLETED",
+    "VALIDATE": "COMPLETED",
+    "READ_ONLY_ASSESSMENT": "COMPLETED",
+    "BASELINE_CAPTURE": "COMPLETED",
+    "PROPOSE_OPERATION": "COMPLETED",
+    "CUSTOMER_APPROVAL": "PENDING",
+    "EXECUTE": "PENDING",
+    "VERIFY": "PENDING",
+    "COMPLETE": "PENDING"
+  },
+  "redaction_scan": {
+    "passed": true,
+    "detail": "clean"
+  },
+  "blockers": [],
+  "completed_at": "2026-07-03T04:15:07.162157+00:00"
+}

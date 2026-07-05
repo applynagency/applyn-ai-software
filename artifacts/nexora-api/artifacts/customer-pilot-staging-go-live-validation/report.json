@@ -1,0 +1,479 @@
+{
+  "sprint": "67F",
+  "environment_label": "internal-staging-non-production",
+  "started_at": "2026-07-02T17:36:25.788702+00:00",
+  "provider_mutation": false,
+  "execution_performed": false,
+  "configuration_validation": {
+    "environment": "development",
+    "app_version": "1.0.0",
+    "pilot_mode_enabled": true,
+    "pilot_mode_all_orgs": false,
+    "pilot_organization_ids_count": 1,
+    "pilot_organization_ids_redacted": true,
+    "debug_enabled": false,
+    "rate_limit_enabled": true,
+    "cors_origins_count": 0,
+    "cors_wildcard": false,
+    "jwt_placeholder_detected": false,
+    "metrics_enabled": true,
+    "job_queue_enabled": true,
+    "job_cron_enabled": true,
+    "migration_head": "0039_customer_pilot_operations",
+    "migration_current": "0039_customer_pilot_operations",
+    "migration_at_head": true,
+    "alembic_head_count": 1,
+    "smtp_configured": false,
+    "validated_at": "2026-07-02T17:36:26.187571+00:00"
+  },
+  "migration_state": {
+    "head": "0039_customer_pilot_operations",
+    "current": "0039_customer_pilot_operations",
+    "head_count": 1,
+    "expected": "0039_customer_pilot_operations"
+  },
+  "prometheus_scrape_validation": {
+    "metrics_endpoint_status": 200,
+    "metrics_present": true,
+    "metrics_found": [
+      "nexora_customer_pilot_scheduler_healthy",
+      "nexora_customer_pilot_worker_healthy",
+      "nexora_customer_pilot_notification_deliveries_total"
+    ],
+    "metrics_missing": [],
+    "alert_rules_valid": true,
+    "alert_rules_detail": "All required alerts present",
+    "alert_rules_path": "deploy/monitoring/customer-pilot-alerts.yml",
+    "prometheus_scrape_configured": "INSUFFICIENT_EVIDENCE",
+    "detail": "API /metrics exposes pilot gauges; external Prometheus scrape not mutated in this sprint",
+    "validated_at": "2026-07-02T17:36:27.505276+00:00"
+  },
+  "portal_dry_run": {
+    "passed": true,
+    "steps": [
+      {
+        "step": "onboarding_providers",
+        "path": "/v1/onboarding/integrations/providers",
+        "status_code": 200,
+        "ok": true
+      },
+      {
+        "step": "customer_overview",
+        "path": "/v1/customer-pilot/overview",
+        "status_code": 200,
+        "ok": true
+      },
+      {
+        "step": "customer_timeline",
+        "path": "/v1/customer-pilot/timeline",
+        "status_code": 200,
+        "ok": true
+      },
+      {
+        "step": "customer_readiness",
+        "path": "/v1/customer-pilot/readiness",
+        "status_code": 200,
+        "ok": true
+      },
+      {
+        "step": "support_diagnostics",
+        "path": "/v1/pilot/support/diagnostics",
+        "status_code": 200,
+        "ok": true
+      },
+      {
+        "step": "support_export",
+        "path": "/v1/pilot/support/diagnostics/export",
+        "status_code": 200,
+        "ok": true
+      },
+      {
+        "step": "evidence_export",
+        "path": "/v1/pilot/evidence-pack/export",
+        "status_code": 200,
+        "ok": true
+      },
+      {
+        "step": "timeline_export",
+        "path": "/v1/customer-pilot/timeline/export",
+        "status_code": 200,
+        "ok": true
+      },
+      {
+        "step": "execution_status",
+        "path": "/v1/pilot/execution/status",
+        "status_code": 200,
+        "ok": true
+      }
+    ],
+    "export_redaction_clean": true,
+    "provider_mutation": false,
+    "execution_performed": false,
+    "validated_at": "2026-07-02T17:36:27.872984+00:00"
+  },
+  "scheduler_reminder_validation": {
+    "redis_reachable": true,
+    "scheduler_lock_acquired": true,
+    "cron_job_type": "CRON_CUSTOMER_PILOT_APPROVAL_REMINDERS",
+    "first_run": {
+      "sent_24h": 0,
+      "sent_1h": 0,
+      "expirations": 0,
+      "failures": 0
+    },
+    "second_run": {
+      "sent_24h": 0,
+      "sent_1h": 0,
+      "expirations": 0,
+      "failures": 0
+    },
+    "reminder_24h_delivery_count": 1,
+    "notification_delivery_count": 1,
+    "duplicate_prevented": true,
+    "scheduler_snapshot_recorded": true,
+    "scheduler_snapshot_status": "success",
+    "approval_status_before": "PENDING",
+    "approval_status_after": "PENDING",
+    "approval_unchanged": true,
+    "provider_mutation": false,
+    "execution_performed": false,
+    "elapsed_ms": 63,
+    "validated_at": "2026-07-02T17:36:28.056347+00:00"
+  },
+  "notification_idempotency": {
+    "duplicate_prevented": true,
+    "reminder_24h_count": 1
+  },
+  "smtp_validation": {
+    "status": "NOT_CONFIGURED",
+    "detail": "SMTP_HOST unset \u2014 in-app notifications only",
+    "email_delivery": "NOT_CONFIGURED"
+  },
+  "alert_delivery_validation": {
+    "status": "INSUFFICIENT_EVIDENCE",
+    "detail": "No PILOT_ALERT_WEBHOOK_URL or PILOT_ALERT_EMAIL configured",
+    "delivered": false
+  },
+  "backup_restore_validation": {
+    "valid": true,
+    "detail": "pg_restore --list succeeded (2290 entries); isolated restore to nexora_restore_validate",
+    "table_count": 2290,
+    "pilot_table_entries": 93,
+    "isolated_restore": true,
+    "restore_database": "nexora_restore_validate",
+    "migration_revision_after_restore": "0039_customer_pilot_operations",
+    "pilot_tables_in_restore": 15,
+    "rpo_rto_observation": {
+      "backup_duration_seconds": 1,
+      "restore_duration_seconds": 2,
+      "note": "Observed timings from internal staging db container; active DB not overwritten"
+    },
+    "validated_at": "2026-07-02T17:35:29.073970+00:00"
+  },
+  "runbook_walkthrough": {
+    "completed": true,
+    "operator_role": "platform_operator",
+    "scenarios": [
+      {
+        "scenario": "redis_outage",
+        "runbook": "CUSTOMER_PILOT_ALERT_RESPONSE.md",
+        "mode": "simulated",
+        "completed": true,
+        "timestamp": "2026-07-02T17:36:28.056643+00:00"
+      },
+      {
+        "scenario": "worker_outage",
+        "runbook": "CUSTOMER_PILOT_ALERT_RESPONSE.md",
+        "mode": "simulated",
+        "completed": true,
+        "timestamp": "2026-07-02T17:36:28.056643+00:00"
+      },
+      {
+        "scenario": "stale_reminder_cron",
+        "runbook": "CUSTOMER_PILOT_NOTIFICATION_RECOVERY.md",
+        "mode": "documented",
+        "completed": true,
+        "timestamp": "2026-07-02T17:36:28.056643+00:00"
+      },
+      {
+        "scenario": "failed_notification_requeue",
+        "runbook": "CUSTOMER_PILOT_NOTIFICATION_RECOVERY.md",
+        "mode": "documented",
+        "completed": true,
+        "timestamp": "2026-07-02T17:36:28.056643+00:00"
+      },
+      {
+        "scenario": "alert_ack_resolution",
+        "runbook": "CUSTOMER_PILOT_ALERT_RESPONSE.md",
+        "mode": "simulated",
+        "completed": true,
+        "timestamp": "2026-07-02T17:36:28.056643+00:00"
+      },
+      {
+        "scenario": "backup_restore",
+        "runbook": "CUSTOMER_PILOT_BACKUP_RESTORE.md",
+        "mode": "executed_via_script",
+        "completed": true,
+        "timestamp": "2026-07-02T17:36:28.056643+00:00"
+      },
+      {
+        "scenario": "support_diagnostics",
+        "runbook": "CUSTOMER_PILOT_SUPPORT_DIAGNOSTICS.md",
+        "mode": "documented",
+        "completed": true,
+        "timestamp": "2026-07-02T17:36:28.056643+00:00"
+      }
+    ],
+    "gaps": [
+      "Configure internal alert receiver and complete live fire/resolve drill"
+    ],
+    "validated_at": "2026-07-02T17:36:28.056643+00:00"
+  },
+  "operations_readiness": {
+    "verdict": "GO",
+    "checks": [
+      {
+        "name": "redis_connectivity",
+        "passed": true,
+        "detail": "Redis reachable",
+        "fix": "Restore Redis connectivity before relying on reminder delivery"
+      },
+      {
+        "name": "arq_worker_heartbeat",
+        "passed": true,
+        "detail": "Last reminder job completed at 2026-07-02 17:35:00.338886+00:00",
+        "fix": "Ensure Arq worker is running and processing cron jobs"
+      },
+      {
+        "name": "approval_reminder_cron_registered",
+        "passed": true,
+        "detail": "Reminder cron registered",
+        "fix": "Enable PILOT_MODE_ENABLED and JOB_CRON_ENABLED with worker on default queue"
+      },
+      {
+        "name": "scheduler_lock_capability",
+        "passed": true,
+        "detail": "Redis lock available",
+        "fix": "Verify Redis lock configuration or disable DISTRIBUTED_LOCK_ENABLED for single-node"
+      },
+      {
+        "name": "reminder_last_success",
+        "passed": true,
+        "detail": "Last successful reminder run 0.0h ago",
+        "fix": "Investigate cron_customer_pilot_approval_reminders failures in worker logs"
+      },
+      {
+        "name": "reminder_failure_streak",
+        "passed": true,
+        "detail": "Consecutive reminder failures: 0",
+        "fix": "Review worker logs and Redis connectivity; resolve root cause before customer onboarding"
+      },
+      {
+        "name": "failed_delivery_backlog",
+        "passed": true,
+        "detail": "Failed notification deliveries: 0",
+        "fix": "Use delivery requeue endpoint for failed records after fixing root cause"
+      },
+      {
+        "name": "clock_sanity",
+        "passed": true,
+        "detail": "System clock uses UTC",
+        "fix": "Sync NTP on worker nodes"
+      },
+      {
+        "name": "email_provider",
+        "passed": true,
+        "detail": "Email not configured (in-app only)",
+        "fix": "Configure SMTP_HOST for email reminders if required"
+      }
+    ],
+    "failed_checks": [],
+    "insufficient_evidence": [],
+    "remediation_steps": [],
+    "evaluated_at": "2026-07-02T17:36:28.479332+00:00",
+    "read_only": true
+  },
+  "deployment_readiness": {
+    "verdict": "INSUFFICIENT_EVIDENCE",
+    "checks": [
+      {
+        "name": "api_version",
+        "passed": true,
+        "detail": "API version 1.0.0",
+        "fix": "Deploy current Nexora API image"
+      },
+      {
+        "name": "migration_at_head",
+        "passed": true,
+        "detail": "DB revision 0039_customer_pilot_operations; expected 0039_customer_pilot_operations",
+        "fix": "Run alembic upgrade head before customer onboarding"
+      },
+      {
+        "name": "single_alembic_head",
+        "passed": true,
+        "detail": "Alembic heads: 1",
+        "fix": "Resolve branched Alembic migrations to exactly one head"
+      },
+      {
+        "name": "ops_redis_connectivity",
+        "passed": true,
+        "detail": "Redis reachable",
+        "fix": "Restore Redis connectivity before relying on reminder delivery"
+      },
+      {
+        "name": "ops_arq_worker_heartbeat",
+        "passed": true,
+        "detail": "Last reminder job completed at 2026-07-02 17:35:00.338886+00:00",
+        "fix": "Ensure Arq worker is running and processing cron jobs"
+      },
+      {
+        "name": "ops_approval_reminder_cron_registered",
+        "passed": true,
+        "detail": "Reminder cron registered",
+        "fix": "Enable PILOT_MODE_ENABLED and JOB_CRON_ENABLED with worker on default queue"
+      },
+      {
+        "name": "ops_scheduler_lock_capability",
+        "passed": true,
+        "detail": "Redis lock available",
+        "fix": "Verify Redis lock configuration or disable DISTRIBUTED_LOCK_ENABLED for single-node"
+      },
+      {
+        "name": "ops_reminder_last_success",
+        "passed": true,
+        "detail": "Last successful reminder run 0.0h ago",
+        "fix": "Investigate cron_customer_pilot_approval_reminders failures in worker logs"
+      },
+      {
+        "name": "ops_reminder_failure_streak",
+        "passed": true,
+        "detail": "Consecutive reminder failures: 0",
+        "fix": "Review worker logs and Redis connectivity; resolve root cause before customer onboarding"
+      },
+      {
+        "name": "ops_failed_delivery_backlog",
+        "passed": true,
+        "detail": "Failed notification deliveries: 0",
+        "fix": "Use delivery requeue endpoint for failed records after fixing root cause"
+      },
+      {
+        "name": "ops_clock_sanity",
+        "passed": true,
+        "detail": "System clock uses UTC",
+        "fix": "Sync NTP on worker nodes"
+      },
+      {
+        "name": "ops_email_provider",
+        "passed": true,
+        "detail": "Email not configured (in-app only)",
+        "fix": "Configure SMTP_HOST for email reminders if required"
+      },
+      {
+        "name": "pilot_mode_enabled",
+        "passed": true,
+        "detail": "PILOT_MODE_ENABLED=true",
+        "fix": "Set PILOT_MODE_ENABLED=true for customer pilot"
+      },
+      {
+        "name": "pilot_org_allowlist",
+        "passed": true,
+        "detail": "Allowlist enforced (1 orgs)",
+        "fix": "Set PILOT_MODE_ALL_ORGS=false and populate PILOT_ORGANIZATION_IDS with internal tenant only"
+      },
+      {
+        "name": "debug_disabled",
+        "passed": true,
+        "detail": "Debug off",
+        "fix": "Disable DEBUG in production-like environments"
+      },
+      {
+        "name": "secure_secrets",
+        "passed": true,
+        "detail": "JWT secret not a known placeholder",
+        "fix": "Rotate JWT_SECRET_KEY to a unique production value"
+      },
+      {
+        "name": "cors_not_wildcard",
+        "passed": true,
+        "detail": "No wildcard CORS",
+        "fix": "Set explicit CORS_ALLOWED_ORIGINS for authenticated portal"
+      },
+      {
+        "name": "rate_limiting_enabled",
+        "passed": true,
+        "detail": "Rate limiting enabled",
+        "fix": "Enable RATE_LIMIT_ENABLED in production-like config"
+      },
+      {
+        "name": "health_endpoints",
+        "passed": true,
+        "detail": "database=pass",
+        "fix": "Resolve failing /readyz or /livez dependency checks"
+      },
+      {
+        "name": "metrics_enabled",
+        "passed": true,
+        "detail": "Metrics exposition enabled",
+        "fix": "Enable METRICS_ENABLED and configure Prometheus scrape"
+      },
+      {
+        "name": "smtp_delivery",
+        "passed": false,
+        "detail": "Email NOT CONFIGURED \u2014 in-app notifications only",
+        "fix": "Configure SMTP_HOST for email reminders if required"
+      },
+      {
+        "name": "alert_delivery",
+        "passed": false,
+        "detail": "Alert delivery INSUFFICIENT_EVIDENCE \u2014 no receiver configured",
+        "fix": "Configure internal alert receiver and run test alert"
+      },
+      {
+        "name": "backup_integrity",
+        "passed": true,
+        "detail": "Latest backup manifest validated",
+        "fix": null
+      },
+      {
+        "name": "internal_dry_run",
+        "passed": true,
+        "detail": "portal dry run passed",
+        "fix": "Complete internal portal dry run per Sprint 67E runbook"
+      }
+    ],
+    "failed_checks": [],
+    "insufficient_evidence": [
+      "smtp_not_configured",
+      "smtp_delivery",
+      "alert_receiver_not_configured",
+      "alert_delivery"
+    ],
+    "remediation_steps": [
+      "Configure SMTP_HOST for email reminders if required",
+      "Configure internal alert receiver and run test alert"
+    ],
+    "operations_verdict": "GO",
+    "evaluated_at": "2026-07-02T17:36:28.535581+00:00",
+    "read_only": true,
+    "environment": "development"
+  },
+  "redaction_scan": {
+    "passed": true,
+    "detail": "All evidence artifacts passed redaction scan"
+  },
+  "final_decision": {
+    "verdict": "INSUFFICIENT_EVIDENCE",
+    "blockers": [],
+    "insufficient_evidence": [
+      "deployment_readiness_insufficient_evidence",
+      "alert_delivery_not_proven"
+    ],
+    "passed_items": [
+      "smtp_not_configured_in_app_only_scope"
+    ],
+    "evaluated_at": "2026-07-02T17:36:28.542500+00:00",
+    "scoped_external_onboarding": false,
+    "ga_ready": false
+  },
+  "completed_at": "2026-07-02T17:36:28.542503+00:00"
+}

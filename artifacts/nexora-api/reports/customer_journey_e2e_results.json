@@ -1,0 +1,165 @@
+{
+  "generated_at": "2026-06-17T10:10:41.247Z",
+  "credentials": {
+    "email": "sim_1781691015953@example.com",
+    "username": "sim_91015953"
+  },
+  "steps": [
+    {
+      "step": "01_register",
+      "status": "PASS",
+      "duration_ms": 2525,
+      "screenshot": "/Users/applynagency/applyn-ai-software/artifacts/nexora-api/reports/s28_6_step_01_register.png",
+      "observed": "Registered and logged in"
+    },
+    {
+      "step": "02_create_organization",
+      "status": "PASS",
+      "duration_ms": 2260,
+      "screenshot": "/Users/applynagency/applyn-ai-software/artifacts/nexora-api/reports/s28_6_step_02_create_organization.png",
+      "observed": "Organization create submitted"
+    },
+    {
+      "step": "03_create_application",
+      "status": "PASS",
+      "duration_ms": 655,
+      "screenshot": "/Users/applynagency/applyn-ai-software/artifacts/nexora-api/reports/s28_6_step_03_create_application.png",
+      "observed": "Wizard reached generate step"
+    },
+    {
+      "step": "04_generate_software",
+      "status": "PASS",
+      "duration_ms": 3560,
+      "screenshot": "/Users/applynagency/applyn-ai-software/artifacts/nexora-api/reports/s28_6_step_04_generate_software.png",
+      "observed": "Generate clicked"
+    },
+    {
+      "step": "05_monitor_build",
+      "status": "PASS",
+      "duration_ms": 1407,
+      "screenshot": "/Users/applynagency/applyn-ai-software/artifacts/nexora-api/reports/s28_6_step_05_monitor_build.png",
+      "observed": "Build Center opened"
+    },
+    {
+      "step": "06_deploy",
+      "status": "PASS",
+      "duration_ms": 4875,
+      "screenshot": "/Users/applynagency/applyn-ai-software/artifacts/nexora-api/reports/s28_6_step_06_deploy.png",
+      "observed": "Deploy submitted"
+    },
+    {
+      "step": "07_create_change_request",
+      "status": "PASS",
+      "duration_ms": 4364,
+      "screenshot": "/Users/applynagency/applyn-ai-software/artifacts/nexora-api/reports/s28_6_step_07_create_change_request.png",
+      "observed": "Change request submitted"
+    },
+    {
+      "step": "08_release_new_version",
+      "status": "PASS",
+      "duration_ms": 5367,
+      "screenshot": "/Users/applynagency/applyn-ai-software/artifacts/nexora-api/reports/s28_6_step_08_release_new_version.png",
+      "observed": "Release submitted"
+    }
+  ],
+  "network_error_count": 6,
+  "console_error_count": 4,
+  "networkErrors": [
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:8000/nexora-api/v1/workflows/f5b66919-f223-4933-99e9-e6f8dce4c2ca/execute",
+      "method": "POST",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      },
+      "ts": "2026-06-17T10:10:25.243Z"
+    },
+    {
+      "type": "response",
+      "url": "http://localhost:8000/nexora-api/v1/agents/deployment/run",
+      "status": 422,
+      "method": "POST",
+      "body": "{\"detail\":\"No human-approved approval run found. Approve via /v1/approval/{artifact_id}/approve first.\",\"error_type\":\"ValidationError\"}",
+      "ts": "2026-06-17T10:10:28.480Z"
+    },
+    {
+      "type": "response",
+      "url": "http://localhost:8000/nexora-api/v1/agents/approval/run",
+      "status": 422,
+      "method": "POST",
+      "body": "{\"detail\":\"No completed Full Stack Assembly run found. Run Full Stack Assembly first.\",\"error_type\":\"ValidationError\"}",
+      "ts": "2026-06-17T10:10:28.499Z"
+    },
+    {
+      "type": "response",
+      "url": "http://localhost:8000/nexora-api/v1/agents/fullstack-assembly/run",
+      "status": 422,
+      "method": "POST",
+      "body": "{\"detail\":\"No completed Frontend Execution run found for this requirement. Run Frontend Execution first.\",\"error_type\":\"ValidationError\"}",
+      "ts": "2026-06-17T10:10:28.513Z"
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:8000/nexora-api/v1/workflows/f5b66919-f223-4933-99e9-e6f8dce4c2ca/execute",
+      "method": "POST",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      },
+      "ts": "2026-06-17T10:10:31.524Z"
+    },
+    {
+      "type": "response",
+      "url": "http://localhost:8000/nexora-api/v1/regeneration",
+      "status": 422,
+      "method": "POST",
+      "body": "{\"detail\":\"Regeneration failed at backend_architect: No completed Business Analyst run found for this requirement. Run Business Analyst first.\",\"error_type\":\"ValidationError\"}",
+      "ts": "2026-06-17T10:10:37.763Z"
+    }
+  ],
+  "consoleErrors": [
+    {
+      "text": "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)",
+      "location": {
+        "url": "http://localhost:8000/nexora-api/v1/agents/deployment/run",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "ts": "2026-06-17T10:10:28.480Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)",
+      "location": {
+        "url": "http://localhost:8000/nexora-api/v1/agents/approval/run",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "ts": "2026-06-17T10:10:28.498Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)",
+      "location": {
+        "url": "http://localhost:8000/nexora-api/v1/agents/fullstack-assembly/run",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "ts": "2026-06-17T10:10:28.512Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)",
+      "location": {
+        "url": "http://localhost:8000/nexora-api/v1/regeneration",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "ts": "2026-06-17T10:10:37.762Z"
+    }
+  ]
+}

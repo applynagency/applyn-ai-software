@@ -1,0 +1,35 @@
+{
+  "executedAt": "2026-07-03T06:31:00Z",
+  "allPassed": true,
+  "commands": [
+    {
+      "command": "node --test static/frontend.test.mjs",
+      "exitCode": 0,
+      "summary": "68/68 pass"
+    },
+    {
+      "command": "npm run validate",
+      "exitCode": 0,
+      "summary": "Frontend validation passed: static/app.js + help.js + pilot-operator.js parse successfully."
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "summary": "75/75 pass (static/*.test.mjs including build.test.mjs bundle budget)"
+    },
+    {
+      "command": "node scripts/build-frontend.mjs",
+      "exitCode": 0,
+      "summary": "Initial bundle (brotli): 114.1KB / 200KB budget — OK; Performance budget: PASS"
+    }
+  ],
+  "buildBudgetTest": {
+    "test": "end-to-end build emits hashed, compressed assets within budget",
+    "file": "static/build.test.mjs",
+    "result": "PASS",
+    "initialBrotliKB": 114.1,
+    "appJsRawKB": 947.8,
+    "appJsBrotliKB": 104.9,
+    "pilotOperatorBrotliKB": 6.9
+  }
+}

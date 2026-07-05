@@ -1,0 +1,52 @@
+# Local development overrides — lower memory footprint.
+# Default: 1 API worker, no background worker/scheduler (use --profile jobs to enable).
+services:
+  api:
+    ports:
+      - "8000:8000"
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --workers
+      - "1"
+    environment:
+      # Avoid spawning worker + scheduler containers locally unless --profile jobs.
+      - JOB_QUEUE_ENABLED=false
+      - UNIVERSAL_DISCOVERY_ENABLED=true
+      # P0: auto alert → incident → AI investigate (in-process when job queue off).
+      - MONITORING_ENABLED=true
+      - INTEGRATION_PIPELINE_SYNC_ENABLED=true
+      - INTEGRATION_GITOPS_SYNC_ENABLED=true
+      - WAR_ROOM_REALTIME_ENABLED=true
+      - ESCALATION_ENABLED=true
+      - INTEGRATION_READINESS_ENABLED=true
+      - EVENT_CONSUMER_ENABLED=false
+      - NOTIFICATION_QUEUE_ENABLED=false
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+
+  worker:
+    profiles: ["jobs"]
+
+  scheduler:
+    profiles: ["jobs"]
+
+  db:
+    ports:
+      - "5432:5432"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  redis:
+    deploy:
+      resources:
+        limits:
+          memory: 128M

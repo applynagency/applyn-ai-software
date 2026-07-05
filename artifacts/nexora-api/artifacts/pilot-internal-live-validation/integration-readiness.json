@@ -1,0 +1,268 @@
+[
+  {
+    "id": "4eacbdc9-1230-43cd-a941-0aa07efb6062",
+    "resource_type": "marketplace",
+    "resource_id": "55ed4e3c-9d89-4b7b-a988-dc1aa9a73f11",
+    "provider_type": "PROMETHEUS",
+    "credential_id": "4838fa64-5e62-4743-91f2-048fa748df6a",
+    "lifecycle_state": "CONNECTED",
+    "provider_mode": "live",
+    "capabilities": {
+      "read": true,
+      "write": false,
+      "deploy": false,
+      "apply": false,
+      "query_metrics": true,
+      "query_logs": false,
+      "query_traces": false,
+      "traffic_shift": false,
+      "sync_gitops": false
+    },
+    "health_score": 91,
+    "failure_reason": null,
+    "last_validated_at": "2026-07-02T09:00:27.359170Z",
+    "last_successful_at": "2026-07-02T09:00:27.359172Z",
+    "reauth_required": false,
+    "validation_metadata": {
+      "permissions": [
+        "metrics:read"
+      ],
+      "provider_identity": {
+        "endpoint": "http://pilot-prometheus:9090"
+      },
+      "warnings": []
+    },
+    "feature_impact": [
+      "Observability Platform",
+      "Release Reliability"
+    ],
+    "remediation": null
+  },
+  {
+    "id": "08503643-4ba6-4cef-86f3-1658bc0ca8b6",
+    "resource_type": "marketplace",
+    "resource_id": "a441372b-e182-4182-9c89-e5f5b75962f4",
+    "provider_type": "GITHUB",
+    "credential_id": "0067b2cb-9742-49b8-881b-33e07ddd0a0a",
+    "lifecycle_state": "CONNECTED",
+    "provider_mode": "live",
+    "capabilities": {
+      "read": true,
+      "write": false,
+      "deploy": false,
+      "apply": false,
+      "query_metrics": false,
+      "query_logs": false,
+      "query_traces": false,
+      "traffic_shift": false,
+      "sync_gitops": false
+    },
+    "health_score": 88,
+    "failure_reason": null,
+    "last_validated_at": "2026-07-02T09:00:27.337423Z",
+    "last_successful_at": "2026-07-02T09:00:27.337424Z",
+    "reauth_required": false,
+    "validation_metadata": {
+      "permissions": [
+        "repo:read"
+      ],
+      "provider_identity": {
+        "login": "pilot-admin",
+        "id": 1,
+        "name": "",
+        "organizations": [],
+        "repository_count": 0
+      },
+      "warnings": [
+        "Token scopes not reported (fine-grained or app token).",
+        "Organizations not readable with this token."
+      ]
+    },
+    "feature_impact": [
+      "Delivery Platform",
+      "GitOps"
+    ],
+    "remediation": null
+  },
+  {
+    "id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+    "resource_type": "marketplace",
+    "resource_id": "fbbd6caf-c54f-4d93-91f7-ee3dd397017d",
+    "provider_type": "KUBERNETES",
+    "credential_id": "7f8f7f88-e0a9-4aac-815c-a077588bb259",
+    "lifecycle_state": "CONNECTED",
+    "provider_mode": "live",
+    "capabilities": {
+      "read": true,
+      "write": false,
+      "deploy": false,
+      "apply": false,
+      "query_metrics": false,
+      "query_logs": false,
+      "query_traces": false,
+      "traffic_shift": false,
+      "sync_gitops": false
+    },
+    "health_score": 88,
+    "failure_reason": null,
+    "last_validated_at": "2026-07-02T09:00:27.247051Z",
+    "last_successful_at": "2026-07-02T09:00:27.247054Z",
+    "reauth_required": false,
+    "validation_metadata": {
+      "permissions": [
+        "namespaces:list"
+      ],
+      "provider_identity": {
+        "cluster": "default",
+        "api_server": "https://pilot-k3s:6443",
+        "namespaces": [
+          "default",
+          "kube-node-lease",
+          "kube-public",
+          "kube-system",
+          "nexora-pilot"
+        ],
+        "namespace_count": 5
+      },
+      "warnings": []
+    },
+    "feature_impact": [
+      "Control Plane",
+      "Kubernetes Operations",
+      "Release Reliability"
+    ],
+    "remediation": null
+  },
+  {
+    "id": "47e1dcb5-cae1-4538-baed-f69acd9a4dfe",
+    "resource_type": "marketplace",
+    "resource_id": "a477ab95-d362-49eb-9c16-5a5e13895ffb",
+    "provider_type": "PROMETHEUS",
+    "credential_id": "e39fa5ca-ac35-49db-a54a-37639ba93d2c",
+    "lifecycle_state": "CONNECTED",
+    "provider_mode": "live",
+    "capabilities": {
+      "read": true,
+      "write": false,
+      "deploy": false,
+      "apply": false,
+      "query_metrics": true,
+      "query_logs": false,
+      "query_traces": false,
+      "traffic_shift": false,
+      "sync_gitops": false
+    },
+    "health_score": 91,
+    "failure_reason": null,
+    "last_validated_at": "2026-07-02T08:55:31.533591Z",
+    "last_successful_at": "2026-07-02T08:55:31.533591Z",
+    "reauth_required": false,
+    "validation_metadata": {
+      "permissions": [
+        "metrics:read"
+      ],
+      "provider_identity": {
+        "endpoint": "http://pilot-prometheus:9090"
+      },
+      "warnings": []
+    },
+    "feature_impact": [
+      "Observability Platform",
+      "Release Reliability"
+    ],
+    "remediation": null
+  },
+  {
+    "id": "d68c7d9c-4a09-4e10-b714-8fc2809e6ac9",
+    "resource_type": "marketplace",
+    "resource_id": "016fed47-f890-49af-a0d2-d17575c14e70",
+    "provider_type": "GITHUB",
+    "credential_id": "697e049a-7a0b-4504-a4f2-8dbdd1c47ba6",
+    "lifecycle_state": "DEGRADED",
+    "provider_mode": "live",
+    "capabilities": {
+      "read": false,
+      "write": false,
+      "deploy": false,
+      "apply": false,
+      "query_metrics": false,
+      "query_logs": false,
+      "query_traces": false,
+      "traffic_shift": false,
+      "sync_gitops": false
+    },
+    "health_score": 60,
+    "failure_reason": null,
+    "last_validated_at": "2026-07-02T08:55:31.516645Z",
+    "last_successful_at": "2026-07-02T08:55:31.516646Z",
+    "reauth_required": false,
+    "validation_metadata": {
+      "permissions": [],
+      "provider_identity": {
+        "login": "pilot-admin",
+        "id": 1,
+        "name": "",
+        "organizations": [],
+        "repository_count": 0
+      },
+      "warnings": [
+        "Token scopes not reported (fine-grained or app token).",
+        "Organizations not readable with this token."
+      ]
+    },
+    "feature_impact": [
+      "Delivery Platform",
+      "GitOps"
+    ],
+    "remediation": "Some capabilities are missing; review permissions."
+  },
+  {
+    "id": "f5531aa9-5d20-415e-a5e4-80df585f22e6",
+    "resource_type": "marketplace",
+    "resource_id": "99b5262f-4a47-42cf-b35c-55c4135c1c1a",
+    "provider_type": "KUBERNETES",
+    "credential_id": "bc30655e-9e19-4c3a-99bb-50840b944f1f",
+    "lifecycle_state": "CONNECTED",
+    "provider_mode": "live",
+    "capabilities": {
+      "read": true,
+      "write": false,
+      "deploy": false,
+      "apply": false,
+      "query_metrics": false,
+      "query_logs": false,
+      "query_traces": false,
+      "traffic_shift": false,
+      "sync_gitops": false
+    },
+    "health_score": 88,
+    "failure_reason": null,
+    "last_validated_at": "2026-07-02T08:55:31.468871Z",
+    "last_successful_at": "2026-07-02T08:55:31.468872Z",
+    "reauth_required": false,
+    "validation_metadata": {
+      "permissions": [
+        "namespaces:list"
+      ],
+      "provider_identity": {
+        "cluster": "default",
+        "api_server": "https://pilot-k3s:6443",
+        "namespaces": [
+          "default",
+          "kube-node-lease",
+          "kube-public",
+          "kube-system",
+          "nexora-pilot"
+        ],
+        "namespace_count": 5
+      },
+      "warnings": []
+    },
+    "feature_impact": [
+      "Control Plane",
+      "Kubernetes Operations",
+      "Release Reliability"
+    ],
+    "remediation": null
+  }
+]

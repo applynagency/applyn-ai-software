@@ -1,0 +1,49 @@
+# Prometheus alerting rules for Nexora (Sprint 62B).
+# Load alongside the /metrics scrape config.
+groups:
+  - name: nexora-red
+    rules:
+      - alert: NexoraHighErrorRate
+        expr: |
+          sum(rate(nexora_http_requests_total{status=~"5.."}[5m]))
+          / clamp_min(sum(rate(nexora_http_requests_total[5m])), 1) > 0.05
+        for: 5m
+        labels: {severity: critical}
+        annotations:
+          summary: "High 5xx error ratio (>5%)"
+      - alert: NexoraHighLatencyP99
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(nexora_http_request_duration_seconds_bucket[5m])) by (le)) > 2
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "API p99 latency above 2s"
+  - name: nexora-use
+    rules:
+      - alert: NexoraDBPoolSaturated
+        expr: nexora_db_pool_connections{state="checked_out"} > 40
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "Database connection pool nearing exhaustion"
+  - name: nexora-platform
+    rules:
+      - alert: NexoraAIProviderDown
+        expr: max_over_time(nexora_ai_provider_up[5m]) == 0
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "AI provider {{ $labels.provider }} circuit open"
+      - alert: NexoraEventBacklog
+        expr: nexora_event_consumer_pending > 1000
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "Domain-event backlog growing (consumer not keeping up)"
+      - alert: NexoraDeadLetterEvents
+        expr: increase(nexora_events_total{status="dead_letter"}[1h]) > 0
+        for: 1m
+        labels: {severity: warning}
+        annotations:
+          summary: "Domain events are being dead-lettered"

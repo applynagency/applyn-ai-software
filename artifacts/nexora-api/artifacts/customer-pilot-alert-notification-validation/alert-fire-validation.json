@@ -1,0 +1,10 @@
+{
+  "started_at": "2026-07-02T18:01:59.327822+00:00",
+  "rule_name": "CustomerPilotAlertDeliveryTest",
+  "method": "controlled_test_signal",
+  "provider_mutation": false,
+  "signal_set": 1,
+  "fired_at": "2026-07-02T18:01:59.536206+00:00",
+  "firing_observed": true,
+  "receiver_acknowledged": true
+}

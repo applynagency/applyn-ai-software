@@ -1,0 +1,126 @@
+{
+  "sprint": "66G",
+  "started_at": "2026-07-02T10:24:11.591926+00:00",
+  "organization_id": "41a17fb0-9d64-4e84-accf-0c81f6dc87c4",
+  "enrollment_id": "2c0ce636-4f82-420d-8321-8a4c6f1ed754",
+  "go_no_go_customer_approval": "GO",
+  "safety_confirmations": {
+    "approval_granted": false,
+    "typed_confirmation_submitted": false,
+    "execution_endpoint_called": false,
+    "kubernetes_mutation_occurred": false,
+    "customer_or_production_touched": false,
+    "explicit_simulation_used": false,
+    "stages_beyond_propose_advanced": false
+  },
+  "counts": {
+    "proposals": 1,
+    "pending_approvals": 1,
+    "approved_approvals": 0,
+    "executed_operations": 0
+  },
+  "stages_before": {
+    "CONNECT": "COMPLETED",
+    "VALIDATE": "COMPLETED",
+    "READ_ONLY_ASSESSMENT": "COMPLETED",
+    "BASELINE_CAPTURE": "COMPLETED",
+    "PROPOSE_OPERATION": "PENDING",
+    "CUSTOMER_APPROVAL": "PENDING",
+    "EXECUTE": "PENDING",
+    "VERIFY": "PENDING",
+    "COMPLETE": "PENDING"
+  },
+  "integration_validation": {
+    "lifecycle_state": "CONNECTED",
+    "provider_mode": "live",
+    "write": true
+  },
+  "baseline_hash": "3a069634725200a94f276fd7085e70f2b20fadc862404dd639a1e01d348efcfa",
+  "baseline_history_preserved": true,
+  "proposal": {
+    "id": "30d98614-5fc6-4410-a28c-e65a15eeabc7",
+    "status": "PENDING_CONFIRMATION",
+    "payload_hash": "5d69df027a2f5038e26f295678194ef0570d39440a74482ee1ea80c6dcbbb11e",
+    "correlation_id": "sprint66g-pilot-demo-scale-1-to-2-v1",
+    "execution_label": "LIVE-ELIGIBLE / NOT EXECUTED",
+    "source_mode": "LIVE"
+  },
+  "preflight": {
+    "allowed": false,
+    "reason_code": "APPROVAL_REQUIRED",
+    "reason": "Approval policy not satisfied",
+    "execution_label": "LIVE-ELIGIBLE / NOT EXECUTED"
+  },
+  "stages_after_propose": {
+    "CONNECT": "COMPLETED",
+    "VALIDATE": "COMPLETED",
+    "READ_ONLY_ASSESSMENT": "COMPLETED",
+    "BASELINE_CAPTURE": "COMPLETED",
+    "PROPOSE_OPERATION": "COMPLETED",
+    "CUSTOMER_APPROVAL": "PENDING",
+    "EXECUTE": "PENDING",
+    "VERIFY": "PENDING",
+    "COMPLETE": "PENDING"
+  },
+  "approval": {
+    "id": "9cbd4673-d64b-4ef2-a0d7-510483366be3",
+    "status": "PENDING",
+    "expires_at": "2026-07-03T10:24:12.697604Z",
+    "payload_hash": "5d69df027a2f5038e26f295678194ef0570d39440a74482ee1ea80c6dcbbb11e"
+  },
+  "readonly_evidence": {
+    "before": {
+      "captured_at": "2026-07-02T10:24:11.591939+00:00",
+      "prometheus_error": "HTTPStatusError",
+      "deployment": {
+        "desired_replicas": 1,
+        "ready_replicas": 1,
+        "available_replicas": 1
+      },
+      "pods": [
+        {
+          "name": "pilot-demo-57c4b9d8f-rt6m6",
+          "phase": "Running",
+          "ready": true,
+          "restarts": 0
+        }
+      ],
+      "events_count": 1
+    },
+    "after": {
+      "captured_at": "2026-07-02T10:24:12.707166+00:00",
+      "prometheus_error": "HTTPStatusError",
+      "deployment": {
+        "desired_replicas": 1,
+        "ready_replicas": 1,
+        "available_replicas": 1
+      },
+      "pods": [
+        {
+          "name": "pilot-demo-57c4b9d8f-rt6m6",
+          "phase": "Running",
+          "ready": true,
+          "restarts": 0
+        }
+      ],
+      "events_count": 1
+    }
+  },
+  "stages_final": {
+    "CONNECT": "COMPLETED",
+    "VALIDATE": "COMPLETED",
+    "READ_ONLY_ASSESSMENT": "COMPLETED",
+    "BASELINE_CAPTURE": "COMPLETED",
+    "PROPOSE_OPERATION": "COMPLETED",
+    "CUSTOMER_APPROVAL": "PENDING",
+    "EXECUTE": "PENDING",
+    "VERIFY": "PENDING",
+    "COMPLETE": "PENDING"
+  },
+  "redaction_scan": {
+    "status": "PASS",
+    "violations": []
+  },
+  "blockers": [],
+  "completed_at": "2026-07-02T10:24:12.722943+00:00"
+}

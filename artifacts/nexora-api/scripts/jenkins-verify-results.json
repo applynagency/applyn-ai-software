@@ -1,0 +1,77 @@
+{
+  "generated_at": "2026-07-04T05:48:03.441Z",
+  "base_url": "http://127.0.0.1:8000",
+  "email": "browser-smoke-1783108438688@example.com",
+  "steps": [
+    {
+      "name": "login",
+      "status": "PASS",
+      "detail": "Signed in as browser-smoke-1783108438688@example.com"
+    },
+    {
+      "name": "org",
+      "status": "PASS",
+      "detail": "Using org Browser Smoke's Organization"
+    },
+    {
+      "name": "list_connections",
+      "status": "PASS",
+      "detail": "1 connection(s)"
+    },
+    {
+      "name": "find_jenkins",
+      "status": "PASS",
+      "detail": "Found 1 Jenkins connection(s)"
+    },
+    {
+      "name": "verify_3cc1e214-9138-4193-b64b-04bce87965fc",
+      "status": "PASS",
+      "detail": "Jenkins: CONNECTED (100%)"
+    },
+    {
+      "name": "validate_3cc1e214-9138-4193-b64b-04bce87965fc",
+      "status": "WARN",
+      "detail": "Jenkins: readiness undefined/100"
+    },
+    {
+      "name": "health_3cc1e214-9138-4193-b64b-04bce87965fc",
+      "status": "WARN",
+      "detail": "Jenkins: CONNECTED"
+    }
+  ],
+  "jenkins": {
+    "id": "3cc1e214-9138-4193-b64b-04bce87965fc",
+    "name": "Jenkins",
+    "integration_key": "JENKINS",
+    "status": "VERIFIED",
+    "health": "HEALTHY",
+    "readiness_score": 100,
+    "last_verified_at": "2026-07-04T05:47:27.884840Z",
+    "permissions_granted": [
+      "jobs:read"
+    ],
+    "verify": {
+      "verified": true,
+      "connection_status": "CONNECTED",
+      "confidence": 100,
+      "permissions": [
+        "jobs:read"
+      ],
+      "errors": [],
+      "warnings": [],
+      "latency_ms": 94
+    },
+    "validate": {
+      "provider_mode": "live"
+    },
+    "health_view": {
+      "health_score": 88,
+      "lifecycle_state": "CONNECTED",
+      "provider_mode": "live",
+      "consecutive_failures": 0,
+      "failure_reason": null,
+      "last_validated_at": "2026-07-04T05:48:04.316188Z"
+    }
+  },
+  "summary": "PASS"
+}

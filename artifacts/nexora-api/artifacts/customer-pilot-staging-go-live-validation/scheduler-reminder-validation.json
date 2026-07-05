@@ -1,0 +1,29 @@
+{
+  "redis_reachable": true,
+  "scheduler_lock_acquired": true,
+  "cron_job_type": "CRON_CUSTOMER_PILOT_APPROVAL_REMINDERS",
+  "first_run": {
+    "sent_24h": 0,
+    "sent_1h": 0,
+    "expirations": 0,
+    "failures": 0
+  },
+  "second_run": {
+    "sent_24h": 0,
+    "sent_1h": 0,
+    "expirations": 0,
+    "failures": 0
+  },
+  "reminder_24h_delivery_count": 1,
+  "notification_delivery_count": 1,
+  "duplicate_prevented": true,
+  "scheduler_snapshot_recorded": true,
+  "scheduler_snapshot_status": "success",
+  "approval_status_before": "PENDING",
+  "approval_status_after": "PENDING",
+  "approval_unchanged": true,
+  "provider_mutation": false,
+  "execution_performed": false,
+  "elapsed_ms": 63,
+  "validated_at": "2026-07-02T17:36:28.056347+00:00"
+}

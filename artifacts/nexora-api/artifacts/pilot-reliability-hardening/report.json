@@ -1,0 +1,39 @@
+{
+  "sprint": "66K",
+  "title": "Pilot Reliability Hardening & Customer Pilot Launch Pack",
+  "decision": "READY_FOR_SCOPED_CUSTOMER_NON_PRODUCTION_PILOT",
+  "original_failures_fixed": 4,
+  "all_pilot_tests_stable": true,
+  "infrastructure_mutation": false,
+  "customer_infrastructure_connected": false,
+  "internal_pilot_status": "CLOSED",
+  "launch_readiness_evaluator": {
+    "endpoint": "GET /v1/pilot/launch-readiness",
+    "read_only": true,
+    "verdicts": [
+      "GO",
+      "NO_GO",
+      "INSUFFICIENT_EVIDENCE"
+    ],
+    "no_side_effect_test": "test_launch_readiness_has_no_mutation_side_effects"
+  },
+  "customer_launch_pack": [
+    "docs/customer-pilot/README.md",
+    "docs/customer-pilot/CUSTOMER_PILOT_SCOPE.md",
+    "docs/customer-pilot/CUSTOMER_PREREQUISITES.md",
+    "docs/customer-pilot/CUSTOMER_SECURITY_AND_RBAC.md",
+    "docs/customer-pilot/CUSTOMER_APPROVAL_TEMPLATE.md",
+    "docs/customer-pilot/CUSTOMER_SUCCESS_CRITERIA.md",
+    "docs/customer-pilot/CUSTOMER_EVIDENCE_GUIDE.md",
+    "docs/customer-pilot/CUSTOMER_ROLLBACK_PLAN.md",
+    "docs/customer-pilot/CUSTOMER_LIMITATIONS.md",
+    "docs/customer-pilot/CUSTOMER_PILOT_CLOSEOUT_TEMPLATE.md"
+  ],
+  "remaining_blockers_for_first_real_customer": [
+    "Customer organization onboarding and credential provisioning (customer-driven)",
+    "Launch readiness GO verdict after live integration validation",
+    "Customer approver and operator designated per approval template",
+    "Agreed maintenance window for single operation"
+  ],
+  "ga_ready": false
+}

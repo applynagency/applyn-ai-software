@@ -1,0 +1,385 @@
+{
+  "version": "1.0",
+  "templates": [
+    {
+      "slug": "crm-delivery",
+      "name": "CRM Delivery Team",
+      "description": "Full-stack delivery teams for CRM products with sales and customer workflows.",
+      "industry": "CRM",
+      "teams": [
+        {
+          "name": "Product Team",
+          "description": "Owns CRM product backlog and release planning.",
+          "team_type": "PRODUCT",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Define CRM epics",
+              "description": "Break down sales pipeline features into epics and stories.",
+              "priority": "HIGH"
+            },
+            {
+              "title": "Prioritize backlog",
+              "description": "Rank features by customer impact and revenue.",
+              "priority": "CRITICAL"
+            }
+          ]
+        },
+        {
+          "name": "UI/UX Team",
+          "description": "Designs CRM dashboards and customer-facing flows.",
+          "team_type": "UI_UX",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Design sales dashboards",
+              "description": "Create wireframes for pipeline and account views.",
+              "priority": "HIGH"
+            }
+          ]
+        },
+        {
+          "name": "Frontend Team",
+          "description": "Builds CRM web application interfaces.",
+          "team_type": "FRONTEND",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Implement UI components",
+              "description": "Build reusable React components for CRM modules.",
+              "priority": "HIGH"
+            }
+          ]
+        },
+        {
+          "name": "Backend Team",
+          "description": "Implements CRM APIs and integrations.",
+          "team_type": "BACKEND",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Build REST APIs",
+              "description": "Implement account, contact, and deal endpoints.",
+              "priority": "HIGH"
+            }
+          ]
+        },
+        {
+          "name": "QA Team",
+          "description": "Validates CRM functionality and integrations.",
+          "team_type": "QA",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Regression testing",
+              "description": "Run automated and manual regression on CRM flows.",
+              "priority": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "name": "Deployment Team",
+          "description": "Manages CRM release and deployment pipelines.",
+          "team_type": "DEPLOYMENT",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Release coordination",
+              "description": "Coordinate staging and production deployments.",
+              "priority": "HIGH"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "healthcare-delivery",
+      "name": "Healthcare Delivery Team",
+      "description": "HIPAA-aware delivery teams for healthcare applications.",
+      "industry": "Healthcare",
+      "teams": [
+        {
+          "name": "Product Team",
+          "description": "Healthcare product ownership and compliance-aware planning.",
+          "team_type": "PRODUCT",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Clinical workflow planning",
+              "description": "Define patient and provider workflow requirements.",
+              "priority": "CRITICAL"
+            }
+          ]
+        },
+        {
+          "name": "UI/UX Team",
+          "description": "Accessible healthcare UI design.",
+          "team_type": "UI_UX",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Accessibility review",
+              "description": "Ensure WCAG 2.1 AA compliance for all screens.",
+              "priority": "CRITICAL"
+            }
+          ]
+        },
+        {
+          "name": "Frontend Team",
+          "description": "Patient and provider portal frontend.",
+          "team_type": "FRONTEND",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Portal implementation",
+              "description": "Build secure patient portal interfaces.",
+              "priority": "HIGH"
+            }
+          ]
+        },
+        {
+          "name": "Backend Team",
+          "description": "FHIR and healthcare API services.",
+          "team_type": "BACKEND",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "FHIR integration",
+              "description": "Integrate with EHR systems via FHIR APIs.",
+              "priority": "CRITICAL"
+            }
+          ]
+        },
+        {
+          "name": "QA Team",
+          "description": "Healthcare QA and validation.",
+          "team_type": "QA",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Clinical scenario testing",
+              "description": "Validate end-to-end clinical workflows.",
+              "priority": "HIGH"
+            }
+          ]
+        },
+        {
+          "name": "Compliance Team",
+          "description": "HIPAA and regulatory compliance oversight.",
+          "team_type": "COMPLIANCE",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "HIPAA audit",
+              "description": "Review features for PHI handling compliance.",
+              "priority": "CRITICAL"
+            }
+          ]
+        },
+        {
+          "name": "Deployment Team",
+          "description": "Secure healthcare deployment pipelines.",
+          "team_type": "DEPLOYMENT",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Secure deployments",
+              "description": "Deploy to HIPAA-compliant environments.",
+              "priority": "CRITICAL"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "financial-services",
+      "name": "Financial Services Team",
+      "description": "Regulated delivery teams for banking and fintech products.",
+      "industry": "Financial Services",
+      "teams": [
+        {
+          "name": "Product Team",
+          "description": "Financial product ownership and regulatory planning.",
+          "team_type": "PRODUCT",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Feature roadmap",
+              "description": "Plan banking features with regulatory constraints.",
+              "priority": "HIGH"
+            }
+          ]
+        },
+        {
+          "name": "Frontend Team",
+          "description": "Banking and trading UI.",
+          "team_type": "FRONTEND",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Transaction UI",
+              "description": "Build secure transaction and account views.",
+              "priority": "HIGH"
+            }
+          ]
+        },
+        {
+          "name": "Backend Team",
+          "description": "Core banking and payment APIs.",
+          "team_type": "BACKEND",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Payment processing",
+              "description": "Implement payment gateway integrations.",
+              "priority": "CRITICAL"
+            }
+          ]
+        },
+        {
+          "name": "Security Team",
+          "description": "Application and infrastructure security.",
+          "team_type": "SECURITY",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Threat modeling",
+              "description": "Conduct threat models for financial features.",
+              "priority": "CRITICAL"
+            },
+            {
+              "title": "Penetration testing",
+              "description": "Coordinate security testing before releases.",
+              "priority": "HIGH"
+            }
+          ]
+        },
+        {
+          "name": "Compliance Team",
+          "description": "SOX, PCI-DSS, and regulatory compliance.",
+          "team_type": "COMPLIANCE",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Regulatory review",
+              "description": "Review changes for PCI-DSS and SOX compliance.",
+              "priority": "CRITICAL"
+            }
+          ]
+        },
+        {
+          "name": "QA Team",
+          "description": "Financial QA and audit trail validation.",
+          "team_type": "QA",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Audit trail validation",
+              "description": "Verify all transactions are logged correctly.",
+              "priority": "CRITICAL"
+            }
+          ]
+        },
+        {
+          "name": "Deployment Team",
+          "description": "Controlled financial services deployments.",
+          "team_type": "DEPLOYMENT",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Change approval",
+              "description": "Manage change advisory board approvals.",
+              "priority": "CRITICAL"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ecommerce-delivery",
+      "name": "E-Commerce Delivery Team",
+      "description": "High-velocity delivery teams for online retail platforms.",
+      "industry": "E-Commerce",
+      "teams": [
+        {
+          "name": "Product Team",
+          "description": "E-commerce product ownership and merchandising.",
+          "team_type": "PRODUCT",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Merchandising features",
+              "description": "Plan catalog, cart, and checkout improvements.",
+              "priority": "HIGH"
+            }
+          ]
+        },
+        {
+          "name": "UI/UX Team",
+          "description": "Conversion-focused e-commerce design.",
+          "team_type": "UI_UX",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Checkout optimization",
+              "description": "Design frictionless checkout experiences.",
+              "priority": "CRITICAL"
+            }
+          ]
+        },
+        {
+          "name": "Frontend Team",
+          "description": "Storefront and admin frontend.",
+          "team_type": "FRONTEND",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Storefront pages",
+              "description": "Build product listing and detail pages.",
+              "priority": "HIGH"
+            }
+          ]
+        },
+        {
+          "name": "Backend Team",
+          "description": "Catalog, cart, and order services.",
+          "team_type": "BACKEND",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Order management",
+              "description": "Implement order processing and fulfillment APIs.",
+              "priority": "HIGH"
+            }
+          ]
+        },
+        {
+          "name": "QA Team",
+          "description": "E-commerce QA and performance testing.",
+          "team_type": "QA",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Load testing",
+              "description": "Validate platform under peak traffic.",
+              "priority": "HIGH"
+            }
+          ]
+        },
+        {
+          "name": "Deployment Team",
+          "description": "Zero-downtime e-commerce deployments.",
+          "team_type": "DEPLOYMENT",
+          "status": "ACTIVE",
+          "responsibilities": [
+            {
+              "title": "Blue-green releases",
+              "description": "Execute blue-green deployments for storefront.",
+              "priority": "HIGH"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

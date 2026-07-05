@@ -1,0 +1,177 @@
+{
+  "id": "30d98614-5fc6-4410-a28c-e65a15eeabc7",
+  "action": "scale_deployment",
+  "resource_name": "pilot-demo",
+  "status": "SUCCEEDED",
+  "preflight": {
+    "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+    "state": "CONNECTED",
+    "provider_mode": "live",
+    "last_validated_at": "2026-07-02T11:01:22.400417+00:00",
+    "required_capabilities": [
+      "kubernetes.workloads.write"
+    ],
+    "missing_capabilities": [],
+    "preflight_status": "passed",
+    "blocked_reason": null,
+    "remediation_guidance": null,
+    "correlation_id": null,
+    "simulated": false
+  },
+  "result": {
+    "action": "scale_deployment",
+    "status": "scaled",
+    "replicas": 2,
+    "integration_readiness": {
+      "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+      "state": "CONNECTED",
+      "provider_mode": "live",
+      "last_validated_at": "2026-07-02T11:01:22.400417+00:00",
+      "required_capabilities": [
+        "kubernetes.workloads.write"
+      ],
+      "missing_capabilities": [],
+      "preflight_status": "passed",
+      "blocked_reason": null,
+      "remediation_guidance": null,
+      "correlation_id": null,
+      "simulated": false
+    },
+    "correlation_id": "sprint66g-pilot-demo-scale-1-to-2-v1",
+    "execution_path": "pilot.confirm_live_operation\u2192LiveMutationGate\u2192k8s_ops.execute_write",
+    "nexora_controlled": true
+  },
+  "verification": {
+    "verification_status": "VERIFIED",
+    "source_mode": "LIVE",
+    "message": "Live Kubernetes and Prometheus evidence confirm target replica count",
+    "before": {
+      "resource_name": "pilot-demo",
+      "environment_tier": "DEVELOPMENT",
+      "params": {
+        "namespace": "nexora-pilot",
+        "replicas": 2,
+        "from_replicas": 1,
+        "risk_classification": "low",
+        "risk_explanation": "Reversible scale of one non-production deployment; no image, config, secret, or network mutation; namespace-scoped RBAC only.",
+        "verification_criteria": [
+          "deployment desired replicas = 2",
+          "available replicas = 2",
+          "both pods Ready",
+          "no warning events attributable to the operation",
+          "restart count does not increase unexpectedly",
+          "Prometheus deployment available replicas query returns 2"
+        ],
+        "failure_criteria": [
+          "rollout does not reach 2 available replicas within configured timeout",
+          "warning events show scheduling/image/probe failure",
+          "Prometheus or Kubernetes evidence is unavailable"
+        ],
+        "rollback_trigger": "any verification failure or insufficient evidence"
+      },
+      "captured": "pre_execution"
+    },
+    "after": {
+      "execution": {
+        "action": "scale_deployment",
+        "status": "scaled",
+        "replicas": 2,
+        "integration_readiness": {
+          "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+          "state": "CONNECTED",
+          "provider_mode": "live",
+          "last_validated_at": "2026-07-02T11:01:22.400417+00:00",
+          "required_capabilities": [
+            "kubernetes.workloads.write"
+          ],
+          "missing_capabilities": [],
+          "preflight_status": "passed",
+          "blocked_reason": null,
+          "remediation_guidance": null,
+          "correlation_id": null,
+          "simulated": false
+        },
+        "correlation_id": "sprint66g-pilot-demo-scale-1-to-2-v1",
+        "execution_path": "pilot.confirm_live_operation\u2192LiveMutationGate\u2192k8s_ops.execute_write",
+        "nexora_controlled": true
+      },
+      "kubernetes": {
+        "captured_at": "2026-07-02T11:04:55.582672+00:00",
+        "deployment": {
+          "desired_replicas": 2,
+          "ready_replicas": 2,
+          "available_replicas": 2,
+          "conditions": [
+            {
+              "type": "Progressing",
+              "status": "True",
+              "reason": "NewReplicaSetAvailable"
+            },
+            {
+              "type": "Available",
+              "status": "True",
+              "reason": "MinimumReplicasAvailable"
+            }
+          ]
+        },
+        "pods": [
+          {
+            "name": "pilot-demo-57c4b9d8f-rt6m6",
+            "phase": "Running",
+            "ready": true,
+            "restarts": 0
+          },
+          {
+            "name": "pilot-demo-57c4b9d8f-z5f5w",
+            "phase": "Running",
+            "ready": true,
+            "restarts": 0
+          }
+        ],
+        "pod_count": 2,
+        "total_restarts": 0,
+        "warning_events": [],
+        "rollout_failed": false
+      },
+      "prometheus": {
+        "status": "success",
+        "data": {
+          "resultType": "vector",
+          "result": [
+            {
+              "metric": {
+                "__name__": "kube_deployment_status_replicas_available",
+                "deployment": "pilot-demo",
+                "instance": "pilot-k3s:30801",
+                "job": "kube-state-metrics",
+                "namespace": "nexora-pilot"
+              },
+              "value": [
+                1782990295.72,
+                "2"
+              ]
+            }
+          ]
+        }
+      },
+      "events": {
+        "captured_at": "2026-07-02T11:04:55.735004+00:00",
+        "warning_events": [],
+        "rollout_failed": false
+      },
+      "deployment_readiness": "Available",
+      "status": "Available"
+    },
+    "target_replicas": 2
+  },
+  "correlation_id": "sprint66g-pilot-demo-scale-1-to-2-v1",
+  "source_mode": "LIVE",
+  "verification_status": "VERIFIED",
+  "payload_hash": null,
+  "execution_label": null,
+  "template_id": null,
+  "environment_id": null,
+  "cluster_id": null,
+  "params": {},
+  "rollback_plan": null
+}

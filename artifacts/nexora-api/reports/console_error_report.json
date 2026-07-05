@@ -1,0 +1,46 @@
+[
+  {
+    "text": "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)",
+    "location": {
+      "url": "http://localhost:8000/nexora-api/v1/agents/deployment/run",
+      "line": 0,
+      "column": 0,
+      "lineNumber": 0,
+      "columnNumber": 0
+    },
+    "ts": "2026-06-17T10:10:28.480Z"
+  },
+  {
+    "text": "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)",
+    "location": {
+      "url": "http://localhost:8000/nexora-api/v1/agents/approval/run",
+      "line": 0,
+      "column": 0,
+      "lineNumber": 0,
+      "columnNumber": 0
+    },
+    "ts": "2026-06-17T10:10:28.498Z"
+  },
+  {
+    "text": "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)",
+    "location": {
+      "url": "http://localhost:8000/nexora-api/v1/agents/fullstack-assembly/run",
+      "line": 0,
+      "column": 0,
+      "lineNumber": 0,
+      "columnNumber": 0
+    },
+    "ts": "2026-06-17T10:10:28.512Z"
+  },
+  {
+    "text": "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)",
+    "location": {
+      "url": "http://localhost:8000/nexora-api/v1/regeneration",
+      "line": 0,
+      "column": 0,
+      "lineNumber": 0,
+      "columnNumber": 0
+    },
+    "ts": "2026-06-17T10:10:37.762Z"
+  }
+]

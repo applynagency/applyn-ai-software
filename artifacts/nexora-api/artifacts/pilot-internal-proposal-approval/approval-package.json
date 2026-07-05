@@ -1,0 +1,136 @@
+{
+  "banner": "PROPOSED ONLY \u2014 NOT APPROVED \u2014 NOT EXECUTED",
+  "generated_at": "2026-07-02T10:24:12.706921+00:00",
+  "organization": {
+    "id": "41a17fb0-9d64-4e84-accf-0c81f6dc87c4",
+    "name": "Nexora Pilot Test"
+  },
+  "proposal": {
+    "operation_id": "30d98614-5fc6-4410-a28c-e65a15eeabc7",
+    "action": "scale_deployment",
+    "template_id": "scale_deployment",
+    "status": "PENDING_CONFIRMATION",
+    "execution_label": "LIVE-ELIGIBLE / NOT EXECUTED",
+    "idempotency_key": "sprint66g-pilot-demo-scale-1-to-2-v1",
+    "payload_hash": "5d69df027a2f5038e26f295678194ef0570d39440a74482ee1ea80c6dcbbb11e"
+  },
+  "approval": {
+    "approval_id": "9cbd4673-d64b-4ef2-a0d7-510483366be3",
+    "status": "PENDING",
+    "expires_at": "2026-07-03T10:24:12.697604Z",
+    "approver_name": "Internal Pilot Approver",
+    "approver_email": "pilot-approver@nexora.internal",
+    "payload_hash": "5d69df027a2f5038e26f295678194ef0570d39440a74482ee1ea80c6dcbbb11e"
+  },
+  "target": {
+    "integration_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+    "namespace": "nexora-pilot",
+    "deployment": "pilot-demo",
+    "environment": "development",
+    "environment_tier": "non-production"
+  },
+  "change": {
+    "summary": "Controlled internal pilot validation: scale deployment pilot-demo from 1 to 2 replicas in namespace nexora-pilot (non-production) using namespace-scoped Kubernetes RBAC.",
+    "desired": {
+      "namespace": "nexora-pilot",
+      "replicas": 2,
+      "from_replicas": 1,
+      "risk_classification": "low",
+      "risk_explanation": "Reversible scale of one non-production deployment; no image, config, secret, or network mutation; namespace-scoped RBAC only.",
+      "verification_criteria": [
+        "deployment desired replicas = 2",
+        "available replicas = 2",
+        "both pods Ready",
+        "no warning events attributable to the operation",
+        "restart count does not increase unexpectedly",
+        "Prometheus deployment available replicas query returns 2"
+      ],
+      "failure_criteria": [
+        "rollout does not reach 2 available replicas within configured timeout",
+        "warning events show scheduling/image/probe failure",
+        "Prometheus or Kubernetes evidence is unavailable"
+      ],
+      "rollback_trigger": "any verification failure or insufficient evidence"
+    },
+    "rollback_plan": "Scale replicas from 2 back to 1 in namespace nexora-pilot",
+    "risk": "low",
+    "risk_explanation": "Reversible scale of one non-production deployment; no image, config, secret, or network mutation; namespace-scoped RBAC only."
+  },
+  "before_state": {
+    "replicas": 1,
+    "baseline_hash": "3a069634725200a94f276fd7085e70f2b20fadc862404dd639a1e01d348efcfa"
+  },
+  "baseline_hash": "3a069634725200a94f276fd7085e70f2b20fadc862404dd639a1e01d348efcfa",
+  "verification_criteria": [
+    "deployment desired replicas = 2",
+    "available replicas = 2",
+    "both pods Ready",
+    "no warning events attributable to the operation",
+    "restart count does not increase unexpectedly",
+    "Prometheus deployment available replicas query returns 2"
+  ],
+  "failure_criteria": [
+    "rollout does not reach 2 available replicas within configured timeout",
+    "warning events show scheduling/image/probe failure",
+    "Prometheus or Kubernetes evidence is unavailable"
+  ],
+  "rollback_trigger": "any verification failure or insufficient evidence",
+  "integration_readiness": {
+    "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+    "capabilities": {
+      "read": true,
+      "write": true,
+      "deploy": false,
+      "apply": false,
+      "query_metrics": false,
+      "query_logs": false,
+      "query_traces": false,
+      "traffic_shift": false,
+      "sync_gitops": false
+    },
+    "provider_mode": "live",
+    "lifecycle_state": "CONNECTED",
+    "write_allowed": true
+  },
+  "preflight": {
+    "allowed": false,
+    "simulated": false,
+    "reason": "Approval policy not satisfied",
+    "reason_code": "APPROVAL_REQUIRED",
+    "remediation": "Complete approval workflow before execution.",
+    "correlation_id": "sprint66g-pilot-demo-scale-1-to-2-v1",
+    "missing_capabilities": [],
+    "lifecycle_state": "CONNECTED",
+    "provider_mode": "live",
+    "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+    "evidence_context": {
+      "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+      "state": "CONNECTED",
+      "provider_mode": "live",
+      "last_validated_at": "2026-07-02T10:24:12.564079+00:00",
+      "required_capabilities": [
+        "kubernetes.workloads.write"
+      ],
+      "missing_capabilities": [],
+      "preflight_status": "blocked",
+      "blocked_reason": "APPROVAL_REQUIRED",
+      "remediation_guidance": "Complete approval workflow before execution.",
+      "correlation_id": "sprint66g-pilot-demo-scale-1-to-2-v1",
+      "simulated": false
+    },
+    "execution_label": "LIVE-ELIGIBLE / NOT EXECUTED",
+    "live_eligible": true,
+    "proposal_phase": true
+  },
+  "safety_statements": [
+    "Approval alone does not execute any infrastructure mutation.",
+    "A separate typed confirmation and execution step is required after approval.",
+    "This package documents a proposed reversible scale operation only."
+  ],
+  "enrollment": {
+    "id": "2c0ce636-4f82-420d-8321-8a4c6f1ed754",
+    "kill_switch": false,
+    "operation_count": 0,
+    "operation_limit": 2
+  }
+}

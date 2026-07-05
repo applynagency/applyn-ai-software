@@ -1,0 +1,101 @@
+# Customer Pilot operational alerts (Sprint 67E).
+# Load alongside Nexora /metrics scrape config.
+groups:
+  - name: customer-pilot-operations
+    rules:
+      - alert: CustomerPilotSchedulerUnhealthy
+        expr: nexora_customer_pilot_scheduler_healthy == 0
+        for: 10m
+        labels:
+          severity: critical
+          component: customer-pilot
+        annotations:
+          summary: "Customer pilot scheduler unhealthy"
+          description: "Operations readiness reports scheduler NO_GO for 10m. See CUSTOMER_PILOT_ALERT_RESPONSE.md"
+
+      - alert: CustomerPilotWorkerUnhealthy
+        expr: nexora_customer_pilot_worker_healthy == 0
+        for: 10m
+        labels:
+          severity: critical
+          component: customer-pilot
+        annotations:
+          summary: "Customer pilot worker unhealthy"
+          description: "Arq worker heartbeat missing for customer pilot cron jobs."
+
+      - alert: CustomerPilotReminderCronStale
+        expr: |
+          increase(nexora_customer_pilot_approval_reminder_failures_total[1h]) > 0
+          or (
+            increase(nexora_customer_pilot_approval_reminders_total[2h]) == 0
+            and nexora_customer_pilot_worker_healthy == 1
+          )
+        for: 15m
+        labels:
+          severity: warning
+          component: customer-pilot
+        annotations:
+          summary: "Customer pilot reminder cron may be stale"
+          description: "Scheduler unhealthy with queued notifications present."
+
+      - alert: CustomerPilotNotificationFailuresHigh
+        expr: increase(nexora_customer_pilot_notification_failures_total[1h]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: customer-pilot
+        annotations:
+          summary: "Customer pilot notification failures elevated"
+          description: "More than 10 notification failures in the last hour."
+
+      - alert: CustomerPilotNotificationQueueStale
+        expr: nexora_customer_pilot_notification_queue_oldest_seconds > 3600
+        for: 10m
+        labels:
+          severity: warning
+          component: customer-pilot
+        annotations:
+          summary: "Customer pilot notification queue aging"
+          description: "Oldest queued delivery exceeds 1 hour."
+
+      - alert: CustomerPilotSupportExportFailures
+        expr: |
+          increase(nexora_customer_pilot_support_bundle_total[1h]) == 0
+          and nexora_customer_pilot_scheduler_healthy == 0
+        for: 30m
+        labels:
+          severity: info
+          component: customer-pilot
+        annotations:
+          summary: "Support bundle activity low during scheduler degradation"
+          description: "Investigate support diagnostics export path if operators cannot collect bundles."
+
+      - alert: CustomerPilotApprovalRemindersNotRunning
+        expr: increase(nexora_customer_pilot_approval_reminders_total[2h]) == 0
+        for: 30m
+        labels:
+          severity: warning
+          component: customer-pilot
+        annotations:
+          summary: "No approval reminders sent in 2 hours"
+          description: "Reminder cron may not be running. Check worker and scheduler lock."
+
+      - alert: CustomerPilotRedisUnavailable
+        expr: nexora_customer_pilot_scheduler_healthy == 0 and nexora_customer_pilot_worker_healthy == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: customer-pilot
+        annotations:
+          summary: "Customer pilot Redis or worker dependency failure"
+          description: "Both scheduler and worker health gauges report unhealthy — likely Redis outage."
+
+      - alert: CustomerPilotDeploymentUnhealthy
+        expr: nexora_customer_pilot_deployment_healthy == 0
+        for: 15m
+        labels:
+          severity: warning
+          component: customer-pilot
+        annotations:
+          summary: "Customer pilot deployment readiness not GO"
+          description: "GET /v1/pilot/deployment-readiness reports non-GO verdict."

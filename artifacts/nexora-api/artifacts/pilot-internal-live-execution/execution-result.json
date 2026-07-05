@@ -1,0 +1,55 @@
+{
+  "id": "30d98614-5fc6-4410-a28c-e65a15eeabc7",
+  "action": "scale_deployment",
+  "resource_name": "pilot-demo",
+  "status": "PENDING_VERIFICATION",
+  "preflight": {
+    "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+    "state": "CONNECTED",
+    "provider_mode": "live",
+    "last_validated_at": "2026-07-02T11:01:22.400417+00:00",
+    "required_capabilities": [
+      "kubernetes.workloads.write"
+    ],
+    "missing_capabilities": [],
+    "preflight_status": "passed",
+    "blocked_reason": null,
+    "remediation_guidance": null,
+    "correlation_id": null,
+    "simulated": false
+  },
+  "result": {
+    "action": "scale_deployment",
+    "status": "scaled",
+    "replicas": 2,
+    "integration_readiness": {
+      "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+      "state": "CONNECTED",
+      "provider_mode": "live",
+      "last_validated_at": "2026-07-02T11:01:22.400417+00:00",
+      "required_capabilities": [
+        "kubernetes.workloads.write"
+      ],
+      "missing_capabilities": [],
+      "preflight_status": "passed",
+      "blocked_reason": null,
+      "remediation_guidance": null,
+      "correlation_id": null,
+      "simulated": false
+    },
+    "correlation_id": "sprint66g-pilot-demo-scale-1-to-2-v1",
+    "execution_path": "pilot.confirm_live_operation\u2192LiveMutationGate\u2192k8s_ops.execute_write",
+    "nexora_controlled": true
+  },
+  "verification": {},
+  "correlation_id": "sprint66g-pilot-demo-scale-1-to-2-v1",
+  "source_mode": "LIVE",
+  "verification_status": null,
+  "payload_hash": "5d69df027a2f5038e26f295678194ef0570d39440a74482ee1ea80c6dcbbb11e",
+  "execution_label": null,
+  "template_id": null,
+  "environment_id": null,
+  "cluster_id": null,
+  "params": {},
+  "rollback_plan": null
+}

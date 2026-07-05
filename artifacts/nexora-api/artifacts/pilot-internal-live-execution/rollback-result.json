@@ -1,0 +1,9 @@
+{
+  "attempted": true,
+  "rollback_replicas": 1,
+  "result": {
+    "action": "scale_deployment",
+    "status": "scaled",
+    "replicas": 1
+  }
+}

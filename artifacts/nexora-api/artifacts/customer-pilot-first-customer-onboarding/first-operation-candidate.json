@@ -1,0 +1,14 @@
+{
+  "template_id": "scale_deployment",
+  "action": "scale_deployment",
+  "classification": "low-risk reversible",
+  "namespace": "nexora-pilot",
+  "resource": "selected non-production deployment from assessment inventory",
+  "replicas_before": 1,
+  "replicas_after": 2,
+  "rollback": "scale 2 \u2192 1",
+  "prometheus_verification": "kube_deployment_status_replicas_available{namespace=\"nexora-pilot\"}",
+  "maintenance_window": "Agreed Sat 02:00-04:00 UTC",
+  "execution_authorized": false,
+  "approval_package_created": false
+}

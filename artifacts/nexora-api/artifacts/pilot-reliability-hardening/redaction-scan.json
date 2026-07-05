@@ -1,0 +1,17 @@
+{
+  "scanned_files": [
+    "docs/customer-pilot/CUSTOMER_PREREQUISITES.md",
+    "docs/customer-pilot/CUSTOMER_SUCCESS_CRITERIA.md",
+    "docs/customer-pilot/CUSTOMER_APPROVAL_TEMPLATE.md",
+    "docs/customer-pilot/CUSTOMER_SECURITY_AND_RBAC.md",
+    "docs/customer-pilot/README.md",
+    "docs/customer-pilot/CUSTOMER_LIMITATIONS.md",
+    "docs/customer-pilot/CUSTOMER_EVIDENCE_GUIDE.md",
+    "docs/customer-pilot/CUSTOMER_PILOT_CLOSEOUT_TEMPLATE.md",
+    "docs/customer-pilot/CUSTOMER_PILOT_SCOPE.md",
+    "docs/customer-pilot/CUSTOMER_ROLLBACK_PLAN.md"
+  ],
+  "internal_pattern_hits": [],
+  "passed": true,
+  "scanned_at": "2026-07-02T12:00:00Z"
+}

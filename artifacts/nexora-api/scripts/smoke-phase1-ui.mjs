@@ -9,8 +9,39 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const BASE = process.env.NEXORA_UI_BASE || "http://127.0.0.1:8000";
+const API = (process.env.SMOKE_BASE_URL || `${BASE}/nexora-api`).replace(/\/$/, "");
 const EMAIL = process.env.NEXORA_EMAIL || "browser-smoke-1783108438688@example.com";
 const PASSWORD = process.env.NEXORA_PASSWORD || "SmokeTest123!";
+
+async function api(pathname, { method = "GET", body } = {}) {
+  const headers = { Accept: "application/json" };
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  const res = await fetch(`${API}${pathname}`, {
+    method,
+    headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  const text = await res.text();
+  let json = null;
+  try { json = text ? JSON.parse(text) : null; } catch { /* non-json */ }
+  return { status: res.status, json, text };
+}
+
+/** Ensure smoke user exists (fresh CI DB has no persisted browser-smoke user). */
+async function ensureSmokeUser() {
+  let login = await api("/v1/auth/login", { method: "POST", body: { email: EMAIL, password: PASSWORD } });
+  if (login.status === 200) return EMAIL;
+
+  const stamp = Date.now();
+  const email = `browser-smoke-${stamp}@example.com`;
+  await api("/v1/auth/register", {
+    method: "POST",
+    body: { email, username: `bsmoke${stamp}`, password: PASSWORD, full_name: "Browser Smoke" },
+  });
+  login = await api("/v1/auth/login", { method: "POST", body: { email, password: PASSWORD } });
+  if (login.status !== 200) throw new Error(`smoke user login failed: ${login.status}`);
+  return email;
+}
 
 const routes = [
   { path: "/", name: "Command Center", expect: /command center|How to use this dashboard|Welcome|signal|incident/i },
@@ -45,6 +76,8 @@ function record(name, status, detail = "") {
 }
 
 async function main() {
+  const smokeEmail = await ensureSmokeUser();
+
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await context.newPage();
@@ -69,7 +102,7 @@ async function main() {
 
   await page.goto(BASE, { waitUntil: "domcontentloaded", timeout: 30000 });
   await page.waitForSelector("#auth-form", { timeout: 15000 });
-  await page.fill('input[name="email"]', EMAIL);
+  await page.fill('input[name="email"]', smokeEmail);
   await page.fill('input[name="password"]', PASSWORD);
   await page.click('#auth-form button[type="submit"]');
   await page.waitForTimeout(3000);
@@ -80,7 +113,7 @@ async function main() {
     await browser.close();
     process.exit(1);
   }
-  record("login", "PASS", EMAIL);
+  record("login", "PASS", smokeEmail);
 
   for (const route of routes) {
     await page.goto(`${BASE}${route.path}`, { waitUntil: "domcontentloaded", timeout: 30000 });

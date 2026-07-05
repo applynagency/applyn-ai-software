@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-04T20:05:39.985Z",
+  "generated_at": "2026-07-05T10:25:23.414Z",
   "api": "http://localhost:8000/nexora-api",
   "checks": [
     {
@@ -10,7 +10,7 @@
     {
       "name": "auth_bootstrap",
       "status": "WARN",
-      "detail": "registered lazy-route-1783195540658@example.com"
+      "detail": "registered lazy-route-1783247124297@example.com"
     },
     {
       "name": "login",

@@ -1,0 +1,69 @@
+{
+  "operation_id": "30d98614-5fc6-4410-a28c-e65a15eeabc7",
+  "operation_status": "PENDING_CONFIRMATION",
+  "ready_for_typed_confirmation": true,
+  "provider_mutation_called": false,
+  "kubernetes_mutation_called": false,
+  "remaining_required_action": "typed confirmation",
+  "execution_label": "LIVE-ELIGIBLE / NOT EXECUTED",
+  "gates": {
+    "stage_connect": true,
+    "stage_validate": true,
+    "stage_read_only_assessment": true,
+    "stage_baseline_capture": true,
+    "stage_propose_operation": true,
+    "stage_customer_approval": true,
+    "typed_confirmation_supplied": false,
+    "typed_confirmation_required": true,
+    "approval_approved": true,
+    "approval_unexpired": true,
+    "payload_hash_matches": true,
+    "kill_switch_off": true,
+    "operation_limit_ok": true,
+    "cooldown_clear": true,
+    "non_production_environment": true,
+    "operation_awaiting_confirmation": true,
+    "idempotency_key_present": true,
+    "idempotency_unused": true,
+    "rollback_plan_present": true,
+    "before_state_captured": true,
+    "verification_plan_defined": true,
+    "integration_connected": true,
+    "provider_mode_live": true,
+    "live_mutation_gate_preflight": true,
+    "target_replicas_defined": true,
+    "rollback_target_valid": true
+  },
+  "blockers": [],
+  "preflight": {
+    "allowed": true,
+    "simulated": false,
+    "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+    "provider_mode": "live",
+    "validated_capabilities": {
+      "read": true,
+      "write": true
+    },
+    "correlation_id": "sprint66g-pilot-demo-scale-1-to-2-v1",
+    "evidence_context": {
+      "connection_id": "bf7ec5b8-04c2-40a3-8bb9-2d5e4077f8c8",
+      "state": "CONNECTED",
+      "provider_mode": "live",
+      "last_validated_at": "2026-07-02T10:39:58.857080+00:00",
+      "required_capabilities": [
+        "kubernetes.workloads.write"
+      ],
+      "missing_capabilities": [],
+      "preflight_status": "passed",
+      "blocked_reason": null,
+      "remediation_guidance": null,
+      "correlation_id": null,
+      "simulated": false
+    },
+    "lifecycle_state": "CONNECTED",
+    "remediation": null,
+    "reason": null,
+    "reason_code": null
+  },
+  "banner": "APPROVED FOR INTERNAL PILOT \u2014 NOT EXECUTED \u2014 TYPED CONFIRMATION REQUIRED"
+}

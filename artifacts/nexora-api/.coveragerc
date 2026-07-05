@@ -1,0 +1,14 @@
+[run]
+source = app
+branch = false
+omit =
+    app/tests/*
+    */__init__.py
+
+[report]
+precision = 1
+show_missing = true
+skip_empty = true
+
+[html]
+directory = coverage_html

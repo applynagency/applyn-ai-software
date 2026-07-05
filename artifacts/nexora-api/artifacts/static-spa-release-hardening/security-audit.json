@@ -1,0 +1,76 @@
+{
+  "auditedAt": "2026-07-03T06:32:00Z",
+  "scope": [
+    "static/app.js",
+    "static/pilot-operator.js"
+  ],
+  "verdict": "PASS",
+  "findings": [
+    {
+      "id": "operator-routes-gated",
+      "status": "PASS",
+      "requirement": "/pilot/execution and /pilot/evidence remain operator-only",
+      "evidence": [
+        "canAccessOperatorPilotConsole() in app.js gates nav (operatorPilotOnly) and chunk loaders call it before data fetch",
+        "renderPilotExecution/renderPilotEvidence in pilot-operator.js return Unauthorized when !canAccessOperatorPilotConsole()"
+      ]
+    },
+    {
+      "id": "customer-pilot-no-operator-controls",
+      "status": "PASS",
+      "requirement": "/customer-pilot/* contains no confirmation-token, confirm, execute, or rollback controls",
+      "evidence": [
+        "renderCustomerPilot() in app.js has no confirmation-token API paths, data-pilot-confirm handlers, or live-operations confirm endpoints",
+        "customer-pilot-execution page is read-only with explicit copy: Customers cannot execute or confirm operations",
+        "rollback_ack in customer approval is acknowledgment checkbox only, not an operator rollback action"
+      ]
+    },
+    {
+      "id": "token-memory-only",
+      "status": "PASS",
+      "requirement": "Confirmation token remains memory-only and is cleared after success/failure/cancel/navigation",
+      "evidence": [
+        "pilotConfirmationTokenMemory let binding only in app.js",
+        "clearPilotConfirmationToken() on load, submit, token request failure, and navigate away from pilot-execution",
+        "Token acquired via POST then held in memory; UI states it is not stored or displayed"
+      ]
+    },
+    {
+      "id": "token-not-persisted",
+      "status": "PASS",
+      "requirement": "No token in localStorage, sessionStorage, URL query string, DOM attributes, logs, exports, or error messages",
+      "evidence": [
+        "grep: no localStorage.setItem/sessionStorage.setItem with confirmation in app.js or pilot-operator.js",
+        "confirmation_token only in POST body at submit time; not written to URL or data-* attributes",
+        "no console.log of token; exports use backend endpoints only"
+      ]
+    },
+    {
+      "id": "evidence-export-fail-closed",
+      "status": "PASS",
+      "requirement": "Evidence exports remain backend-generated and fail closed on backend redaction failure",
+      "evidence": [
+        "pilot-operator.js checks export_blocked and block_reason before download",
+        "customer-pilot export handler in app.js checks export_blocked before proceeding"
+      ]
+    },
+    {
+      "id": "deep-links",
+      "status": "PASS",
+      "requirement": "Direct deep links /pilot/execution?op=<id> and /pilot/evidence?op=<id> work",
+      "evidence": [
+        "parseRoute extracts operationId from ?op= query in app.js",
+        "loadRouteData loads chunk then loadPilotExecutionConsole(state.route.operationId) / loadPilotEvidencePage(state.route.operationId)"
+      ]
+    }
+  ],
+  "safetyConfirmation": {
+    "databaseWrites": false,
+    "approvals": false,
+    "confirmations": false,
+    "executions": false,
+    "providerMutations": false,
+    "customerInfrastructure": false,
+    "productionInfrastructure": false
+  }
+}

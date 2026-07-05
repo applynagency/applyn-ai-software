@@ -1,0 +1,56 @@
+{
+  "verdict": "INSUFFICIENT_EVIDENCE",
+  "checks": [
+    {
+      "name": "pilot_feature_gating",
+      "passed": true,
+      "detail": "Pilot mode enabled",
+      "evidence_ref": {}
+    },
+    {
+      "name": "organization_allowlist",
+      "passed": true,
+      "detail": "Organization is pilot-eligible",
+      "evidence_ref": {}
+    },
+    {
+      "name": "enrollment_present",
+      "passed": true,
+      "detail": "Pilot enrollment exists",
+      "evidence_ref": {
+        "enrollment_id": "<redacted>"
+      }
+    },
+    {
+      "name": "integration_github",
+      "passed": false,
+      "detail": "No GITHUB integration registered",
+      "evidence_ref": {}
+    },
+    {
+      "name": "kubernetes_rbac_evidence",
+      "passed": false,
+      "detail": "RBAC evidence not yet collected",
+      "evidence_ref": {}
+    }
+  ],
+  "failed_checks": [
+    "integration_github",
+    "kubernetes_rbac_evidence"
+  ],
+  "insufficient_evidence": [
+    "kubernetes_rbac_evidence_missing"
+  ],
+  "remediation_steps": [
+    "Connect and validate GITHUB integration",
+    "Run integration validation to capture RBAC evidence"
+  ],
+  "minimum_rbac": [
+    "deployments:get,list,watch",
+    "deployments/scale:get,patch,update",
+    "pods:get,list,watch",
+    "events:get,list,watch"
+  ],
+  "evaluated_at": "2026-07-02T12:00:00Z",
+  "read_only": true
+}

@@ -10,6 +10,8 @@ out-tsc
 
 # dependencies
 node_modules
+.pnpm-store/
+.pycache/
 
 # IDEs and editors
 /.idea

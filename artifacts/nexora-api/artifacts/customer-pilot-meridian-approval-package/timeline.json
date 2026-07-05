@@ -1,0 +1,372 @@
+{
+  "events": [
+    {
+      "id": "audit-d5c9b279-8928-41b5-aabf-bcb627591679",
+      "timestamp": "2026-07-03T04:15:07.116321+00:00",
+      "event_type": "COMMUNICATION_SENT",
+      "title": "Pilot update sent",
+      "description": "Pilot update sent",
+      "status": "INFO",
+      "actor_type": "PLATFORM_OPERATOR",
+      "metadata": {
+        "category": "APPROVAL_REQUEST",
+        "operation_id": null
+      },
+      "deep_link": "/customer-pilot",
+      "operation_id": null
+    },
+    {
+      "id": "delivery-b6c2f37e-721f-4b05-96a6-b3472b2d861b",
+      "timestamp": "2026-07-03T04:15:07.115883+00:00",
+      "event_type": "NOTIFICATION_DELIVERY",
+      "title": "Notification delivered",
+      "description": "Notification delivered successfully.",
+      "status": "INFO",
+      "actor_type": "SYSTEM",
+      "metadata": {
+        "channel": "in_app",
+        "status": "delivered"
+      },
+      "deep_link": "/customer-pilot/communications",
+      "operation_id": null
+    },
+    {
+      "id": "comm-d40b0531-40ae-4f69-9874-f5c82ff583d9",
+      "timestamp": "2026-07-03T04:15:07.112019+00:00",
+      "event_type": "APPROVAL_REQUEST",
+      "title": "Approval required",
+      "description": "A proposed pilot operation requires your review and approval before any platform operator can proceed.",
+      "status": "INFO",
+      "actor_type": "PLATFORM_OPERATOR",
+      "metadata": {},
+      "deep_link": "/customer-pilot/approval",
+      "operation_id": null
+    },
+    {
+      "id": "pkg-f8cccb9a-6ed2-48c5-a125-a62107108020",
+      "timestamp": "2026-07-03T04:15:07.084928+00:00",
+      "event_type": "APPROVAL_PACKAGE_SNAPSHOT",
+      "title": "Approval package snapshot stored",
+      "description": "Immutable approval package snapshot recorded.",
+      "status": "INFO",
+      "actor_type": "SYSTEM",
+      "metadata": {
+        "payload_hash": "01d4211b68133b9df33a64c43284509a60fb13ba489e4ba661228949a2c0f508"
+      },
+      "deep_link": "/customer-pilot/approval",
+      "operation_id": "d1440973-a1d9-4c72-9c39-d992a08d5a97"
+    },
+    {
+      "id": "op-status-d1440973-a1d9-4c72-9c39-d992a08d5a97-AWAITING_APPROVAL",
+      "timestamp": "2026-07-03T04:15:07.083361+00:00",
+      "event_type": "OPERATION_STATUS_CHANGED",
+      "title": "Operation status updated",
+      "description": "Operation status is now AWAITING_APPROVAL.",
+      "status": "AWAITING_CUSTOMER_APPROVAL",
+      "actor_type": "SYSTEM",
+      "metadata": {
+        "operation_status": "AWAITING_APPROVAL"
+      },
+      "deep_link": "/customer-pilot/execution",
+      "operation_id": "d1440973-a1d9-4c72-9c39-d992a08d5a97"
+    },
+    {
+      "id": "approval-bc63be25-1fc0-4d4a-9b76-63c307e993ca",
+      "timestamp": "2026-07-03T04:15:07.082517+00:00",
+      "event_type": "APPROVAL_PACKAGE_CREATED",
+      "title": "Approval package available",
+      "description": "An immutable approval package was created for review.",
+      "status": "AWAITING_CUSTOMER_APPROVAL",
+      "actor_type": "PLATFORM_OPERATOR",
+      "metadata": {
+        "approval_id": "bc63be25-1fc0-4d4a-9b76-63c307e993ca"
+      },
+      "deep_link": "/customer-pilot/approval",
+      "operation_id": "d1440973-a1d9-4c72-9c39-d992a08d5a97"
+    },
+    {
+      "id": "stage-e0424e71-fd4f-460b-a080-468a8b77e9fa",
+      "timestamp": "2026-07-03T04:15:07.074663+00:00",
+      "event_type": "STAGE_COMPLETED",
+      "title": "Propose safe live operation",
+      "description": "Pilot stage PROPOSE_OPERATION marked COMPLETED.",
+      "status": "COMPLETED",
+      "actor_type": "PLATFORM_OPERATOR",
+      "metadata": {
+        "stage_key": "PROPOSE_OPERATION",
+        "outcome": "Proposed scale_deployment on [REDACTED]"
+      },
+      "deep_link": "/customer-pilot",
+      "operation_id": null
+    },
+    {
+      "id": "op-d1440973-a1d9-4c72-9c39-d992a08d5a97",
+      "timestamp": "2026-07-03T04:15:07.067566+00:00",
+      "event_type": "OPERATION_PROPOSED",
+      "title": "Operation proposed",
+      "description": "Proposed operation: scale_deployment on [REDACTED].",
+      "status": "AWAITING_CUSTOMER_APPROVAL",
+      "actor_type": "PLATFORM_OPERATOR",
+      "metadata": {
+        "action": "scale_deployment",
+        "resource_name": "[REDACTED]"
+      },
+      "deep_link": "/customer-pilot/operation",
+      "operation_id": "d1440973-a1d9-4c72-9c39-d992a08d5a97"
+    },
+    {
+      "id": "audit-d4a6d1d4-2956-4e96-b46a-c79125266071",
+      "timestamp": "2026-07-03T04:11:21.904690+00:00",
+      "event_type": "COMMUNICATION_SENT",
+      "title": "Pilot update sent",
+      "description": "Pilot update sent",
+      "status": "INFO",
+      "actor_type": "PLATFORM_OPERATOR",
+      "metadata": {
+        "category": "PILOT_STATUS_UPDATE",
+        "operation_id": null
+      },
+      "deep_link": "/customer-pilot",
+      "operation_id": null
+    },
+    {
+      "id": "delivery-099b05a8-3ca9-4e77-8aaa-714f3133ac49",
+      "timestamp": "2026-07-03T04:11:21.904059+00:00",
+      "event_type": "NOTIFICATION_DELIVERY",
+      "title": "Notification delivered",
+      "description": "Notification delivered successfully.",
+      "status": "INFO",
+      "actor_type": "SYSTEM",
+      "metadata": {
+        "channel": "in_app",
+        "status": "delivered"
+      },
+      "deep_link": "/customer-pilot/communications",
+      "operation_id": null
+    },
+    {
+      "id": "comm-173b4ef0-0a49-4b3d-adee-9112e979b65e",
+      "timestamp": "2026-07-03T04:11:21.898473+00:00",
+      "event_type": "PILOT_STATUS_UPDATE",
+      "title": "Pilot status update",
+      "description": "Your scoped non-production pilot status has been updated. Review the latest timeline in the Customer Pilot portal.",
+      "status": "INFO",
+      "actor_type": "PLATFORM_OPERATOR",
+      "metadata": {},
+      "deep_link": "/customer-pilot",
+      "operation_id": null
+    },
+    {
+      "id": "audit-942643d0-b06e-40e2-a4e0-1f9570bcf803",
+      "timestamp": "2026-07-02T18:31:14.331204+00:00",
+      "event_type": "COMMUNICATION_SENT",
+      "title": "Pilot update sent",
+      "description": "Pilot update sent",
+      "status": "INFO",
+      "actor_type": "PLATFORM_OPERATOR",
+      "metadata": {
+        "category": "PILOT_STATUS_UPDATE",
+        "operation_id": null
+      },
+      "deep_link": "/customer-pilot",
+      "operation_id": null
+    },
+    {
+      "id": "delivery-32940833-a561-4231-9458-59be46e2ce85",
+      "timestamp": "2026-07-02T18:31:14.330608+00:00",
+      "event_type": "NOTIFICATION_DELIVERY",
+      "title": "Notification delivered",
+      "description": "Notification delivered successfully.",
+      "status": "INFO",
+      "actor_type": "SYSTEM",
+      "metadata": {
+        "channel": "in_app",
+        "status": "delivered"
+      },
+      "deep_link": "/customer-pilot/communications",
+      "operation_id": null
+    },
+    {
+      "id": "comm-e9c3a1d6-9ee2-4cf6-b7c7-5763be284161",
+      "timestamp": "2026-07-02T18:31:14.325322+00:00",
+      "event_type": "PILOT_STATUS_UPDATE",
+      "title": "Pilot status update",
+      "description": "Your scoped non-production pilot status has been updated. Review the latest timeline in the Customer Pilot portal.",
+      "status": "INFO",
+      "actor_type": "PLATFORM_OPERATOR",
+      "metadata": {},
+      "deep_link": "/customer-pilot",
+      "operation_id": null
+    },
+    {
+      "id": "stage-9bf0438d-c799-46e3-b17e-52ea3a7f1638",
+      "timestamp": "2026-07-02T18:31:14.292325+00:00",
+      "event_type": "STAGE_COMPLETED",
+      "title": "Capture pilot baseline",
+      "description": "Pilot stage BASELINE_CAPTURE marked COMPLETED.",
+      "status": "COMPLETED",
+      "actor_type": "PLATFORM_OPERATOR",
+      "metadata": {
+        "stage_key": "BASELINE_CAPTURE",
+        "outcome": "Pilot baseline captured from live assessment"
+      },
+      "deep_link": "/customer-pilot",
+      "operation_id": null
+    },
+    {
+      "id": "stage-4f6233e7-f3fa-44c7-ad2b-a6281c652384",
+      "timestamp": "2026-07-02T18:31:14.279173+00:00",
+      "event_type": "STAGE_COMPLETED",
+      "title": "Run read-only assessment",
+      "description": "Pilot stage READ_ONLY_ASSESSMENT marked COMPLETED.",
+      "status": "COMPLETED",
+      "actor_type": "PLATFORM_OPERATOR",
+      "metadata": {
+        "stage_key": "READ_ONLY_ASSESSMENT",
+        "outcome": "Read-only assessment completed with live evidence"
+      },
+      "deep_link": "/customer-pilot",
+      "operation_id": null
+    },
+    {
+      "id": "audit-093b37d5-c91b-46c4-b559-5c0b9fe08096",
+      "timestamp": "2026-07-02T18:28:42.801685+00:00",
+      "event_type": "COMMUNICATION_SENT",
+      "title": "Pilot update sent",
+      "description": "Pilot update sent",
+      "status": "INFO",
+      "actor_type": "PLATFORM_OPERATOR",
+      "metadata": {
+        "category": "PILOT_STATUS_UPDATE",
+        "operation_id": null
+      },
+      "deep_link": "/customer-pilot",
+      "operation_id": null
+    },
+    {
+      "id": "delivery-d156b7f9-7bbe-4676-bc42-54f2d34764b0",
+      "timestamp": "2026-07-02T18:28:42.801082+00:00",
+      "event_type": "NOTIFICATION_DELIVERY",
+      "title": "Notification delivered",
+      "description": "Notification delivered successfully.",
+      "status": "INFO",
+      "actor_type": "SYSTEM",
+      "metadata": {
+        "channel": "in_app",
+        "status": "delivered"
+      },
+      "deep_link": "/customer-pilot/communications",
+      "operation_id": null
+    },
+    {
+      "id": "comm-711f1e97-2cce-42ba-9669-02955f7c1447",
+      "timestamp": "2026-07-02T18:28:42.795301+00:00",
+      "event_type": "PILOT_STATUS_UPDATE",
+      "title": "Pilot status update",
+      "description": "Your scoped non-production pilot status has been updated. Review the latest timeline in the Customer Pilot portal.",
+      "status": "INFO",
+      "actor_type": "PLATFORM_OPERATOR",
+      "metadata": {},
+      "deep_link": "/customer-pilot",
+      "operation_id": null
+    },
+    {
+      "id": "stage-70bf0a47-e1b8-4b29-92d8-6125719e5f94",
+      "timestamp": "2026-07-02T18:28:42.743205+00:00",
+      "event_type": "STAGE_COMPLETED",
+      "title": "Validate integration readiness",
+      "description": "Pilot stage VALIDATE marked COMPLETED.",
+      "status": "COMPLETED",
+      "actor_type": "PLATFORM_OPERATOR",
+      "metadata": {
+        "stage_key": "VALIDATE",
+        "outcome": "Integration readiness validated"
+      },
+      "deep_link": "/customer-pilot",
+      "operation_id": null
+    },
+    {
+      "id": "stage-43d19042-c853-4c7a-849d-13ca6270c43d",
+      "timestamp": "2026-07-02T18:28:42.706838+00:00",
+      "event_type": "STAGE_COMPLETED",
+      "title": "Connect integrations",
+      "description": "Pilot stage CONNECT marked COMPLETED.",
+      "status": "COMPLETED",
+      "actor_type": "PLATFORM_OPERATOR",
+      "metadata": {
+        "stage_key": "CONNECT",
+        "outcome": "Onboarding path k8s-github-prometheus started"
+      },
+      "deep_link": "/customer-pilot",
+      "operation_id": null
+    }
+  ],
+  "next_cursor": null,
+  "has_more": false,
+  "stage_summary": [
+    {
+      "stage_key": "CONNECT",
+      "title": "Connect integrations",
+      "status": "COMPLETED",
+      "outcome": "Onboarding path k8s-github-prometheus started",
+      "completed_at": "2026-07-02T18:28:42.706838+00:00"
+    },
+    {
+      "stage_key": "VALIDATE",
+      "title": "Validate integration readiness",
+      "status": "COMPLETED",
+      "outcome": "Integration readiness validated",
+      "completed_at": "2026-07-02T18:28:42.743205+00:00"
+    },
+    {
+      "stage_key": "READ_ONLY_ASSESSMENT",
+      "title": "Run read-only assessment",
+      "status": "COMPLETED",
+      "outcome": "Read-only assessment completed with live evidence",
+      "completed_at": "2026-07-02T18:31:14.279173+00:00"
+    },
+    {
+      "stage_key": "BASELINE_CAPTURE",
+      "title": "Capture pilot baseline",
+      "status": "COMPLETED",
+      "outcome": "Pilot baseline captured from live assessment",
+      "completed_at": "2026-07-02T18:31:14.292325+00:00"
+    },
+    {
+      "stage_key": "PROPOSE_OPERATION",
+      "title": "Propose safe live operation",
+      "status": "COMPLETED",
+      "outcome": "Proposed scale_deployment on [REDACTED]",
+      "completed_at": "2026-07-03T04:15:07.074663+00:00"
+    },
+    {
+      "stage_key": "CUSTOMER_APPROVAL",
+      "title": "Obtain customer approval",
+      "status": "PENDING",
+      "outcome": null,
+      "completed_at": null
+    },
+    {
+      "stage_key": "EXECUTE",
+      "title": "Execute approved operation",
+      "status": "PENDING",
+      "outcome": null,
+      "completed_at": null
+    },
+    {
+      "stage_key": "VERIFY",
+      "title": "Verify post-operation health",
+      "status": "PENDING",
+      "outcome": null,
+      "completed_at": null
+    },
+    {
+      "stage_key": "COMPLETE",
+      "title": "Complete pilot",
+      "status": "PENDING",
+      "outcome": null,
+      "completed_at": null
+    }
+  ],
+  "current_stage": "CUSTOMER_APPROVAL"
+}

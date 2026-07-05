@@ -1,0 +1,19 @@
+# Sprint 66F kubectl auth can-i evidence
+# identity=system:serviceaccount:nexora-pilot:nexora-pilot-operator
+# namespace=nexora-pilot
+# deployment=pilot-demo
+
+## positive_checks
+yes
+yes
+yes
+yes
+yes
+yes
+
+## negative_checks
+no
+no
+no
+no
+no

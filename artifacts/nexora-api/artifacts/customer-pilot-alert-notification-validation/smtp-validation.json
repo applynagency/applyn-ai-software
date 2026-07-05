@@ -1,0 +1,5 @@
+{
+  "status": "NOT_CONFIGURED",
+  "email_delivery": "NOT_REQUIRED",
+  "detail": "In-app-only scope \u2014 SMTP validation not required"
+}
