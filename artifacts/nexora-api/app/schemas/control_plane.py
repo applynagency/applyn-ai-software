@@ -150,3 +150,22 @@ class GitOpsAppView(BaseModel):
     health: str
     revision: str
     drift: bool
+
+
+class FederationClusterView(BaseModel):
+    id: str
+    name: str
+    distribution: str
+    health: str
+    node_count: int = 0
+    namespace_count: int = 0
+
+
+class FederationSummaryView(BaseModel):
+    cluster_count: int
+    cloud_account_count: int
+    inventory_count: int
+    providers: list[str] = Field(default_factory=list)
+    federation_mode: str
+    dr_orchestration: str
+    clusters: list[FederationClusterView] = Field(default_factory=list)

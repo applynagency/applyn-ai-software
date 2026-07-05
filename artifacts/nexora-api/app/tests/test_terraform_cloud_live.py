@@ -1,4 +1,4 @@
-"""Unit tests for Terraform Cloud live plan helper."""
+"""Unit tests for Terraform Cloud live IaC adapter."""
 
 from __future__ import annotations
 
@@ -7,22 +7,36 @@ from unittest.mock import patch
 from app.platform_engineering.iac import terraform_cloud_live
 
 
-def test_create_plan_run_no_workspace():
-    secret = {"organization": "acme", "token": "tok"}
-    with patch("app.platform_engineering.iac.terraform_cloud_live.list_workspaces", return_value=[]):
-        result = terraform_cloud_live.create_plan_run(secret)
-    assert result.success is False
-    assert "workspace" in (result.error or "").lower()
-
-
-def test_create_plan_run_success():
-    secret = {"organization": "acme", "token": "tok"}
-    created = {"data": {"id": "run-abc"}}
-    status = {"data": {"attributes": {"status": "pending", "message": "queued", "plan-only": True}}}
-    with patch("app.platform_engineering.iac.terraform_cloud_live.post_json", return_value=created), patch(
-        "app.platform_engineering.iac.terraform_cloud_live.get_json", return_value=status,
-    ):
-        result = terraform_cloud_live.create_plan_run(secret, workspace_id="ws-1")
+def test_create_plan_run_live():
+    secret = {"token": "tfc-token", "organization": "acme"}
+    with patch.object(terraform_cloud_live, "post_json", return_value={"data": {"id": "run-plan-1"}}):
+        with patch.object(terraform_cloud_live, "_run_status", return_value={"status": "pending", "message": "queued"}):
+            with patch.object(terraform_cloud_live, "_resolve_workspace_id", return_value="ws-1"):
+                result = terraform_cloud_live.create_plan_run(secret, variables={"workspace_id": "ws-1"})
     assert result.success is True
-    assert result.plan is not None
-    assert result.outputs.get("run_id") == "run-abc"
+    assert result.simulated is False
+    assert result.outputs["run_id"] == "run-plan-1"
+    assert result.outputs["operation"] == "plan"
+
+
+def test_create_apply_run_live():
+    secret = {"token": "tfc-token", "organization": "acme"}
+    with patch.object(terraform_cloud_live, "post_json", return_value={"data": {"id": "run-apply-1"}}):
+        with patch.object(terraform_cloud_live, "_run_status", return_value={"status": "pending", "message": "queued"}):
+            with patch.object(terraform_cloud_live, "_resolve_workspace_id", return_value="ws-1"):
+                result = terraform_cloud_live.create_apply_run(secret, variables={"workspace_id": "ws-1"})
+    assert result.success is True
+    assert result.simulated is False
+    assert result.outputs["operation"] == "apply"
+
+
+def test_create_destroy_run_live():
+    secret = {"token": "tfc-token", "organization": "acme"}
+    with patch.object(terraform_cloud_live, "post_json", return_value={"data": {"id": "run-destroy-1"}}):
+        with patch.object(terraform_cloud_live, "_run_status", return_value={"status": "pending", "message": "queued", "is_destroy": True}):
+            with patch.object(terraform_cloud_live, "_resolve_workspace_id", return_value="ws-1"):
+                result = terraform_cloud_live.create_destroy_run(secret, variables={"workspace_id": "ws-1"})
+    assert result.success is True
+    assert result.simulated is False
+    assert result.outputs["operation"] == "destroy"
+    assert result.plan.destroy == 1

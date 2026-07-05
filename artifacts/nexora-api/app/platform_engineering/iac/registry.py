@@ -149,11 +149,18 @@ def run_iac_operation(
     if provider_key == IaCProviderType.TERRAFORM.value and live_config:
         from app.platform_engineering.iac import terraform_cloud_live
 
+        ws_id = variables.get("terraform_workspace_id") or variables.get("workspace_id")
         if kind == IaCRunKind.PLAN:
             return terraform_cloud_live.create_plan_run(
-                live_config,
-                workspace_id=variables.get("terraform_workspace_id") or variables.get("workspace_id"),
-                variables=variables,
+                live_config, workspace_id=ws_id, variables=variables,
+            )
+        if kind == IaCRunKind.APPLY:
+            return terraform_cloud_live.create_apply_run(
+                live_config, workspace_id=ws_id, variables=variables,
+            )
+        if kind == IaCRunKind.DESTROY:
+            return terraform_cloud_live.create_destroy_run(
+                live_config, workspace_id=ws_id, variables=variables,
             )
     provider = get_iac_provider(provider_type)
     if kind == IaCRunKind.VALIDATE:

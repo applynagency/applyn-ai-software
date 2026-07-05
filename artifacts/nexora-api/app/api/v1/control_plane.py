@@ -15,6 +15,7 @@ from app.schemas.control_plane import (
     ClusterResourceView,
     ClusterView,
     CostView,
+    FederationSummaryView,
     GitOpsAppView,
     HelmReleaseView,
     InventoryItemView,
@@ -193,6 +194,11 @@ async def execute_operation(
 async def unified_inventory(current_user: CurrentUser, session: DBSession, org_context: OrgContextDep):
     rows = await _svc(session).unified_inventory(current_user, org_context)
     return [InventoryItemView(**r) for r in rows]
+
+
+@router.get("/federation", response_model=FederationSummaryView)
+async def federation_summary(current_user: CurrentUser, session: DBSession, org_context: OrgContextDep):
+    return FederationSummaryView(**await _svc(session).federation_summary(current_user, org_context))
 
 
 @router.get("/cloud-accounts/{account_id}/costs", response_model=CostView)

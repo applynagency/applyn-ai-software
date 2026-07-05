@@ -136,6 +136,13 @@ async def test_cluster_register_discover_and_operation_flow(client):
     assert inventory.status_code == 200
     assert len(inventory.json()) >= 1
 
+    federation = await client.get("/v1/control-plane/federation", headers=auth_headers(token))
+    assert federation.status_code == 200
+    body = federation.json()
+    assert body["federation_mode"] == "inventory_aggregate"
+    assert body["cluster_count"] >= 1
+    assert body["inventory_count"] >= 1
+
 
 @pytest.mark.asyncio
 async def test_cluster_read_logs(client):

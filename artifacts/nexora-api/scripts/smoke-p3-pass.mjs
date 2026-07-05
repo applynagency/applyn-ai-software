@@ -111,6 +111,11 @@ async function main() {
   record(clusters.status === 200 ? "p3_control_plane_clusters" : "p3_control_plane_clusters",
     clusters.status === 200 ? "PASS" : "WARN", `clusters=${Array.isArray(clusters.json) ? clusters.json.length : "?"}`);
 
+  const federation = await api("/v1/control-plane/federation", { token });
+  record(federation.status === 200 ? "p3_control_plane_federation" : "p3_control_plane_federation",
+    federation.status === 200 ? "PASS" : "WARN",
+    federation.json?.federation_mode ? `mode=${federation.json.federation_mode}` : `status=${federation.status}`);
+
   const outPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "smoke-p3-results.json");
   writeFileSync(outPath, JSON.stringify(results, null, 2));
   console.log(`\nResults written to ${outPath}`);

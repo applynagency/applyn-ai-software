@@ -444,6 +444,37 @@ class ControlPlaneService:
                 })
         return items
 
+    async def federation_summary(self, user: User, org_context: OrgContext) -> dict:
+        """Cross-cluster inventory aggregate — federation orchestration remains roadmap."""
+        organization_id = org_context.requires_organization
+        self._ensure_read(user, org_context)
+        clusters = await self.clusters.list_for_org(organization_id)
+        accounts = await self.cloud_accounts.list_for_org(organization_id)
+        inventory = await self.unified_inventory(user, org_context)
+        providers = sorted({
+            *(a.provider for a in accounts if a.provider),
+            *(c.distribution for c in clusters if c.distribution),
+        })
+        return {
+            "cluster_count": len(clusters),
+            "cloud_account_count": len(accounts),
+            "inventory_count": len(inventory),
+            "providers": providers,
+            "federation_mode": "inventory_aggregate",
+            "dr_orchestration": "roadmap",
+            "clusters": [
+                {
+                    "id": c.id,
+                    "name": c.name,
+                    "distribution": c.distribution,
+                    "health": c.health,
+                    "node_count": c.node_count,
+                    "namespace_count": c.namespace_count,
+                }
+                for c in clusters
+            ],
+        }
+
     # ------------------------------------------------------------- policies
     async def list_policy_findings(
         self, user: User, org_context: OrgContext, cluster_id: str,

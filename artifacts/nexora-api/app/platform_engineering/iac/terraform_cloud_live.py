@@ -1,4 +1,4 @@
-"""Live Terraform Cloud plan runs via the TFC API v2."""
+"""Live Terraform Cloud plan/apply/destroy runs via the TFC API v2."""
 
 from __future__ import annotations
 
@@ -53,10 +53,19 @@ def _run_status(secret: dict, run_id: str) -> dict:
         "status": attrs.get("status") or "unknown",
         "message": attrs.get("message") or "",
         "plan_only": bool(attrs.get("plan-only")),
+        "is_destroy": bool(attrs.get("is-destroy")),
     }
 
 
-def create_plan_run(secret: dict, *, workspace_id: str | None = None, variables: dict | None = None) -> IaCRunResult:
+def _create_run(
+    secret: dict,
+    *,
+    workspace_id: str | None = None,
+    variables: dict | None = None,
+    plan_only: bool,
+    is_destroy: bool,
+    message: str,
+) -> IaCRunResult:
     variables = variables or {}
     ws_id = workspace_id or _resolve_workspace_id(secret, variables)
     if not ws_id:
@@ -64,9 +73,9 @@ def create_plan_run(secret: dict, *, workspace_id: str | None = None, variables:
     body = {
         "data": {
             "attributes": {
-                "message": "Nexora plan-only run",
-                "is-destroy": False,
-                "plan-only": True,
+                "message": message,
+                "is-destroy": is_destroy,
+                "plan-only": plan_only,
             },
             "relationships": {
                 "workspace": {"data": {"type": "workspaces", "id": ws_id}},
@@ -79,16 +88,56 @@ def create_plan_run(secret: dict, *, workspace_id: str | None = None, variables:
         return IaCRunResult(success=False, logs="", error=str(exc)[:300])
     run_id = (created.get("data") or {}).get("id") or ""
     status = _run_status(secret, run_id) if run_id else {}
+    op = "destroy" if is_destroy else ("plan" if plan_only else "apply")
     plan = IaCPlanResult(
         add=0,
         change=0,
-        destroy=0,
-        output_preview=f"Terraform Cloud plan run {run_id} — status {status.get('status', 'pending')}",
-        outputs={"run_id": run_id, "workspace_id": ws_id, **status},
+        destroy=1 if is_destroy else 0,
+        output_preview=f"Terraform Cloud {op} run {run_id} — status {status.get('status', 'pending')}",
+        outputs={"run_id": run_id, "workspace_id": ws_id, "operation": op, **status},
     )
     logs = (
-        f"terraform cloud run create\n"
+        f"terraform cloud run create ({op})\n"
         f"workspace={ws_id} run={run_id} status={status.get('status')}\n"
         f"{status.get('message', '')}"
     )
-    return IaCRunResult(success=True, logs=logs, plan=plan, outputs=plan.outputs)
+    return IaCRunResult(
+        success=True,
+        logs=logs,
+        plan=plan,
+        outputs=plan.outputs,
+        simulated=False,
+    )
+
+
+def create_plan_run(secret: dict, *, workspace_id: str | None = None, variables: dict | None = None) -> IaCRunResult:
+    return _create_run(
+        secret,
+        workspace_id=workspace_id,
+        variables=variables,
+        plan_only=True,
+        is_destroy=False,
+        message="Nexora plan-only run",
+    )
+
+
+def create_apply_run(secret: dict, *, workspace_id: str | None = None, variables: dict | None = None) -> IaCRunResult:
+    return _create_run(
+        secret,
+        workspace_id=workspace_id,
+        variables=variables,
+        plan_only=False,
+        is_destroy=False,
+        message="Nexora apply run",
+    )
+
+
+def create_destroy_run(secret: dict, *, workspace_id: str | None = None, variables: dict | None = None) -> IaCRunResult:
+    return _create_run(
+        secret,
+        workspace_id=workspace_id,
+        variables=variables,
+        plan_only=False,
+        is_destroy=True,
+        message="Nexora destroy run",
+    )

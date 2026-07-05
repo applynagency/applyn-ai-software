@@ -79,7 +79,11 @@ function renderPeInfrastructure() {
   const canWrite = canWriteResources();
   const stackRows = stacks.map((s) => `
     <div class="ops-list-row"><span>${escapeHtml(s.name)} <span class="muted">${escapeHtml(s.provider)}</span></span>
-    ${canWrite ? `<button class="btn btn-secondary" type="button" data-pe-plan="${escapeHtml(s.id)}">Plan</button>` : ""}</div>`).join("");
+    <span style="display:flex;gap:6px;flex-wrap:wrap;">
+    ${canWrite ? `<button class="btn btn-secondary btn-sm" type="button" data-pe-plan="${escapeHtml(s.id)}">Plan</button>` : ""}
+    ${canWrite ? `<button class="btn btn-primary btn-sm" type="button" data-pe-apply="${escapeHtml(s.id)}">Apply</button>` : ""}
+    ${canWrite ? `<button class="btn btn-secondary btn-sm" type="button" data-pe-destroy="${escapeHtml(s.id)}">Destroy</button>` : ""}
+    </span></div>`).join("");
   const runRows = runs.slice(0, 20).map((r) => {
     const simulated = r.outputs?.simulated === true;
     const badge = simulated
@@ -91,7 +95,7 @@ function renderPeInfrastructure() {
   return `<div class="container">${renderHeader("Infrastructure", "Terraform stacks and operations")}${renderAlerts()}
     ${peConnectBanner("Terraform Cloud", "TERRAFORM", !stacks.length && !peHas("TERRAFORM"))}
     <section class="card" style="border-left:3px solid #f59e0b;margin-bottom:12px;">
-      <p class="muted" style="font-size:13px;margin:0;">IaC <strong>plan</strong> may call Terraform Cloud when connected; <strong>apply/destroy</strong> remains simulated unless your deployment enables live providers. Treat non-live runs as advisory only.</p>
+      <p class="muted" style="font-size:13px;margin:0;">When Terraform Cloud is connected and live preflight passes, <strong>plan/apply/destroy</strong> enqueue real TFC runs. Otherwise runs stay simulated — treat those as advisory only.</p>
     </section>
     <section class="card"><h2>Stacks</h2><div class="ops-list">${stackRows || `<p class="muted">No stacks.</p>`}</div></section>
     <section class="card"><h2>Recent Runs</h2><div class="ops-list">${runRows || `<p class="muted">No runs.</p>`}</div></section>
@@ -153,15 +157,44 @@ function renderPeCompliance() {
 }
 
 function bindPlatformOpsEvents() {
+  async function peSubmitRun(stackId, kind, confirmMsg) {
+    if (!canWriteResources()) return;
+    if (!window.confirm(confirmMsg)) return;
+    const run = await api(`/v1/platform-engineering/stacks/${stackId}/runs`, {
+      method: "POST", body: JSON.stringify({ kind }),
+    });
+    if (run.status === "PENDING_APPROVAL") {
+      if (!window.confirm(`Approve ${kind} run ${run.id}?`)) return;
+      await api(`/v1/platform-engineering/runs/${run.id}/decide?approved=true`, { method: "POST" });
+    }
+    state.message = `${kind} run completed`;
+    await loadPlatformEngineering();
+    render();
+  }
+
   document.querySelectorAll("[data-pe-plan]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       try {
-        await api(`/v1/platform-engineering/stacks/${btn.dataset.pePlan}/runs`, {
-          method: "POST", body: JSON.stringify({ kind: "PLAN" }),
-        });
-        state.message = "Terraform plan completed";
-        await loadPlatformEngineering();
-        render();
+        await peSubmitRun(btn.dataset.pePlan, "PLAN", "Run Terraform plan for this stack?");
+      } catch (error) { state.error = error.message; render(); }
+    });
+  });
+
+  document.querySelectorAll("[data-pe-apply]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      try {
+        await peSubmitRun(btn.dataset.peApply, "APPLY", "Apply Terraform changes? This may mutate live infrastructure when TFC is connected.");
+      } catch (error) { state.error = error.message; render(); }
+    });
+  });
+
+  document.querySelectorAll("[data-pe-destroy]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      try {
+        if (!window.confirm("Destroy is irreversible. Type DESTROY in the next prompt to continue.")) return;
+        const typed = window.prompt("Type DESTROY to confirm infrastructure destroy");
+        if (typed !== "DESTROY") { state.error = "Destroy cancelled — confirmation did not match."; render(); return; }
+        await peSubmitRun(btn.dataset.peDestroy, "DESTROY", "Proceed with Terraform destroy?");
       } catch (error) { state.error = error.message; render(); }
     });
   });

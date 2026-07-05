@@ -12,6 +12,7 @@ async function loadControlPlane() {
   try { state.cpClusters = await api("/v1/control-plane/clusters"); } catch { state.cpClusters = []; }
   try { state.cpOperations = await api("/v1/control-plane/operations"); } catch { state.cpOperations = []; }
   try { state.cpInventory = await api("/v1/control-plane/inventory"); } catch { state.cpInventory = []; }
+  try { state.cpFederation = await api("/v1/control-plane/federation"); } catch { state.cpFederation = null; }
   if (page === "control-plane-cluster-detail" && clusterId) {
     try { state.cpClusterDetail = await api(`/v1/control-plane/clusters/${clusterId}`); } catch { state.cpClusterDetail = null; }
     try { state.cpClusterResources = await api(`/v1/control-plane/clusters/${clusterId}/resources`); } catch { state.cpClusterResources = []; }
@@ -42,6 +43,26 @@ async function loadControlPlane() {
   try {
     state.integrationConnections = await api("/v1/integrations/connections");
   } catch { state.integrationConnections = state.integrationConnections || []; }
+}
+function renderCpFederationCard() {
+  const f = state.cpFederation;
+  if (!f) return "";
+  const clusterRows = (f.clusters || []).map((c) => `
+    <div class="ops-list-row">
+      <span><strong>${escapeHtml(c.name)}</strong> <span class="muted">${escapeHtml(c.distribution)}</span></span>
+      <span class="muted" style="font-size:11px;">${c.node_count} nodes · ${c.namespace_count} ns · ${escapeHtml(c.health || "—")}</span>
+    </div>`).join("");
+  return `<section class="card" style="margin-bottom:12px;border-left:3px solid #2563eb;">
+    <h2>Cross-cluster federation</h2>
+    <p class="muted" style="font-size:12px;margin:0 0 8px;">Mode: <strong>${escapeHtml(f.federation_mode || "inventory_aggregate")}</strong> · DR orchestration: ${escapeHtml(f.dr_orchestration || "roadmap")}</p>
+    <div class="ops-stats" style="margin-bottom:10px;">
+      ${rdMetric("Clusters", f.cluster_count || 0)}
+      ${rdMetric("Cloud Accounts", f.cloud_account_count || 0)}
+      ${rdMetric("Inventory", f.inventory_count || 0)}
+      ${rdMetric("Providers", (f.providers || []).length)}
+    </div>
+    <div class="ops-list">${clusterRows || `<p class="muted">Register clusters to build a cross-cluster inventory view.</p>`}</div>
+  </section>`;
 }
 function cpNeedsConnect() {
   return !hasVerifiedIntegration("KUBERNETES")
@@ -90,6 +111,7 @@ function renderControlPlaneOverview() {
         </div>
         <p class="muted" style="font-size:12px;margin-top:12px;">Per-org cluster inventory is supported today. Cross-cluster federation and disaster-recovery orchestration are on the roadmap — register each cluster separately for now.</p>
       </section>
+      ${renderCpFederationCard()}
     </div>`;
 }
 function renderControlPlaneCloud() {
@@ -274,6 +296,9 @@ function renderCpK8sDiagnostics(cluster, tabs, clusterId) {
 }
 function renderControlPlaneInventory() {
   const items = state.cpInventory || [];
+  const banner = cpNeedsConnect() && !items.length && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner("Kubernetes or Cloud", "KUBERNETES", "Sync cloud accounts and discover clusters to populate unified inventory.")
+    : "";
   const rows = items.slice(0, 200).map((i) => `
     <div class="ops-list-row">
       <span><strong>${escapeHtml(i.resource_type)}</strong> ${escapeHtml(i.resource_name)}
@@ -285,6 +310,8 @@ function renderControlPlaneInventory() {
     <div class="container">
       ${renderHeader("Unified Inventory", "Cloud and cluster assets in one view")}
       ${renderAlerts()}
+      ${banner}
+      ${renderCpFederationCard()}
       <section class="card"><h2>Assets (${items.length})</h2><div class="ops-list">${rows || `<p class="muted">No inventory yet — sync cloud accounts and discover clusters.</p>`}</div></section>
     </div>`;
 }

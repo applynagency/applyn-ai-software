@@ -637,7 +637,8 @@ function renderHelpGettingStarted() {
       <ul class="muted" style="margin:8px 0 0;padding-left:20px;">
         <li>Security scanner connectors — SonarQube (live), Snyk and Trivy (live when connected); Checkmarx planned</li>
         <li>Drone CI and Argo Workflows pipeline sync (backend registry — marketplace onboarding planned)</li>
-        <li>Multi-cluster federation and DR orchestration (control plane inventory today — scale roadmap)</li>
+        <li>Multi-cluster federation inventory aggregate (DR orchestration remains roadmap)</li>
+        <li>Live Terraform Cloud apply/destroy when connected and preflight passes</li>
       </ul>
       <p class="muted" style="font-size:12px;margin-top:8px;">Production hardening: set <code>RATE_LIMIT_FAIL_OPEN=false</code> when Redis is HA so abuse protection fails closed.</p>
     </section>`;
