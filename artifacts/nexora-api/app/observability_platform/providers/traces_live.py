@@ -14,9 +14,9 @@ def _sample_trace(query: str, *, provider: str, endpoint: str, simulated: bool) 
         "duration_ms": 245,
         "status": "error",
         "spans": [
-            {"span_id": "s1", "service": "api-gateway", "operation": "GET /checkout", "duration_ms": 245, "status": "error"},
-            {"span_id": "s2", "service": "payment-svc", "operation": "charge", "duration_ms": 180, "status": "error", "parent": "s1"},
-            {"span_id": "s3", "service": "postgres", "operation": "query", "duration_ms": 12, "status": "ok", "parent": "s2"},
+            {"span_id": "s1", "service": "api-gateway", "operation": "GET /checkout", "duration_ms": 245, "status": "error", "start_offset_ms": 0},
+            {"span_id": "s2", "service": "payment-svc", "operation": "charge", "duration_ms": 180, "status": "error", "parent": "s1", "start_offset_ms": 12},
+            {"span_id": "s3", "service": "postgres", "operation": "query", "duration_ms": 12, "status": "ok", "parent": "s2", "start_offset_ms": 45},
         ],
     }
     return {
@@ -30,6 +30,13 @@ def _sample_trace(query: str, *, provider: str, endpoint: str, simulated: bool) 
     }
 
 
+def _parent_span_id(span: dict) -> str | None:
+    for ref in span.get("references") or []:
+        if isinstance(ref, dict) and ref.get("refType") == "CHILD_OF":
+            return ref.get("spanID") or ref.get("spanId")
+    return None
+
+
 def _parse_jaeger_traces(data: dict, limit: int) -> list[dict]:
     traces: list[dict] = []
     for item in (data.get("data") or [])[:limit]:
@@ -40,31 +47,36 @@ def _parse_jaeger_traces(data: dict, limit: int) -> list[dict]:
         root = spans[0] if spans else {}
         proc = processes.get(str(root.get("processID", ""))) or {}
         service = (proc.get("serviceName") or "unknown")
-        duration_us = 0
-        if spans:
-            starts = [s.get("startTime") or 0 for s in spans if isinstance(s, dict)]
-            ends = [(s.get("startTime") or 0) + (s.get("duration") or 0) for s in spans if isinstance(s, dict)]
-            if starts and ends:
-                duration_us = max(ends) - min(starts)
+        trace_start_us = min((s.get("startTime") or 0) for s in spans if isinstance(s, dict)) if spans else 0
+        trace_end_us = max(
+            (s.get("startTime") or 0) + (s.get("duration") or 0)
+            for s in spans if isinstance(s, dict)
+        ) if spans else 0
+        duration_us = max(trace_end_us - trace_start_us, 1)
         has_error = any(
             any(t.get("key") == "error" and t.get("value") for t in (s.get("tags") or []))
             for s in spans if isinstance(s, dict)
         )
+        parsed_spans = []
+        for s in spans[:40]:
+            if not isinstance(s, dict):
+                continue
+            start_us = s.get("startTime") or trace_start_us
+            parsed_spans.append({
+                "span_id": s.get("spanID") or s.get("spanId"),
+                "parent": _parent_span_id(s),
+                "service": (processes.get(str(s.get("processID", ""))) or {}).get("serviceName", service),
+                "operation": s.get("operationName") or "span",
+                "duration_ms": max(int((s.get("duration") or 0) / 1000), 1),
+                "start_offset_ms": max(int((start_us - trace_start_us) / 1000), 0),
+                "status": "error" if any(t.get("key") == "error" for t in (s.get("tags") or [])) else "ok",
+            })
         traces.append({
             "trace_id": item.get("traceID") or item.get("traceId") or "unknown",
             "root_service": service,
             "duration_ms": max(int(duration_us / 1000), 1),
             "status": "error" if has_error else "ok",
-            "spans": [
-                {
-                    "span_id": s.get("spanID") or s.get("spanId"),
-                    "service": (processes.get(str(s.get("processID", ""))) or {}).get("serviceName", service),
-                    "operation": s.get("operationName") or "span",
-                    "duration_ms": max(int((s.get("duration") or 0) / 1000), 1),
-                    "status": "error" if any(t.get("key") == "error" for t in (s.get("tags") or [])) else "ok",
-                }
-                for s in spans[:20] if isinstance(s, dict)
-            ],
+            "spans": parsed_spans,
         })
     return traces
 

@@ -2451,6 +2451,54 @@ h3 {
   margin-bottom: 16px;
 }
 
+.trace-waterfall {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trace-waterfall-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(120px, 2fr) 48px;
+  gap: 8px;
+  align-items: center;
+  padding-left: calc(var(--depth, 0) * 14px);
+  font-size: 11px;
+}
+
+.trace-waterfall-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trace-waterfall-track {
+  position: relative;
+  height: 14px;
+  background: var(--surface-2, rgba(0, 0, 0, 0.04));
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.trace-waterfall-bar {
+  position: absolute;
+  top: 2px;
+  height: 10px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  min-width: 4px;
+}
+
+.trace-waterfall-bar--error {
+  background: linear-gradient(90deg, #dc2626, #f87171);
+}
+
+.trace-waterfall-ms {
+  text-align: right;
+  font-size: 10px;
+}
+
 .ops-domain-bar-list {
   display: flex;
   flex-direction: column;

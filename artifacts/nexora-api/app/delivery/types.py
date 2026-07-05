@@ -22,6 +22,8 @@ class PipelineProviderType(str, enum.Enum):
     DRONE = "DRONE"
     ARGO_WORKFLOWS = "ARGO_WORKFLOWS"
     BITBUCKET_PIPELINES = "BITBUCKET_PIPELINES"
+    BUILDKITE = "BUILDKITE"
+    HARNESS = "HARNESS"
 
 
 class ArtifactRegistryType(str, enum.Enum):

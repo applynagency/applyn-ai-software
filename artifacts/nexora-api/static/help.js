@@ -625,10 +625,10 @@ function renderHelpGettingStarted() {
   const roadmapHtml = `
     <section class="help-section card" style="margin-top:16px;">
       <h3>Integration roadmap</h3>
-      <p class="muted">35 integrations ship today. Future roadmap:</p>
+      <p class="muted">35 integrations ship today with live pipeline sync (Harness, Buildkite), Flux GitOps reconciliation, and trace waterfall explorer.</p>
       <ul class="muted" style="margin:8px 0 0;padding-left:20px;">
-        <li>Full Harness/Buildkite pipeline sync (ingest live today)</li>
-        <li>Live Flux CD reconciliation from cluster API</li>
+        <li>Expanded security scanner connectors (planned)</li>
+        <li>Multi-cluster Flux HelmRelease sync (planned)</li>
       </ul>
     </section>`;
   const body = `

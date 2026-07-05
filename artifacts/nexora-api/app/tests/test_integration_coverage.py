@@ -33,7 +33,7 @@ def test_every_integration_has_live_data_path(key):
 
 
 def test_pipeline_sync_keys():
-    for key in ("JENKINS", "CIRCLECI", "AZURE_DEVOPS", "GITHUB", "GITLAB", "BITBUCKET"):
+    for key in ("JENKINS", "CIRCLECI", "AZURE_DEVOPS", "GITHUB", "GITLAB", "BITBUCKET", "BUILDKITE", "HARNESS"):
         assert supports_pipeline_sync(key)
 
 

@@ -34,6 +34,8 @@ _PIPELINE_MAP = {
     "GITHUB": PipelineProviderType.GITHUB_ACTIONS,
     "GITLAB": PipelineProviderType.GITLAB_CI,
     "BITBUCKET": PipelineProviderType.BITBUCKET_PIPELINES,
+    "BUILDKITE": PipelineProviderType.BUILDKITE,
+    "HARNESS": PipelineProviderType.HARNESS,
 }
 
 

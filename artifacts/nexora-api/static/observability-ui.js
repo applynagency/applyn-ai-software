@@ -5,13 +5,47 @@
  */
 
 async function loadObsPlatform() {
+  const page = state.route.page || "";
+  if (page === "obs-platform-metrics") {
+    try { state.obsPlatformTopMetrics = await api("/v1/observability/metrics/top"); } catch { state.obsPlatformTopMetrics = null; }
+    return;
+  }
+  if (page === "obs-platform-logs" || page === "obs-platform-traces") {
+    return;
+  }
   try { state.obsPlatformDash = await api("/v1/observability/dashboard"); } catch { state.obsPlatformDash = null; }
   try { state.obsPlatformMap = await api("/v1/observability/service-map"); } catch { state.obsPlatformMap = null; }
   try { state.obsPlatformSlo = await api("/v1/observability/slo"); } catch { state.obsPlatformSlo = null; }
   try { state.obsPlatformAlerts = await api("/v1/observability/alerts/intelligence"); } catch { state.obsPlatformAlerts = null; }
   try { state.obsPlatformCorrelations = await api("/v1/observability/correlation"); } catch { state.obsPlatformCorrelations = []; }
-  try { state.obsPlatformTopMetrics = await api("/v1/observability/metrics/top"); } catch { state.obsPlatformTopMetrics = null; }
   try { state.obsPlatformProviders = await api("/v1/observability/providers"); } catch { state.obsPlatformProviders = null; }
+}
+function renderTraceWaterfall(spans, traceDurationMs) {
+  if (!spans || !spans.length) return "";
+  const byId = Object.fromEntries(spans.filter((s) => s.span_id).map((s) => [s.span_id, s]));
+  const total = Math.max(traceDurationMs || 0, ...spans.map((s) => (s.start_offset_ms || 0) + (s.duration_ms || 0)), 1);
+  const children = {};
+  spans.forEach((s) => {
+    const pid = s.parent && byId[s.parent] ? s.parent : "";
+    if (!children[pid]) children[pid] = [];
+    children[pid].push(s);
+  });
+  const rows = [];
+  function walk(parentId, depth) {
+    (children[parentId] || []).forEach((span) => {
+      const left = ((span.start_offset_ms || 0) / total) * 100;
+      const width = Math.max(((span.duration_ms || 1) / total) * 100, 0.8);
+      const err = span.status === "error" ? " trace-waterfall-bar--error" : "";
+      rows.push(`<div class="trace-waterfall-row" style="--depth:${depth}">
+        <span class="trace-waterfall-label" title="${escapeHtml(span.operation || "")}">${escapeHtml(span.service || "")} · ${escapeHtml(span.operation || "span")}</span>
+        <div class="trace-waterfall-track" aria-hidden="true"><div class="trace-waterfall-bar${err}" style="left:${left.toFixed(2)}%;width:${width.toFixed(2)}%"></div></div>
+        <span class="trace-waterfall-ms muted">${span.duration_ms || 0}ms</span>
+      </div>`);
+      if (span.span_id) walk(span.span_id, depth + 1);
+    });
+  }
+  walk("", 0);
+  return `<div class="trace-waterfall">${rows.join("")}</div>`;
 }
 function renderObsConnectBanner(providerLabel, integrationKey) {
   const href = integrationKey
@@ -178,18 +212,14 @@ function renderObsTraces() {
       </p>`
     : "";
   const traceRows = traces.map((t) => {
-    const spans = (t.spans || []).map((s) => `
-      <div class="ops-list-row" style="padding-left:12px;">
-        <span>${escapeHtml(s.service || "")} · ${escapeHtml(s.operation || "span")}</span>
-        <span class="muted">${s.duration_ms || 0}ms · ${escapeHtml(s.status || "")}</span>
-      </div>`).join("");
+    const waterfall = renderTraceWaterfall(t.spans || [], t.duration_ms);
     return `
       <article class="card" style="margin-bottom:10px;">
         <div class="ops-list-row">
           <span><strong>${escapeHtml(t.root_service || "service")}</strong> · ${escapeHtml(t.trace_id || "")}</span>
           <span class="muted">${t.duration_ms || 0}ms · ${escapeHtml(t.status || "")}</span>
         </div>
-        ${spans ? `<div class="ops-list">${spans}</div>` : ""}
+        ${waterfall || `<p class="muted" style="font-size:11px;margin:8px 0 0;">No span detail — connect Jaeger or Tempo for waterfall view.</p>`}
       </article>`;
   }).join("");
   return `<div class="container">${renderHeader("Trace Explorer", "OpenTelemetry, Jaeger, Zipkin, Tempo")}

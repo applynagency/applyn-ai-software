@@ -1903,19 +1903,13 @@ async function loadRouteData() {
   } else if (state.route.page && (state.route.page === "delivery" || state.route.page.startsWith("delivery-"))) {
     await loadDeliveryChunk();
     if (typeof loadDeliveryRouteData === "function") await loadDeliveryRouteData(state.route.page);
-  } else if (state.route.page && state.route.page.startsWith("ops-workspace")) {
-    await loadPlatformOpsUiChunk();
-    if (typeof loadOpsWorkspace === "function") await loadOpsWorkspace();
   } else if (state.route.page && (state.route.page.startsWith("platform-engineering") || state.route.page.startsWith("pe-"))) {
     await loadPlatformOpsUiChunk();
     if (typeof loadPlatformEngineering === "function") await loadPlatformEngineering();
-  } else if (state.route.page && state.route.page.startsWith("operator")) {
-    await loadPlatformOpsUiChunk();
-    if (typeof loadOperator === "function") await loadOperator();
   } else if (state.route.page && state.route.page.startsWith("obs-platform")) {
     await loadObservabilityUiChunk();
     if (typeof loadObsPlatform === "function") await loadObsPlatform();
-  } else if (state.route.page && state.route.page.startsWith("ir-")) {
+  } else if (state.route.page === "ir-postmortems") {
     await loadIncidentResponseUiChunk();
     if (typeof loadIncidentResponse === "function") await loadIncidentResponse();
   } else if (state.route.page && state.route.page.startsWith("sec-")) {
@@ -4506,13 +4500,6 @@ const OPS_UI_PAGES = new Set([
   "delivery-promotion",
   "delivery-freeze",
   "delivery-rr-analytics",
-  "ops-workspace",
-  "ops-workspace-queue",
-  "ops-workspace-changes",
-  "ops-workspace-maintenance",
-  "ops-workspace-slo",
-  "ops-workspace-cost",
-  "ops-workspace-executive",
   "platform-engineering",
   "pe-templates",
   "pe-infrastructure",
@@ -4521,14 +4508,6 @@ const OPS_UI_PAGES = new Set([
   "pe-secrets",
   "pe-drift",
   "pe-compliance",
-  "operator",
-  "operator-recommendations",
-  "operator-goals",
-  "operator-policies",
-  "operator-history",
-  "operator-learning",
-  "operator-simulations",
-  "operator-savings",
   "pilot-execution",
   "pilot-evidence",
   "pilot-operations-health",
@@ -4579,22 +4558,10 @@ const OPS_UI_PAGES = new Set([
   "help-tours",
   "help-category",
   "help-article",
-  "ir-dashboard",
-  "ir-oncall",
-  "ir-escalation",
-  "ir-major",
-  "ir-status",
-  "ir-comms",
   "ir-postmortems",
-  "ir-analytics",
-  "obs-platform",
   "obs-platform-metrics",
   "obs-platform-logs",
   "obs-platform-traces",
-  "obs-platform-map",
-  "obs-platform-slo",
-  "obs-platform-alerts",
-  "obs-platform-correlation",
   "sec-dashboard",
   "sec-findings",
   "sec-vulns",
@@ -5740,14 +5707,6 @@ function renderPage() {
     case "delivery-freeze":
     case "delivery-rr-analytics":
       return lazyDeliveryView("renderDelivery");
-    case "ops-workspace":
-    case "ops-workspace-queue":
-    case "ops-workspace-changes":
-    case "ops-workspace-maintenance":
-    case "ops-workspace-slo":
-    case "ops-workspace-cost":
-    case "ops-workspace-executive":
-      return renderRetiredHubPage("Ops Workspace", "/incidents", "Open Incidents");
     case "platform-engineering":
     case "pe-templates":
     case "pe-infrastructure":
@@ -5757,35 +5716,12 @@ function renderPage() {
     case "pe-drift":
     case "pe-compliance":
       return lazyPlatformOpsView();
-    case "operator":
-    case "operator-recommendations":
-    case "operator-goals":
-    case "operator-policies":
-    case "operator-history":
-    case "operator-learning":
-    case "operator-simulations":
-    case "operator-savings":
-      return renderRetiredHubPage("AI Operator", "/copilot", "Open AI Copilot");
     case "obs-platform-traces":
       return lazyObservabilityView("renderObsTraces");
-    case "obs-platform":
-    case "obs-platform-map":
-    case "obs-platform-slo":
-    case "obs-platform-alerts":
-    case "obs-platform-correlation":
-      return renderRetiredHubPage("Observability Platform", "/alerts", "Open Alerts");
     case "obs-platform-logs":
       return lazyObservabilityView("renderObsLogs");
     case "obs-platform-metrics":
       return lazyObservabilityView("renderObsMetrics");
-    case "ir-dashboard":
-    case "ir-oncall":
-    case "ir-escalation":
-    case "ir-major":
-    case "ir-status":
-    case "ir-comms":
-    case "ir-analytics":
-      return renderRetiredHubPage("Incident Response Hub", "/incidents", "Open Incidents");
     case "ir-postmortems":
       return lazyIncidentResponseView();
     case "sec-dashboard":

@@ -8,6 +8,8 @@ from app.delivery.pipelines.azure_devops_live import AzurePipelinesProvider
 from app.delivery.pipelines.bitbucket_live import BitbucketPipelinesProvider
 from app.delivery.pipelines.circleci_live import CircleCIProvider
 from app.delivery.pipelines.gitlab_live import GitLabCIProvider
+from app.delivery.pipelines.buildkite_live import BuildkiteProvider
+from app.delivery.pipelines.harness_live import HarnessProvider
 from app.delivery.pipelines.jenkins_live import JenkinsProvider
 from app.delivery.pipelines.providers import (
     ArgoWorkflowsProvider,
@@ -24,6 +26,8 @@ _REGISTRY: dict[PipelineProviderType, PipelineProvider] = {
     PipelineProviderType.BITBUCKET_PIPELINES: BitbucketPipelinesProvider(),
     PipelineProviderType.DRONE: DroneProvider(),
     PipelineProviderType.ARGO_WORKFLOWS: ArgoWorkflowsProvider(),
+    PipelineProviderType.BUILDKITE: BuildkiteProvider(),
+    PipelineProviderType.HARNESS: HarnessProvider(),
 }
 
 

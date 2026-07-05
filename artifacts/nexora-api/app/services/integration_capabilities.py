@@ -9,6 +9,7 @@ from app.services.universal_discovery_adapters import supports_universal_discove
 # Marketplace keys that sync CI/CD pipelines into Delivery.
 PIPELINE_INTEGRATION_KEYS = frozenset({
     "JENKINS", "CIRCLECI", "AZURE_DEVOPS", "GITHUB", "GITLAB", "BITBUCKET",
+    "BUILDKITE", "HARNESS",
 })
 
 GITOPS_INTEGRATION_KEYS = frozenset({"ARGOCD", "FLUX"})
