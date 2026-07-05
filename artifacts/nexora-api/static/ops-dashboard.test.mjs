@@ -37,6 +37,8 @@ test("ops dashboard: stats-first command center composition", () => {
   );
   assert.match(dashFn, /renderOpsAlertStrip/);
   assert.match(dashFn, /renderOpsDomainBars/);
+  assert.match(dashFn, /renderOpsTrendCharts/);
+  assert.match(opsSource, /\/v1\/monitoring\/dashboard/);
   assert.doesNotMatch(dashFn, /renderOpsFlowLanes/);
 });
 
@@ -77,6 +79,7 @@ test("ops dashboard: signals load from ops workspace and delivery APIs", () => {
   assert.match(source, /\/v1\/ops-workspace\/my-work/);
   assert.match(source, /\/v1\/ops-workspace\/queue/);
   assert.match(source, /\/v1\/delivery\/operations/);
+  assert.match(source, /\/v1\/delivery\/pipeline-runs/);
 });
 
 test("ops dashboard: lane counts reflect live signals", () => {

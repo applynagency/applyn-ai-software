@@ -941,6 +941,97 @@ async def poll_gcp_monitoring(secret: dict) -> list[NormalizedAlert]:
     return await _with_retry(_run)
 
 
+# =========================================================================== #
+# Splunk (notable / fired alerts)
+# =========================================================================== #
+async def poll_splunk(secret: dict) -> list[NormalizedAlert]:
+    endpoint = (secret.get("endpoint") or "").rstrip("/")
+    token = secret.get("token")
+    if not endpoint or not token:
+        return []
+
+    async def _run():
+        out: list[NormalizedAlert] = []
+        headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+        async with safe_http_client(timeout=_TIMEOUT, verify=False) as c:
+            resp = await c.get(f"{endpoint}/services/alerts/fired_alerts", headers=headers,
+                               params={"output_mode": "json", "count": 50})
+            if resp.status_code in (401, 403):
+                raise IngestError("Splunk denied access.")
+            if resp.status_code >= 400:
+                return []
+            entries = (resp.json().get("entry") or [])[:_PAGE]
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                content = entry.get("content") or {}
+                name = content.get("savedsearch_name") or entry.get("name") or "splunk-alert"
+                out.append(NormalizedAlert(
+                    provider="SPLUNK",
+                    alert_id=str(entry.get("id") or name),
+                    alert_name=name,
+                    severity=content.get("severity") or "HIGH",
+                    status="FIRING",
+                    service=content.get("app") or content.get("search"),
+                    labels={"app": content.get("app")},
+                    description=content.get("triggered_alert_count"),
+                    timestamp=_parse_ts(content.get("trigger_time")),
+                ).with_correlation())
+        return out[:_PAGE]
+
+    return await _with_retry(_run)
+
+
+# =========================================================================== #
+# ServiceNow (open incidents)
+# =========================================================================== #
+async def poll_servicenow(secret: dict) -> list[NormalizedAlert]:
+    base = (secret.get("instance_url") or "").rstrip("/")
+    user = secret.get("username")
+    password = secret.get("password")
+    if not base or not user or not password:
+        return []
+
+    async def _run():
+        out: list[NormalizedAlert] = []
+        async with safe_http_client(timeout=_TIMEOUT, verify=True) as c:
+            resp = await c.get(
+                f"{base}/api/now/table/incident",
+                auth=(user, password),
+                headers={"Accept": "application/json"},
+                params={"sysparm_query": "active=true", "sysparm_limit": 50},
+            )
+            if resp.status_code in (401, 403):
+                raise IngestError("ServiceNow denied access.")
+            if resp.status_code >= 400:
+                return []
+            for row in (resp.json().get("result") or [])[:_PAGE]:
+                if not isinstance(row, dict):
+                    continue
+                number = row.get("number") or row.get("sys_id") or "snow-incident"
+                out.append(NormalizedAlert(
+                    provider="SERVICENOW",
+                    alert_id=str(row.get("sys_id") or number),
+                    alert_name=row.get("short_description") or number,
+                    severity=(row.get("priority") or "3"),
+                    status="FIRING",
+                    service=row.get("cmdb_ci") or row.get("assignment_group"),
+                    labels={"number": number, "state": row.get("state")},
+                    description=row.get("description"),
+                    timestamp=_parse_ts(row.get("opened_at")),
+                ).with_correlation())
+        return out[:_PAGE]
+
+    return await _with_retry(_run)
+
+
+# =========================================================================== #
+# OpenTelemetry Collector (Prometheus-compatible scrape endpoint)
+# =========================================================================== #
+async def poll_opentelemetry(secret: dict) -> list[NormalizedAlert]:
+    return await poll_prometheus(secret)
+
+
 # --------------------------------------------------------------------------- #
 INGEST_POLLERS = {
     "AWS": poll_cloudwatch,
@@ -963,6 +1054,9 @@ INGEST_POLLERS = {
     "ELASTIC": poll_elastic,
     "SONARQUBE": poll_sonarqube,
     "GCP": poll_gcp_monitoring,
+    "SPLUNK": poll_splunk,
+    "SERVICENOW": poll_servicenow,
+    "OPENTELEMETRY": poll_opentelemetry,
 }
 
 

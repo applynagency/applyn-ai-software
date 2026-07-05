@@ -625,12 +625,9 @@ function renderHelpGettingStarted() {
   const roadmapHtml = `
     <section class="help-section card" style="margin-top:16px;">
       <h3>Integration roadmap</h3>
-      <p class="muted">Core 26 integrations ship today. On the roadmap for enterprise buyers:</p>
+      <p class="muted">30 integrations ship today including Alertmanager, Splunk, ServiceNow, and OpenTelemetry Collector.</p>
       <ul class="muted" style="margin:8px 0 0;padding-left:20px;">
-        <li>Alertmanager (webhook ingest supported — catalog entry coming)</li>
-        <li>Splunk, ServiceNow, Sentry, Dynatrace</li>
-        <li>OpenTelemetry Collector (first-class)</li>
-        <li>Harness / Buildkite, Flux CD</li>
+        <li>Sentry, Dynatrace, Harness / Buildkite, Flux CD</li>
       </ul>
     </section>`;
   const body = `

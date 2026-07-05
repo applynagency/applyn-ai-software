@@ -166,7 +166,8 @@ function marketplaceBacked(result) {
 function renderObsTraces() {
   return `<div class="container">${renderHeader("Trace Explorer", "OpenTelemetry, Jaeger, Zipkin, Tempo")}
     ${renderAlerts()}
-    <section class="card"><p class="muted">Trace waterfall and dependency views powered by connected trace backends.</p></section>
+    ${renderObsConnectBanner("OpenTelemetry Collector, Jaeger, or Tempo", "OPENTELEMETRY")}
+    <section class="card"><p class="muted">Trace waterfall and dependency views appear after connecting a trace backend.</p></section>
   </div>`;
 }
 function renderObsServiceMap() {

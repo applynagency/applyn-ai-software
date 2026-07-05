@@ -1,4 +1,4 @@
-"""Coverage tests — all 26 marketplace integrations have live-data paths."""
+"""Coverage tests — all 30 marketplace integrations have live-data paths."""
 
 import pytest
 
@@ -14,8 +14,8 @@ from app.services.universal_discovery_adapters import supports_universal_discove
 ALL_KEYS = set(INTEGRATION_DEFINITIONS.keys())
 
 
-def test_all_26_integrations_defined():
-    assert len(ALL_KEYS) == 26
+def test_all_30_integrations_defined():
+    assert len(ALL_KEYS) == 30
 
 
 @pytest.mark.parametrize("key", sorted(ALL_KEYS))
@@ -48,9 +48,10 @@ def test_discovery_coverage():
 def test_ingest_coverage():
     ingested = set(INGEST_POLLERS.keys())
     for key in (
-        "AWS", "AZURE", "CLOUDWATCH", "PROMETHEUS", "KUBERNETES", "GITHUB", "GITLAB",
+        "AWS", "AZURE", "CLOUDWATCH", "PROMETHEUS", "ALERTMANAGER", "KUBERNETES", "GITHUB", "GITLAB",
         "BITBUCKET", "JENKINS", "CIRCLECI", "DATADOG", "PAGERDUTY", "OPSGENIE",
         "GRAFANA", "NEW_RELIC", "LOKI", "ELASTIC", "SONARQUBE", "GCP",
+        "SPLUNK", "SERVICENOW", "OPENTELEMETRY",
     ):
         assert key in ingested
 

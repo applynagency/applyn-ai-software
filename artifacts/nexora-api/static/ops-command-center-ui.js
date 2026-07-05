@@ -15,12 +15,14 @@ async function loadOpsDashboardSignals() {
     loadCredentials().catch(() => { state.credentials = []; }),
     api("/v1/integrations/connections").then((r) => { state.integrationConnections = r || []; }).catch(() => { state.integrationConnections = []; }),
   ]);
-  const [myWork, queue, alerts, changes, deliveryOps] = await Promise.all([
+  const [myWork, queue, alerts, changes, deliveryOps, monDash, pipelineRuns] = await Promise.all([
     api("/v1/ops-workspace/my-work").catch(() => null),
     api("/v1/ops-workspace/queue").catch(() => null),
-    api("/v1/monitoring/alerts?limit=30").catch(() => ({ items: [] })),
+    api("/v1/monitoring/alerts?limit=200").catch(() => ({ items: [] })),
     api("/v1/change-requests?offset=0&limit=50").catch(() => ({ items: [] })),
     api("/v1/delivery/operations").catch(() => []),
+    api("/v1/monitoring/dashboard").catch(() => null),
+    api("/v1/delivery/pipeline-runs?limit=100").catch(() => []),
   ]);
   state.opsMyWork = myWork;
   state.opsQueue = queue;
@@ -36,6 +38,11 @@ async function loadOpsDashboardSignals() {
     ? deliveryOpsRaw
     : (deliveryOpsRaw?.items || []);
   const pendingApprovals = deliveryOpsList.filter((o) => String(o.status || "") === "PENDING_APPROVAL");
+  const runsList = Array.isArray(pipelineRuns) ? pipelineRuns : (pipelineRuns?.items || []);
+  const incidentTrend = (monDash?.incident_trend || []).map((p) => ({
+    label: p.period || "",
+    count: p.count || 0,
+  }));
   state.opsDashboard = {
     loaded: true,
     firingAlerts,
@@ -43,7 +50,90 @@ async function loadOpsDashboardSignals() {
     pendingApprovals,
     attentionItems: myWork?.total_attention_items || 0,
     queueTotal: queue?.total || (queue?.items || []).length,
+    trends: {
+      incidents: incidentTrend.length ? incidentTrend : bucketDailyTrend(state.incidents, "created_at", 7),
+      alerts: bucketDailyTrend(firingAlerts, "created_at", 7),
+      pipelines: bucketPipelineSuccess(runsList, 7),
+    },
   };
+}
+function bucketDailyTrend(items, dateField, days = 7) {
+  const buckets = Array.from({ length: days }, (_, i) => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - (days - 1 - i));
+    return {
+      label: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      count: 0,
+      key: d.toDateString(),
+    };
+  });
+  const keyMap = Object.fromEntries(buckets.map((b) => [b.key, b]));
+  (items || []).forEach((item) => {
+    const raw = item[dateField] || item.created_at || item.opened_at || item.finished_at;
+    if (!raw) return;
+    const d = new Date(raw);
+    d.setHours(0, 0, 0, 0);
+    const k = d.toDateString();
+    if (keyMap[k]) keyMap[k].count += 1;
+  });
+  return buckets;
+}
+function bucketPipelineSuccess(runs, days = 7) {
+  const buckets = Array.from({ length: days }, (_, i) => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - (days - 1 - i));
+    return {
+      label: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      count: 0,
+      total: 0,
+      success: 0,
+      key: d.toDateString(),
+    };
+  });
+  const keyMap = Object.fromEntries(buckets.map((b) => [b.key, b]));
+  (runs || []).forEach((run) => {
+    const raw = run.finished_at || run.started_at || run.created_at;
+    if (!raw) return;
+    const d = new Date(raw);
+    d.setHours(0, 0, 0, 0);
+    const k = d.toDateString();
+    if (!keyMap[k]) return;
+    keyMap[k].total += 1;
+    if (/SUCCEEDED|SUCCESS|COMPLETED/i.test(String(run.status || ""))) keyMap[k].success += 1;
+  });
+  return buckets.map((b) => ({
+    label: b.label,
+    count: b.total ? Math.round((b.success / b.total) * 100) : 0,
+  }));
+}
+function renderOpsSparkline(title, points, href, color, suffix = "") {
+  const max = Math.max(1, ...points.map((p) => p.count));
+  const bars = points.map((p) => {
+    const h = Math.max(4, Math.round((p.count / max) * 100));
+    const day = String(p.label || "").split(" ").pop() || p.label;
+    return `<div class="ops-spark-bar" title="${escapeHtml(p.label)}: ${p.count}${suffix}">
+      <span class="ops-spark-fill" style="height:${h}%;background:${color}"></span>
+      <span class="ops-spark-label">${escapeHtml(day)}</span>
+    </div>`;
+  }).join("");
+  return `<a class="ops-spark-card" href="${escapeHtml(href)}" data-nav="${escapeHtml(href)}">
+    <span class="ops-spark-title">${escapeHtml(title)}</span>
+    <div class="ops-spark-bars">${bars}</div>
+  </a>`;
+}
+function renderOpsTrendCharts(trends) {
+  if (!trends) return "";
+  return `
+    <section class="card ops-trend-grid" aria-label="Operational trends">
+      <h2 class="ops-panel-title">7-day trends</h2>
+      <div class="ops-spark-grid">
+        ${renderOpsSparkline("Incidents", trends.incidents || [], "/incidents", "#dc2626")}
+        ${renderOpsSparkline("Firing alerts", trends.alerts || [], "/alerts", "#ea580c")}
+        ${renderOpsSparkline("Pipeline success", trends.pipelines || [], "/delivery/pipelines", "#7c3aed", "%")}
+      </div>
+    </section>`;
 }
 const OPS_OPERATIONAL_FLOWS = [
   {
@@ -608,6 +698,7 @@ function renderOpsCommandCenterDashboard() {
       ${renderOpsAlertStrip(snapshot)}
       ${renderOpsSignalsBar(snapshot)}
       ${renderOpsPriorityCard(snapshot)}
+      ${renderOpsTrendCharts(state.opsDashboard?.trends)}
       ${needsConnect ? renderOpsDashboardSetupStrip() : ""}
       <div class="ops-dashboard-grid">
         ${renderOpsModuleStats(snapshot)}

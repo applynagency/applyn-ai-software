@@ -1032,6 +1032,7 @@ function renderDeliveryPipelines() {
     ? `<p class="muted">Runs appear after sync. Trigger a build in Jenkins, then click <strong>Sync JENKINS</strong>.</p>`
     : `<p class="muted">No runs.</p>`;
   return `<div class="container">${renderHeader("Pipelines", "Unified CI/CD view — sync jobs and read build logs in Nexora")}${renderAlerts()}
+    ${pipes.length === 0 ? renderDeliveryConnectBanner("Jenkins or GitHub Actions", "JENKINS") : ""}
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
       ${syncMeta}
       <div class="actions">${syncBtns}</div>
@@ -1046,9 +1047,27 @@ function renderDeliveryPipelines() {
   </div>`;
 }
 
+function renderDeliveryConnectBanner(label, providerKey) {
+  const href = providerKey
+    ? `/integrations/onboarding?provider=${encodeURIComponent(providerKey)}`
+    : "/integrations/onboarding";
+  return `<div class="ops-connect-banner" role="status">
+    <span class="muted">No live ${escapeHtml(label)} connection — connect to see real data in Nexora.</span>
+    <a href="${escapeHtml(href)}" data-nav="${escapeHtml(href)}">Connect ${escapeHtml(label)}</a>
+  </div>`;
+}
+function deliveryHasVerifiedProvider(key) {
+  const conns = Array.isArray(state.integrationConnections)
+    ? state.integrationConnections
+    : (state.integrationConnections?.items || []);
+  return conns.some((c) => String(c.integration_key || "").toUpperCase() === key
+    && /VERIFIED|CONNECTED/i.test(String(c.status || "")));
+}
+
 function renderDeliveryGitops() {
   const apps = state.dlvGitops || [];
   const canWrite = canWriteResources();
+  const needsConnect = !deliveryHasVerifiedProvider("ARGOCD") || apps.length === 0;
   const rows = apps.map((a) => {
     const syncBtn = (canWrite && a.drift)
       ? `<button type="button" class="btn btn-primary btn-sm" data-delivery-gitops-app-sync="${escapeHtml(a.name)}">Sync</button>`
@@ -1058,8 +1077,8 @@ function renderDeliveryGitops() {
       <span style="display:flex;gap:8px;align-items:center;">${cpHealthBadge(a.health)} ${a.sync_status ? escapeHtml(a.sync_status) : ""} ${a.drift ? "· drift" : ""} ${syncBtn}</span></div>`;
   }).join("");
   return `<div class="container">${renderHeader("GitOps", "Argo CD applications from connected integrations")}${renderAlerts()}
+    ${needsConnect ? renderDeliveryConnectBanner("Argo CD", "ARGOCD") : ""}
     <p class="muted" style="font-size:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-      Connect Argo CD under <a href="/integrations" data-nav="/integrations">Integrations</a>, then sync live apps.
       ${canWrite ? `<button type="button" class="btn btn-primary btn-sm" data-delivery-gitops-sync>Refresh GitOps state</button>` : ""}
     </p>
     <section class="card"><div class="ops-list">${rows || `<p class="muted">No GitOps apps yet. Connect Argo CD and run sync.</p>`}</div></section>

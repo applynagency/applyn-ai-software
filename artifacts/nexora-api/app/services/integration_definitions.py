@@ -208,6 +208,38 @@ INTEGRATION_DEFINITIONS: dict[str, dict] = {
         "docs_url": "https://docs.sonarqube.org/",
         "description": "Read SonarQube projects, quality gates, and issue summaries.",
     },
+    "ALERTMANAGER": {
+        "name": "Alertmanager", "category": IntegrationCategory.OBSERVABILITY.value,
+        "auth_type": "ENDPOINT",
+        "required_fields": ["endpoint"],
+        "capabilities": ["Read active alerts", "Webhook alert ingest", "Silence metadata"],
+        "docs_url": "https://prometheus.io/docs/alerting/latest/alertmanager/",
+        "description": "Ingest and read alerts from Prometheus Alertmanager.",
+    },
+    "SPLUNK": {
+        "name": "Splunk", "category": IntegrationCategory.OBSERVABILITY.value,
+        "auth_type": "TOKEN",
+        "required_fields": ["endpoint", "token"],
+        "capabilities": ["Read notable events", "Search logs", "Read indexes"],
+        "docs_url": "https://docs.splunk.com/Documentation/Splunk",
+        "description": "Read Splunk notable events and search log data.",
+    },
+    "SERVICENOW": {
+        "name": "ServiceNow", "category": IntegrationCategory.INCIDENT.value,
+        "auth_type": "BASIC",
+        "required_fields": ["instance_url", "username", "password"],
+        "capabilities": ["Read incidents", "Read change requests", "Read CMDB services"],
+        "docs_url": "https://developer.servicenow.com/",
+        "description": "Read ServiceNow incidents, changes, and CMDB services.",
+    },
+    "OPENTELEMETRY": {
+        "name": "OpenTelemetry Collector", "category": IntegrationCategory.OBSERVABILITY.value,
+        "auth_type": "ENDPOINT",
+        "required_fields": ["endpoint"],
+        "capabilities": ["Read collector metrics", "Trace export endpoint", "Metrics scrape"],
+        "docs_url": "https://opentelemetry.io/docs/collector/",
+        "description": "Connect OpenTelemetry Collector metrics and trace export endpoints.",
+    },
 }
 
 # Secret field names that must never be surfaced/logged (extends 35A set).

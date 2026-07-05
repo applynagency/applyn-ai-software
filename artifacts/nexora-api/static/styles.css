@@ -2386,6 +2386,71 @@ h3 {
   gap: 16px;
 }
 
+.ops-spark-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.ops-spark-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.ops-spark-card:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.ops-spark-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.ops-spark-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 72px;
+}
+
+.ops-spark-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.ops-spark-fill {
+  display: block;
+  width: 100%;
+  min-height: 4px;
+  border-radius: 4px 4px 2px 2px;
+  transition: height 0.2s ease;
+}
+
+.ops-spark-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.ops-trend-grid {
+  margin-bottom: 16px;
+}
+
 .ops-domain-bar-list {
   display: flex;
   flex-direction: column;

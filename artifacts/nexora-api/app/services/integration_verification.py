@@ -973,6 +973,74 @@ async def _verify_cloudwatch(secret: dict) -> ProviderProbe:
     return await _verify_aws(secret)
 
 
+async def _verify_alertmanager(secret: dict) -> ProviderProbe:
+    endpoint = secret["endpoint"].rstrip("/")
+    headers = {"Authorization": f"Bearer {secret['token']}"} if secret.get("token") else None
+    data = await _http_request("GET", f"{endpoint}/api/v2/status", headers=headers)
+    cluster = (data["_json"].get("cluster") or {})
+    return ProviderProbe(
+        identity={"endpoint": endpoint, "cluster_status": cluster.get("status", "")},
+        version=cluster.get("version"),
+        permissions=["alerts:read"],
+        warnings=[],
+        partial=False,
+    )
+
+
+async def _verify_splunk(secret: dict) -> ProviderProbe:
+    endpoint = secret["endpoint"].rstrip("/")
+    headers = {"Authorization": f"Bearer {secret['token']}", "Accept": "application/json"}
+    data = await _http_request(
+        "GET", f"{endpoint}/services/server/info", headers=headers,
+        params={"output_mode": "json"},
+    )
+    entry = ((data["_json"].get("entry") or [{}])[0]).get("content") or {}
+    return ProviderProbe(
+        identity={"endpoint": endpoint, "server_name": entry.get("serverName", "")},
+        version=entry.get("version"),
+        permissions=["search:read", "alerts:read"],
+        warnings=[],
+        partial=False,
+    )
+
+
+async def _verify_servicenow(secret: dict) -> ProviderProbe:
+    base = secret["instance_url"].rstrip("/")
+    data = await _http_request(
+        "GET",
+        f"{base}/api/now/table/sys_user",
+        headers={"Accept": "application/json"},
+        auth=(secret["username"], secret["password"]),
+        params={"sysparm_limit": 1},
+    )
+    rows = data["_json"].get("result") or []
+    return ProviderProbe(
+        identity={"instance_url": base, "reachable": True},
+        version=None,
+        permissions=["incidents:read", "cmdb:read"],
+        warnings=[],
+        partial=not rows,
+    )
+
+
+async def _verify_opentelemetry(secret: dict) -> ProviderProbe:
+    endpoint = secret["endpoint"].rstrip("/")
+    headers = {"Authorization": f"Bearer {secret['token']}"} if secret.get("token") else None
+    try:
+        data = await _http_request("GET", f"{endpoint}/api/v1/status/buildinfo", headers=headers)
+        version = (data["_json"].get("data") or {}).get("version")
+    except _Failed:
+        data = await _http_request("GET", f"{endpoint}/metrics", headers=headers)
+        version = None
+    return ProviderProbe(
+        identity={"endpoint": endpoint},
+        version=version,
+        permissions=["metrics:read", "traces:export"],
+        warnings=["Collector verified via metrics/status endpoint."],
+        partial=version is None,
+    )
+
+
 _VERIFIERS = {
     "AWS": _verify_aws,
     "AZURE": _verify_azure,
@@ -1000,6 +1068,10 @@ _VERIFIERS = {
     "ELASTIC": _verify_elastic,
     "OPSGENIE": _verify_opsgenie,
     "SONARQUBE": _verify_sonarqube,
+    "ALERTMANAGER": _verify_alertmanager,
+    "SPLUNK": _verify_splunk,
+    "SERVICENOW": _verify_servicenow,
+    "OPENTELEMETRY": _verify_opentelemetry,
 }
 
 

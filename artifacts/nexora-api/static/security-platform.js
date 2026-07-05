@@ -40,11 +40,21 @@ function renderSecurityPlatform() {
   if (page === "sec-rem-exec") return renderSecRemExecution();
   return renderSecDashboard();
 }
+function renderSecConnectBanner(label, providerKey) {
+  const href = providerKey
+    ? `/integrations/onboarding?provider=${encodeURIComponent(providerKey)}`
+    : "/integrations/onboarding";
+  return `<div class="ops-connect-banner" role="status">
+    <span class="muted">Security scans run in offline/simulated mode until ${escapeHtml(label)} is connected.</span>
+    <a href="${escapeHtml(href)}" data-nav="${escapeHtml(href)}">Connect ${escapeHtml(label)}</a>
+  </div>`;
+}
 function renderSecDashboard() {
   const o = state.secOverview || {};
   return `<div class="container">
     ${renderHeader("Security Overview", "Unified DevSecOps and cloud security posture")}
     ${renderAlerts()}
+    ${renderSecConnectBanner("SonarQube", "SONARQUBE")}
     <section class="card"><div class="ops-stats">
       ${rdMetric("Posture", o.posture_score != null ? `${o.posture_score} (${o.grade || "—"})` : "—")}
       ${rdMetric("Open Critical", o.open_critical || 0)}
@@ -128,6 +138,7 @@ function renderSecScanRuns() {
      <span class="muted">${s.simulated ? "simulated" : "live"} · ${escapeHtml(s.provider_mode || "offline")} · ${escapeHtml(s.status)}</span></div>`
   ).join("");
   return `<div class="container">${renderHeader("Scan Runs", "Security scan execution history")}${renderAlerts()}
+    ${renderSecConnectBanner("SonarQube", "SONARQUBE")}
     <section class="card"><div class="ops-list">${items || `<p class="muted">No scan runs.</p>`}</div></section>
   </div>`;
 }

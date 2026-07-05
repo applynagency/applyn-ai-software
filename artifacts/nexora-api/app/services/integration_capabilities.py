@@ -144,6 +144,26 @@ INTEGRATION_VALUE: dict[str, dict] = {
         "unlocks_live": ["Security gates", "Release quality context"],
         "pages": ["/security", "/discovery", "/delivery"],
     },
+    "ALERTMANAGER": {
+        "unlocks_now": ["Live verify", "Active alert ingest", "Webhook push alerts"],
+        "unlocks_live": ["Monitoring dashboard", "Auto-incidents", "Alert correlation"],
+        "pages": ["/alerts", "/monitoring", "/incidents"],
+    },
+    "SPLUNK": {
+        "unlocks_now": ["Live verify", "Notable event ingest", "Index discovery"],
+        "unlocks_live": ["Log search", "Observability correlation"],
+        "pages": ["/logs", "/monitoring", "/discovery"],
+    },
+    "SERVICENOW": {
+        "unlocks_now": ["Live verify", "Open incident ingest", "CMDB service discovery"],
+        "unlocks_live": ["Incident correlation", "Change context"],
+        "pages": ["/incidents", "/delivery/changes", "/discovery"],
+    },
+    "OPENTELEMETRY": {
+        "unlocks_now": ["Live verify", "Collector metrics", "Trace export endpoint"],
+        "unlocks_live": ["Metrics explorer", "Trace explorer", "Observability platform"],
+        "pages": ["/metrics", "/logs", "/observability-platform"],
+    },
 }
 
 

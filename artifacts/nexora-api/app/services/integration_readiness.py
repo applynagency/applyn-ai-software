@@ -105,6 +105,9 @@ FEATURE_IMPACT = {
     "HASHICORP_VAULT": ["Secrets Management", "Vault Discovery"],
     "SONARQUBE": ["Security Platform", "Quality Gates", "Issue Alerts"],
     "MICROSOFT_TEAMS": ["Notifications", "Collaboration Discovery"],
+    "SPLUNK": ["Observability Platform", "Log Search", "Notable Events"],
+    "SERVICENOW": ["Incidents", "Change Correlation", "CMDB Discovery"],
+    "OPENTELEMETRY": ["Observability Platform", "Metrics Explorer", "Trace Explorer"],
 }
 
 EXPIRY_WINDOWS = ("30d", "14d", "7d", "1d")
