@@ -142,7 +142,10 @@ class IntegrationSyncService:
             connection.credential_id, user=user, org_context=org_context,
             reason="integration gitops sync",
         )
-        apps = await asyncio.to_thread(gitops_engines.list_argocd_applications, "prod", secret)
+        apps = await asyncio.to_thread(
+            gitops_engines.list_flux_applications if key == "FLUX" else gitops_engines.list_argocd_applications,
+            "prod", secret,
+        )
         rows = [{
             "engine": a.engine, "name": a.name, "namespace": a.namespace,
             "project": a.project, "sync_status": a.sync_status, "health": a.health,

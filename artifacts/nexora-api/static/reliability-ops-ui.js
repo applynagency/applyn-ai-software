@@ -403,10 +403,14 @@ function renderArchitecture() {
     : "";
 
   if (!latest) {
+    const banner = typeof renderOpsConnectBanner === "function"
+      ? renderOpsConnectBanner("Integrations", null, "Run discovery after connecting Kubernetes, cloud, or observability tools.")
+      : "";
     return `
       <div class="container">
         ${renderHeader("Architecture Map", "Auto-discovered topology, dependency graph & risk areas — read-only")}
         ${renderAlerts()}
+        ${banner}
         <section class="card">
           <p class="muted">No discovery snapshots yet. Run discovery to build a service map from your connected signals (services, dependencies, monitoring, deployments, capacity & SLOs).</p>
           ${runBtn}
@@ -1140,10 +1144,14 @@ function renderServiceHealth() {
   const ov = state.serviceOverview;
   const canWrite = canWriteResources();
   const services = (ov && ov.services) || [];
+  const banner = !services.length && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner("Prometheus or Datadog", "PROMETHEUS", "Connect observability tools to populate service health and SLO burn.")
+    : "";
   return `
     <div class="container">
       ${renderHeader("Service Health", "Continuous SLO intelligence — availability, error budgets, burn rates")}
       ${renderAlerts()}
+      ${banner}
       ${canWrite ? `
       <section class="card">
         <div class="card-header"><div><h2>Add Service</h2><p class="muted">Catalog a service to track reliability against SLOs (read-only analytics).</p></div>

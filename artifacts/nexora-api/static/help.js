@@ -625,9 +625,10 @@ function renderHelpGettingStarted() {
   const roadmapHtml = `
     <section class="help-section card" style="margin-top:16px;">
       <h3>Integration roadmap</h3>
-      <p class="muted">30 integrations ship today including Alertmanager, Splunk, ServiceNow, and OpenTelemetry Collector.</p>
+      <p class="muted">35 integrations ship today. Future roadmap:</p>
       <ul class="muted" style="margin:8px 0 0;padding-left:20px;">
-        <li>Sentry, Dynatrace, Harness / Buildkite, Flux CD</li>
+        <li>Full Harness/Buildkite pipeline sync (ingest live today)</li>
+        <li>Live Flux CD reconciliation from cluster API</li>
       </ul>
     </section>`;
   const body = `

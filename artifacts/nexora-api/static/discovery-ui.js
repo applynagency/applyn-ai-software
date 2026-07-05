@@ -5,9 +5,8 @@
  */
 
 async function loadDiscovery() {
-  // One discovery system: Universal Discovery (DiscoveredAsset inventory + the
-  // Platform Knowledge Graph). Each call is best-effort so a single failure
-  // never blanks the whole page.
+  // Universal Discovery (DiscoveredAsset inventory + Platform Knowledge Graph).
+  // Each call is best-effort so a single failure never blanks the whole page.
   try {
     state.discoveryProgress = await api("/v1/discovery/progress");
   } catch (error) {
@@ -36,6 +35,9 @@ async function loadDiscovery() {
   }
   // The "recent changes" strip reuses the unified discovery event timeline.
   state.discoveryChanges = state.universalTimeline || [];
+  try {
+    state.integrationConnections = await api("/v1/integrations/connections");
+  } catch { state.integrationConnections = state.integrationConnections || []; }
 }
 
 const DISCOVERY_PROVIDER_COLORS = {
@@ -58,10 +60,12 @@ function renderDiscovery() {
 
   const intro = hasAssets
     ? ""
-    : `<section class="card">
+    : (typeof renderOpsConnectBanner === "function"
+      ? renderOpsConnectBanner("Integrations", null, "No assets discovered yet — connect tools and run universal discovery.")
+      : `<section class="card">
         <p class="muted">No assets discovered yet. Connect your integrations, then run a universal discovery to map every asset and build the Platform Knowledge Graph.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">${universalBtn}</div>
-      </section>`;
+      </section>`);
 
   return `
     <div class="container">

@@ -624,11 +624,11 @@ function resolveP2RouteRedirect(path) {
     "/delivery/release-analytics": "/delivery/dora",
     "/observability-platform/metrics": "/metrics",
     "/observability-platform/logs": "/logs",
-    "/observability-platform/traces": "/monitoring",
+    "/observability-platform/traces": "/traces",
     "/observability-platform/service-map": "/discovery",
     "/observability-platform/slo": "/services",
     "/observability-platform/alerts": "/alerts",
-    "/observability-platform/correlation": "/monitoring",
+    "/observability-platform/correlation": "/alerts",
   };
   return exact[path] || null;
 }
@@ -784,6 +784,7 @@ function parseRoute(pathname) {
   if (path === "/alerts") return { page: "alerts" };
   if (path === "/logs") return { page: "obs-platform-logs" };
   if (path === "/metrics") return { page: "obs-platform-metrics" };
+  if (path === "/traces") return { page: "obs-platform-traces" };
   const postmortemMatch = path.match(/^\/postmortems\/([^/]+)$/);
   if (postmortemMatch) return { page: "postmortem-detail", id: decodeURIComponent(postmortemMatch[1]) };
   if (path === "/incidents/on-call") return { page: "incidents-on-call" };
@@ -3755,6 +3756,7 @@ const NAV_GROUPS = [
       { label: "Service Health", path: "/services", icon: "health", match: ["service-health", "service-detail"] },
       { label: "Logs", path: "/logs", icon: "monitor", match: ["obs-platform-logs"] },
       { label: "Metrics", path: "/metrics", icon: "bar-chart", match: ["obs-platform-metrics"] },
+      { label: "Traces", path: "/traces", icon: "activity", match: ["obs-platform-traces"] },
     ],
   },
   {
@@ -4753,6 +4755,26 @@ function loadDashboardGuideDismissed() {
   }
 }
 
+function hasVerifiedIntegration(integrationKey) {
+  const conns = Array.isArray(state.integrationConnections)
+    ? state.integrationConnections
+    : (state.integrationConnections?.items || []);
+  const key = String(integrationKey || "").toUpperCase();
+  return conns.some((c) => String(c.integration_key || c.provider || "").toUpperCase() === key
+    && /VERIFIED|CONNECTED/i.test(String(c.status || "")));
+}
+
+function renderOpsConnectBanner(label, providerKey, message) {
+  const href = providerKey
+    ? `/integrations/onboarding?provider=${encodeURIComponent(providerKey)}`
+    : "/integrations/onboarding";
+  const text = message || `No live ${label} connection — connect to see real data in Nexora.`;
+  return `<div class="ops-connect-banner" role="status">
+    <span class="muted">${escapeHtml(text)}</span>
+    <a href="${escapeHtml(href)}" data-nav="${escapeHtml(href)}">Connect ${escapeHtml(label)}</a>
+  </div>`;
+}
+
 function saveDashboardGuideDismissed(dismissed) {
   try {
     localStorage.setItem(DASHBOARD_GUIDE_STORAGE_KEY, dismissed ? "true" : "false");
@@ -5744,8 +5766,9 @@ function renderPage() {
     case "operator-simulations":
     case "operator-savings":
       return renderRetiredHubPage("AI Operator", "/copilot", "Open AI Copilot");
-    case "obs-platform":
     case "obs-platform-traces":
+      return lazyObservabilityView("renderObsTraces");
+    case "obs-platform":
     case "obs-platform-map":
     case "obs-platform-slo":
     case "obs-platform-alerts":

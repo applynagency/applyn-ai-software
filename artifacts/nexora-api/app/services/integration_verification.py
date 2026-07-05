@@ -1041,6 +1041,68 @@ async def _verify_opentelemetry(secret: dict) -> ProviderProbe:
     )
 
 
+async def _verify_sentry(secret: dict) -> ProviderProbe:
+    endpoint = secret["endpoint"].rstrip("/")
+    headers = {"Authorization": f"Bearer {secret['token']}", "Accept": "application/json"}
+    data = await _http_request("GET", f"{endpoint}/api/0/", headers=headers)
+    version = data["_json"].get("version")
+    return ProviderProbe(
+        identity={"endpoint": endpoint},
+        version=version,
+        permissions=["issues:read", "projects:read"],
+        warnings=[],
+        partial=False,
+    )
+
+
+async def _verify_dynatrace(secret: dict) -> ProviderProbe:
+    env_id = secret["environment_id"]
+    headers = {"Authorization": f"Api-Token {secret['api_token']}", "Accept": "application/json"}
+    data = await _http_request("GET", f"https://{env_id}.live.dynatrace.com/api/v1/config/clusterversion", headers=headers)
+    return ProviderProbe(
+        identity={"environment_id": env_id},
+        version=data["_json"].get("version"),
+        permissions=["problems:read", "entities:read"],
+        warnings=[],
+        partial=False,
+    )
+
+
+async def _verify_buildkite(secret: dict) -> ProviderProbe:
+    org = secret["organization"]
+    headers = {"Authorization": f"Bearer {secret['api_token']}", "Accept": "application/json"}
+    data = await _http_request("GET", f"https://api.buildkite.com/v2/organizations/{org}", headers=headers)
+    body = data["_json"]
+    return ProviderProbe(
+        identity={"organization": org, "name": body.get("name", "")},
+        version=None,
+        permissions=["pipelines:read", "builds:read"],
+        warnings=[],
+        partial=False,
+    )
+
+
+async def _verify_harness(secret: dict) -> ProviderProbe:
+    account = secret["account_id"]
+    headers = {"x-api-key": secret["api_key"], "Accept": "application/json"}
+    await _http_request(
+        "GET", "https://app.harness.io/ng/api/accounts",
+        headers=headers,
+        params={"accountIdentifier": account},
+    )
+    return ProviderProbe(
+        identity={"account_id": account},
+        version=None,
+        permissions=["pipelines:read"],
+        warnings=["Harness API probe uses account list endpoint."],
+        partial=True,
+    )
+
+
+async def _verify_flux(secret: dict) -> ProviderProbe:
+    return await _verify_kubernetes(secret)
+
+
 _VERIFIERS = {
     "AWS": _verify_aws,
     "AZURE": _verify_azure,
@@ -1072,6 +1134,11 @@ _VERIFIERS = {
     "SPLUNK": _verify_splunk,
     "SERVICENOW": _verify_servicenow,
     "OPENTELEMETRY": _verify_opentelemetry,
+    "SENTRY": _verify_sentry,
+    "DYNATRACE": _verify_dynatrace,
+    "BUILDKITE": _verify_buildkite,
+    "HARNESS": _verify_harness,
+    "FLUX": _verify_flux,
 }
 
 

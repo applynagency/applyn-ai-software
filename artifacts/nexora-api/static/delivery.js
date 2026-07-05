@@ -1100,7 +1100,15 @@ function renderDeliveryDora() {
   if (!d.deployment_frequency_per_day && !state.dlvDora && !state.dlvDashboard) {
     return renderFeatureUnavailablePage("DORA", "DORA metrics are not available.");
   }
+  const needsCi = !deliveryHasVerifiedProvider("JENKINS")
+    && !deliveryHasVerifiedProvider("GITHUB")
+    && !deliveryHasVerifiedProvider("GITLAB")
+    && !deliveryHasVerifiedProvider("CIRCLECI");
+  const banner = needsCi && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner("Jenkins or GitHub Actions", "JENKINS", "Sync CI/CD pipelines to populate DORA metrics.")
+    : (needsCi ? renderDeliveryConnectBanner("Jenkins or GitHub Actions", "JENKINS") : "");
   return `<div class="container">${renderHeader("DORA Dashboard", "Engineering effectiveness")}${renderAlerts()}
+    ${banner}
     <p class="muted" style="font-size:12px;margin-bottom:12px;">Metrics are computed from synced CI/CD pipelines (Jenkins, GitHub Actions, GitLab, CircleCI, Azure DevOps, Bitbucket). Connect and verify integrations, then use <strong>Sync pipelines</strong> on each tool or wait for the scheduled sync.</p>
     <section class="card"><div class="ops-stats">
       ${rdMetric("Deployment Frequency", `${d.deployment_frequency_per_day ?? "—"}/day`)}

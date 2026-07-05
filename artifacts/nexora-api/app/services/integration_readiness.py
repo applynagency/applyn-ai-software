@@ -108,6 +108,11 @@ FEATURE_IMPACT = {
     "SPLUNK": ["Observability Platform", "Log Search", "Notable Events"],
     "SERVICENOW": ["Incidents", "Change Correlation", "CMDB Discovery"],
     "OPENTELEMETRY": ["Observability Platform", "Metrics Explorer", "Trace Explorer"],
+    "SENTRY": ["Observability Platform", "Error Ingest"],
+    "DYNATRACE": ["Observability Platform", "APM Context"],
+    "BUILDKITE": ["Delivery Platform", "Build Alerts"],
+    "HARNESS": ["Delivery Platform", "Pipeline Alerts"],
+    "FLUX": ["Delivery GitOps", "GitOps Discovery"],
 }
 
 EXPIRY_WINDOWS = ("30d", "14d", "7d", "1d")

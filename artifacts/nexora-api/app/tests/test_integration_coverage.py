@@ -1,4 +1,4 @@
-"""Coverage tests — all 30 marketplace integrations have live-data paths."""
+"""Coverage tests — all 35 marketplace integrations have live-data paths."""
 
 import pytest
 
@@ -14,8 +14,8 @@ from app.services.universal_discovery_adapters import supports_universal_discove
 ALL_KEYS = set(INTEGRATION_DEFINITIONS.keys())
 
 
-def test_all_30_integrations_defined():
-    assert len(ALL_KEYS) == 30
+def test_all_35_integrations_defined():
+    assert len(ALL_KEYS) == 35
 
 
 @pytest.mark.parametrize("key", sorted(ALL_KEYS))
@@ -37,6 +37,12 @@ def test_pipeline_sync_keys():
         assert supports_pipeline_sync(key)
 
 
+def test_gitops_sync_keys():
+    from app.services.integration_capabilities import supports_gitops_sync
+    for key in ("ARGOCD", "FLUX"):
+        assert supports_gitops_sync(key)
+
+
 def test_discovery_coverage():
     discovered = {k for k in ALL_KEYS if enrichment_for(k)["discovery"]}
     assert "GCP" in discovered or supports_universal_discovery("GCP")
@@ -52,6 +58,7 @@ def test_ingest_coverage():
         "BITBUCKET", "JENKINS", "CIRCLECI", "DATADOG", "PAGERDUTY", "OPSGENIE",
         "GRAFANA", "NEW_RELIC", "LOKI", "ELASTIC", "SONARQUBE", "GCP",
         "SPLUNK", "SERVICENOW", "OPENTELEMETRY",
+        "SENTRY", "DYNATRACE", "BUILDKITE", "HARNESS",
     ):
         assert key in ingested
 

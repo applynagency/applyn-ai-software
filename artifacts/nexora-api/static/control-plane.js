@@ -39,6 +39,15 @@ async function loadControlPlane() {
     const creds = await api("/v1/credentials?limit=200");
     state.credentials = creds.items || creds || [];
   } catch { /* keep existing */ }
+  try {
+    state.integrationConnections = await api("/v1/integrations/connections");
+  } catch { state.integrationConnections = state.integrationConnections || []; }
+}
+function cpNeedsConnect() {
+  return !hasVerifiedIntegration("KUBERNETES")
+    && !hasVerifiedIntegration("AWS")
+    && !hasVerifiedIntegration("AZURE")
+    && !hasVerifiedIntegration("GCP");
 }
 function renderControlPlane() {
   const page = state.route.page;
@@ -55,10 +64,14 @@ function renderControlPlaneOverview() {
   const clusters = state.cpClusters || [];
   const ops = state.cpOperations || [];
   const pending = ops.filter((o) => o.status === "PENDING_APPROVAL").length;
+  const banner = cpNeedsConnect() && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner("Kubernetes or Cloud", "KUBERNETES", "Connect cloud or Kubernetes credentials for live control plane data.")
+    : "";
   return `
     <div class="container">
       ${renderHeader("Control Plane", "Multi-cloud and Kubernetes operations")}
       ${renderAlerts()}
+      ${banner}
       <section class="card">
         <div class="ops-stats">
           ${rdMetric("Cloud Accounts", clouds.length)}

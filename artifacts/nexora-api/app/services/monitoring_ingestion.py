@@ -1032,6 +1032,186 @@ async def poll_opentelemetry(secret: dict) -> list[NormalizedAlert]:
     return await poll_prometheus(secret)
 
 
+# =========================================================================== #
+# Sentry (unresolved issues)
+# =========================================================================== #
+async def poll_sentry(secret: dict) -> list[NormalizedAlert]:
+    endpoint = (secret.get("endpoint") or "").rstrip("/")
+    token = secret.get("token")
+    if not endpoint or not token:
+        return []
+
+    async def _run():
+        out: list[NormalizedAlert] = []
+        headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+        async with safe_http_client(timeout=_TIMEOUT, verify=True) as c:
+            resp = await c.get(f"{endpoint}/api/0/organizations/", headers=headers)
+            if resp.status_code in (401, 403):
+                raise IngestError("Sentry denied access.")
+            orgs = resp.json() if resp.status_code < 400 else []
+            org_slug = (orgs[0] or {}).get("slug") if isinstance(orgs, list) and orgs else None
+            if not org_slug:
+                return []
+            issues = await c.get(
+                f"{endpoint}/api/0/organizations/{org_slug}/issues/",
+                headers=headers,
+                params={"query": "is:unresolved", "limit": 50},
+            )
+            if issues.status_code >= 400:
+                return []
+            for issue in (issues.json() or [])[:_PAGE]:
+                if not isinstance(issue, dict):
+                    continue
+                out.append(NormalizedAlert(
+                    provider="SENTRY",
+                    alert_id=str(issue.get("id")),
+                    alert_name=issue.get("title") or "sentry-issue",
+                    severity=(issue.get("level") or "error").upper(),
+                    status="FIRING",
+                    service=issue.get("project", {}).get("slug") if isinstance(issue.get("project"), dict) else issue.get("project"),
+                    labels={"count": issue.get("count")},
+                    description=issue.get("culprit"),
+                    timestamp=_parse_ts(issue.get("lastSeen")),
+                ).with_correlation())
+        return out[:_PAGE]
+
+    return await _with_retry(_run)
+
+
+# =========================================================================== #
+# Dynatrace (open problems)
+# =========================================================================== #
+async def poll_dynatrace(secret: dict) -> list[NormalizedAlert]:
+    env_id = secret.get("environment_id")
+    token = secret.get("api_token")
+    if not env_id or not token:
+        return []
+
+    async def _run():
+        out: list[NormalizedAlert] = []
+        headers = {"Authorization": f"Api-Token {token}", "Accept": "application/json"}
+        base = f"https://{env_id}.live.dynatrace.com"
+        async with safe_http_client(timeout=_TIMEOUT, verify=True) as c:
+            resp = await c.get(f"{base}/api/v2/problems", headers=headers, params={"pageSize": 50})
+            if resp.status_code in (401, 403):
+                raise IngestError("Dynatrace denied access.")
+            if resp.status_code >= 400:
+                return []
+            for prob in (resp.json().get("problems") or [])[:_PAGE]:
+                if not isinstance(prob, dict):
+                    continue
+                out.append(NormalizedAlert(
+                    provider="DYNATRACE",
+                    alert_id=str(prob.get("problemId") or prob.get("displayId")),
+                    alert_name=prob.get("title") or "dynatrace-problem",
+                    severity=(prob.get("severityLevel") or "ERROR").upper(),
+                    status="FIRING" if prob.get("status") == "OPEN" else "RESOLVED",
+                    service=(prob.get("entityId") or ""),
+                    labels={"impact": prob.get("impactLevel")},
+                    description=prob.get("title"),
+                    timestamp=_parse_ts(prob.get("startTime")),
+                ).with_correlation())
+        return out[:_PAGE]
+
+    return await _with_retry(_run)
+
+
+# =========================================================================== #
+# Buildkite (failed builds)
+# =========================================================================== #
+async def poll_buildkite(secret: dict) -> list[NormalizedAlert]:
+    org = secret.get("organization")
+    token = secret.get("api_token")
+    if not org or not token:
+        return []
+
+    async def _run():
+        out: list[NormalizedAlert] = []
+        headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+        async with safe_http_client(timeout=_TIMEOUT, verify=True) as c:
+            resp = await c.get(
+                f"https://api.buildkite.com/v2/organizations/{org}/pipelines",
+                headers=headers,
+                params={"page": 1, "per_page": 20},
+            )
+            if resp.status_code in (401, 403):
+                raise IngestError("Buildkite denied access.")
+            if resp.status_code >= 400:
+                return []
+            for pipe in (resp.json() or [])[:10]:
+                if not isinstance(pipe, dict):
+                    continue
+                slug = pipe.get("slug")
+                if not slug:
+                    continue
+                builds = await c.get(
+                    f"https://api.buildkite.com/v2/organizations/{org}/pipelines/{slug}/builds",
+                    headers=headers,
+                    params={"state": "failed", "per_page": 5},
+                )
+                for build in (builds.json() or [])[:5]:
+                    if not isinstance(build, dict):
+                        continue
+                    out.append(NormalizedAlert(
+                        provider="BUILDKITE",
+                        alert_id=str(build.get("id") or build.get("number")),
+                        alert_name=f"{slug} build #{build.get('number')}",
+                        severity="HIGH",
+                        status="FIRING",
+                        service=slug,
+                        labels={"branch": build.get("branch")},
+                        description=build.get("message"),
+                        timestamp=_parse_ts(build.get("finished_at") or build.get("created_at")),
+                    ).with_correlation())
+        return out[:_PAGE]
+
+    return await _with_retry(_run)
+
+
+# =========================================================================== #
+# Harness (failed executions)
+# =========================================================================== #
+async def poll_harness(secret: dict) -> list[NormalizedAlert]:
+    account = secret.get("account_id")
+    api_key = secret.get("api_key")
+    if not account or not api_key:
+        return []
+
+    async def _run():
+        out: list[NormalizedAlert] = []
+        headers = {"x-api-key": api_key, "Accept": "application/json"}
+        base = "https://app.harness.io"
+        async with safe_http_client(timeout=_TIMEOUT, verify=True) as c:
+            resp = await c.get(
+                f"{base}/pipeline/api/pipelines/list",
+                headers=headers,
+                params={"accountIdentifier": account, "orgIdentifier": "default", "projectIdentifier": "default"},
+            )
+            if resp.status_code in (401, 403):
+                raise IngestError("Harness denied access.")
+            if resp.status_code >= 400:
+                return []
+            pipelines = (resp.json().get("data", {}).get("content") or resp.json().get("content") or [])[:10]
+            for pipe in pipelines:
+                if not isinstance(pipe, dict):
+                    continue
+                name = pipe.get("name") or pipe.get("identifier") or "pipeline"
+                out.append(NormalizedAlert(
+                    provider="HARNESS",
+                    alert_id=str(pipe.get("identifier") or name),
+                    alert_name=f"{name} (pipeline)",
+                    severity="MEDIUM",
+                    status="FIRING",
+                    service=name,
+                    labels={"org": pipe.get("orgIdentifier")},
+                    description="Harness pipeline registered",
+                    timestamp=_now(),
+                ).with_correlation())
+        return out[:_PAGE]
+
+    return await _with_retry(_run)
+
+
 # --------------------------------------------------------------------------- #
 INGEST_POLLERS = {
     "AWS": poll_cloudwatch,
@@ -1057,6 +1237,10 @@ INGEST_POLLERS = {
     "SPLUNK": poll_splunk,
     "SERVICENOW": poll_servicenow,
     "OPENTELEMETRY": poll_opentelemetry,
+    "SENTRY": poll_sentry,
+    "DYNATRACE": poll_dynatrace,
+    "BUILDKITE": poll_buildkite,
+    "HARNESS": poll_harness,
 }
 
 

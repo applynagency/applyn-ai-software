@@ -1156,6 +1156,11 @@ PROVIDER_DOMAINS: dict[str, list[str]] = {
     "SPLUNK": ["OBSERVABILITY"],
     "SERVICENOW": ["INCIDENT"],
     "OPENTELEMETRY": ["OBSERVABILITY"],
+    "SENTRY": ["OBSERVABILITY"],
+    "DYNATRACE": ["OBSERVABILITY"],
+    "BUILDKITE": ["CI_CD"],
+    "HARNESS": ["CI_CD"],
+    "FLUX": ["GITOPS"],
 }
 
 

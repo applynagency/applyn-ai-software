@@ -11,7 +11,7 @@ PIPELINE_INTEGRATION_KEYS = frozenset({
     "JENKINS", "CIRCLECI", "AZURE_DEVOPS", "GITHUB", "GITLAB", "BITBUCKET",
 })
 
-GITOPS_INTEGRATION_KEYS = frozenset({"ARGOCD"})
+GITOPS_INTEGRATION_KEYS = frozenset({"ARGOCD", "FLUX"})
 
 INTEGRATION_VALUE: dict[str, dict] = {
     "AWS": {
@@ -162,7 +162,32 @@ INTEGRATION_VALUE: dict[str, dict] = {
     "OPENTELEMETRY": {
         "unlocks_now": ["Live verify", "Collector metrics", "Trace export endpoint"],
         "unlocks_live": ["Metrics explorer", "Trace explorer", "Observability platform"],
-        "pages": ["/metrics", "/logs", "/observability-platform"],
+        "pages": ["/metrics", "/logs", "/traces"],
+    },
+    "SENTRY": {
+        "unlocks_now": ["Live verify", "Issue ingest", "Project discovery"],
+        "unlocks_live": ["Error correlation", "Incident context"],
+        "pages": ["/alerts", "/incidents", "/discovery"],
+    },
+    "DYNATRACE": {
+        "unlocks_now": ["Live verify", "Problem ingest", "Entity discovery"],
+        "unlocks_live": ["Monitoring dashboard", "APM context"],
+        "pages": ["/alerts", "/services", "/discovery"],
+    },
+    "HARNESS": {
+        "unlocks_now": ["Live verify", "Pipeline discovery", "Failed execution alerts"],
+        "unlocks_live": ["Delivery pipelines", "DORA metrics"],
+        "pages": ["/delivery/pipelines", "/delivery/dora"],
+    },
+    "BUILDKITE": {
+        "unlocks_now": ["Live verify", "Pipeline discovery", "Failed build alerts"],
+        "unlocks_live": ["Delivery pipelines", "DORA metrics"],
+        "pages": ["/delivery/pipelines", "/delivery/dora"],
+    },
+    "FLUX": {
+        "unlocks_now": ["Live verify", "GitOps source discovery"],
+        "unlocks_live": ["Delivery GitOps view", "Drift detection"],
+        "pages": ["/delivery/gitops", "/discovery"],
     },
 }
 

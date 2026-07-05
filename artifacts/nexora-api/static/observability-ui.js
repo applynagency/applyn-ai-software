@@ -164,10 +164,47 @@ function marketplaceBacked(result) {
   return Boolean(result && result.marketplace_backed);
 }
 function renderObsTraces() {
+  const result = state.obsTraceSearchResult;
+  const busy = state.obsTraceSearchBusy;
+  const traces = (result && result.traces) || [];
+  const simulated = result && result.simulated;
+  const needsBanner = !result || simulated || !result.marketplace_backed;
+  const statusLine = result
+    ? `<p class="muted" style="font-size:11px;margin-top:8px;">
+        Provider: <strong>${escapeHtml(String(result.provider || "TEMPO"))}</strong>
+        ${result.marketplace_backed ? " · marketplace connection" : ""}
+        ${simulated ? ' · <span style="color:var(--warning,#b8860b);">sample data</span>' : " · live"}
+        ${result.total != null ? ` · ${result.total} trace(s)` : ""}
+      </p>`
+    : "";
+  const traceRows = traces.map((t) => {
+    const spans = (t.spans || []).map((s) => `
+      <div class="ops-list-row" style="padding-left:12px;">
+        <span>${escapeHtml(s.service || "")} · ${escapeHtml(s.operation || "span")}</span>
+        <span class="muted">${s.duration_ms || 0}ms · ${escapeHtml(s.status || "")}</span>
+      </div>`).join("");
+    return `
+      <article class="card" style="margin-bottom:10px;">
+        <div class="ops-list-row">
+          <span><strong>${escapeHtml(t.root_service || "service")}</strong> · ${escapeHtml(t.trace_id || "")}</span>
+          <span class="muted">${t.duration_ms || 0}ms · ${escapeHtml(t.status || "")}</span>
+        </div>
+        ${spans ? `<div class="ops-list">${spans}</div>` : ""}
+      </article>`;
+  }).join("");
   return `<div class="container">${renderHeader("Trace Explorer", "OpenTelemetry, Jaeger, Zipkin, Tempo")}
     ${renderAlerts()}
-    ${renderObsConnectBanner("OpenTelemetry Collector, Jaeger, or Tempo", "OPENTELEMETRY")}
-    <section class="card"><p class="muted">Trace waterfall and dependency views appear after connecting a trace backend.</p></section>
+    ${needsBanner ? (typeof renderOpsConnectBanner === "function"
+      ? renderOpsConnectBanner("OpenTelemetry, Jaeger, or Tempo", "OPENTELEMETRY")
+      : renderObsConnectBanner("OpenTelemetry, Jaeger, or Tempo", "OPENTELEMETRY")) : ""}
+    <section class="card">
+      <form data-obs-trace-search style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+        <label style="flex:1;min-width:200px;">Service / query<input name="query" placeholder="api-gateway or checkout" value="${escapeHtml(state.obsTraceQuery || "")}" style="width:100%;font-size:12px;" /></label>
+        <button class="btn btn-primary btn-sm" type="submit" ${busy ? "disabled" : ""}>${busy ? "Searching…" : "Search traces"}</button>
+      </form>
+      ${statusLine}
+    </section>
+    <section class="card"><h2>Traces</h2>${traceRows || `<p class="muted">${result ? "No traces matched." : "Search to load trace spans."}</p>`}</section>
   </div>`;
 }
 function renderObsServiceMap() {
@@ -267,6 +304,29 @@ function bindObservabilityUiEvents() {
       state.obsMetricQueryResult = null;
     } finally {
       state.obsMetricQueryBusy = false;
+      render();
+    }
+  });
+
+  document.querySelector("[data-obs-trace-search]")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const fd = new FormData(form);
+    const query = (fd.get("query") || "").trim() || "api-gateway";
+    state.obsTraceQuery = query;
+    state.obsTraceSearchBusy = true;
+    state.error = null;
+    render();
+    try {
+      state.obsTraceSearchResult = await api("/v1/observability/traces/search", {
+        method: "POST",
+        body: JSON.stringify({ query, limit: 25 }),
+      });
+    } catch (error) {
+      state.error = error.message;
+      state.obsTraceSearchResult = null;
+    } finally {
+      state.obsTraceSearchBusy = false;
       render();
     }
   });

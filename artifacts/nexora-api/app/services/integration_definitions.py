@@ -240,6 +240,46 @@ INTEGRATION_DEFINITIONS: dict[str, dict] = {
         "docs_url": "https://opentelemetry.io/docs/collector/",
         "description": "Connect OpenTelemetry Collector metrics and trace export endpoints.",
     },
+    "SENTRY": {
+        "name": "Sentry", "category": IntegrationCategory.OBSERVABILITY.value,
+        "auth_type": "TOKEN",
+        "required_fields": ["endpoint", "token"],
+        "capabilities": ["Read issues", "Read projects", "Read release health"],
+        "docs_url": "https://docs.sentry.io/api/",
+        "description": "Read Sentry issues, projects, and error events.",
+    },
+    "DYNATRACE": {
+        "name": "Dynatrace", "category": IntegrationCategory.OBSERVABILITY.value,
+        "auth_type": "API_TOKEN",
+        "required_fields": ["environment_id", "api_token"],
+        "capabilities": ["Read problems", "Read entities", "Read metrics"],
+        "docs_url": "https://docs.dynatrace.com/docs/dynatrace-api/",
+        "description": "Read Dynatrace problems, entities, and monitoring data.",
+    },
+    "HARNESS": {
+        "name": "Harness", "category": IntegrationCategory.PROJECT.value,
+        "auth_type": "API_KEY",
+        "required_fields": ["account_id", "api_key"],
+        "capabilities": ["Read pipelines", "Read executions", "Read deployments"],
+        "docs_url": "https://developer.harness.io/",
+        "description": "Read Harness CI/CD pipelines and deployment executions.",
+    },
+    "BUILDKITE": {
+        "name": "Buildkite", "category": IntegrationCategory.PROJECT.value,
+        "auth_type": "API_TOKEN",
+        "required_fields": ["organization", "api_token"],
+        "capabilities": ["Read pipelines", "Read builds", "Read agents"],
+        "docs_url": "https://buildkite.com/docs/apis/",
+        "description": "Read Buildkite pipelines and build history.",
+    },
+    "FLUX": {
+        "name": "Flux CD", "category": IntegrationCategory.ORCHESTRATION.value,
+        "auth_type": "KUBECONFIG",
+        "required_fields": ["kubeconfig"],
+        "capabilities": ["Read GitOps sources", "Read sync status", "Read Kustomizations"],
+        "docs_url": "https://fluxcd.io/flux/",
+        "description": "Read Flux CD GitOps reconciliation state from Kubernetes.",
+    },
 }
 
 # Secret field names that must never be surfaced/logged (extends 35A set).
