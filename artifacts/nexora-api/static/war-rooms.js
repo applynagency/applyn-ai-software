@@ -103,6 +103,10 @@ function wrAgentBadge(agent) {
   const c = WR_AGENT_COLORS[agent] || "#64748b";
   return `<span class="risk-score-badge" style="background:${c}1a;color:${c};font-weight:700;">${escapeHtml(agent)}</span>`;
 }
+function wrEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
 function renderWarRooms() {
   const rooms = state.warRooms || [];
   const d = state.warRoomDetail;
@@ -124,9 +128,17 @@ function renderWarRooms() {
       <span><strong>${escapeHtml((r.title || "War Room").slice(0, 40))}</strong><br/>
         <span class="muted" style="font-size:12px;">${escapeHtml(r.status)}</span></span>
       <span style="text-align:right;">${r.confidence_score ? `<strong style="color:${scoreColor(r.confidence_score)};">${r.confidence_score}%</strong>` : ""}</span>
-    </div>`).join("") : `<p class="muted">No war rooms yet.</p>`;
+    </div>`).join("") : wrEmpty({
+    title: "No war rooms yet",
+    message: "Convene a war room from an open incident to start multi-agent collaboration.",
+    ctaLabel: "View incidents",
+    ctaHref: "/incidents",
+  });
 
-  let detail = `<p class="muted">Select or convene a war room.</p>`;
+  let detail = wrEmpty({
+    title: "Select a war room",
+    message: "Choose an existing room or convene a new one from an incident.",
+  });
   if (d) {
     const banner = `
       <div class="card" style="border-left:4px solid #dc2626;background:#fef2f2;">
@@ -168,7 +180,10 @@ function renderWarRooms() {
 
       <section class="card">
         <h2>Agent Discussion</h2>
-        <div class="ops-list">${transcript || `<p class="muted">No messages yet.</p>`}</div>
+        <div class="ops-list">${transcript || wrEmpty({
+          title: "No messages yet",
+          message: "Agent discussion begins when the war room convenes on an incident.",
+        })}</div>
       </section>
 
       ${d.consensus_rca ? `<section class="card"><h2>Consensus RCA</h2><pre style="white-space:pre-wrap;font-family:inherit;font-size:13px;margin:0;">${escapeHtml(d.consensus_rca)}</pre></section>` : ""}
@@ -197,7 +212,10 @@ function renderWarRooms() {
         return `<section class="card">
           <h2>Live Collaboration <span class="badge" style="background:#dcfce7;color:#166534;">realtime</span></h2>
           <p class="muted" style="font-size:12px;">Online: ${online}</p>
-          <div class="ops-list" data-wr-live-feed>${liveRows || `<p class="muted">No live messages yet.</p>`}</div>
+          <div class="ops-list" data-wr-live-feed>${liveRows || wrEmpty({
+            title: "No live messages yet",
+            message: canWrite ? "Post the first message to start live collaboration." : "Messages from responders appear here in realtime.",
+          })}</div>
           ${typing}
           ${chatForm}
         </section>`;
@@ -219,7 +237,7 @@ function renderWarRooms() {
       ${renderAlerts()}
       ${connectBanner}
       <section class="card">${createForm}</section>
-      <div style="display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;">
+      <div style="display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;" class="war-room-layout">
         <section class="card"><h2>War Rooms</h2><div class="ops-list">${listRows}</div></section>
         <div style="display:flex;flex-direction:column;gap:16px;">${detail}</div>
       </div>

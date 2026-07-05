@@ -635,8 +635,8 @@ function renderHelpGettingStarted() {
       <h3>Integration roadmap</h3>
       <p class="muted">40 integrations ship today with live pipeline sync (Harness, Buildkite, Drone, Argo Workflows), Flux GitOps, Snyk/Trivy/Checkmarx security scans, trace waterfall explorer, Terraform Cloud apply/destroy, and enterprise write-back.</p>
       <ul class="muted" style="margin:8px 0 0;padding-left:20px;">
-        <li>Checkmarx and additional SAST/DAST vendors (roadmap)</li>
-        <li>Multi-cluster DR orchestration beyond inventory aggregate (roadmap)</li>
+        <li>Additional SAST/DAST vendors beyond Checkmarx (roadmap)</li>
+        <li>Automated multi-cluster failover orchestration (roadmap — advisory tabletop exercises ship today)</li>
       </ul>
       <p class="muted" style="font-size:12px;margin-top:8px;">Production hardening: set <code>RATE_LIMIT_FAIL_OPEN=false</code> when Redis is HA so abuse protection fails closed.</p>
     </section>`;

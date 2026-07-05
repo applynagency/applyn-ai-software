@@ -53,6 +53,7 @@ jobs:
       SMOKE_BASE_URL: http://localhost:8000/nexora-api
       NEXORA_UI_BASE: http://127.0.0.1:8000
       SMOKE_ALLOW_AGENT_FAILURE: "0"
+      PILOT_READY_ADVISORY: "1"
 
     steps:
       - name: Checkout

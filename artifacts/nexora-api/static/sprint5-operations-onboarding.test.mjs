@@ -38,7 +38,7 @@ function extractApiPaths(source) {
 test("parseRoute covers operations and integration deep links", () => {
   const { parseRoute } = loadFrontendExports();
   assert.equal(parseRoute("/operations").page, "dashboard");
-  assert.equal(parseRoute("/monitoring").page, "alerts");
+  assert.equal(parseRoute("/monitoring").page, "monitoring");
   assert.equal(parseRoute("/postmortems/pm-abc-123").page, "postmortem-detail");
   assert.equal(parseRoute("/postmortems/pm-abc-123").id, "pm-abc-123");
   assert.equal(parseRoute("/incident-response/status-pages").page, "incidents");

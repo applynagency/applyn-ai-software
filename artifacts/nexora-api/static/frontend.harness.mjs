@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 
+const routeRegistryJsPath = fileURLToPath(new URL("./route-registry.js", import.meta.url));
 const appJsPath = fileURLToPath(new URL("./app.js", import.meta.url));
 const pilotOperatorJsPath = fileURLToPath(new URL("./pilot-operator.js", import.meta.url));
 const billingJsPath = fileURLToPath(new URL("./billing.js", import.meta.url));
@@ -267,11 +268,21 @@ globalThis.__nexoraExports = {
   SHORTCUTS,
   NAV_GROUPS,
   NAV_DISCIPLINES,
+  visibleNavGroups,
   navGroupKey,
   isNavGroupCollapsed,
+  navGroupHasActiveRoute,
   toggleNavGroup,
   ensureActiveNavGroupExpanded,
   NAV_COLLAPSED_STORAGE_KEY,
+  NAV_FOCUS_DENSITY_KEY,
+  isNavFocusDensityEnabled,
+  toggleNavFocusDensity,
+  resolveRouteFromRegistry,
+  resolveNexoraRetiredRoute,
+  resolvePageRouteMeta,
+  suggestWorkflowNextActions,
+  renderWorkflowNextStrip,
   OPS_OPERATIONAL_FLOWS,
   buildOpsDashboardSnapshot,
   computeOpsDataFidelity,
@@ -285,6 +296,7 @@ globalThis.__nexoraExports = {
 `;
 
   vm.createContext(sandbox);
+  vm.runInContext(readFileSync(routeRegistryJsPath, "utf8"), sandbox);
   vm.runInContext(appHarness, sandbox);
   vm.runInContext(readFileSync(developmentUiJsPath, "utf8"), sandbox);
   vm.runInContext(readFileSync(opsCommandCenterUiJsPath, "utf8"), sandbox);

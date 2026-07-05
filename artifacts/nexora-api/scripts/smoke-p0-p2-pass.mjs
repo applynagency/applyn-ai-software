@@ -221,6 +221,21 @@ async function main() {
   record(peProviders.status === 200 ? "p2_pe_providers" : "p2_pe_providers",
     peProviders.status === 200 ? "PASS" : "WARN", `status=${peProviders.status}`);
 
+  // P0 advisory pilot readiness (warn in default CI; strict when PILOT_READY_SMOKE=1)
+  if (!PILOT_READY) {
+    const integAdvisory = await api("/v1/integrations/connections", { token });
+    const verifiedCount = (integAdvisory.json || []).filter((c) => /VERIFIED|CONNECTED/i.test(c.status || "")).length;
+    record("p0_advisory_integrations", verifiedCount >= 1 ? "PASS" : "WARN", `verified_connections=${verifiedCount}`);
+    if (secOverview.status === 200) {
+      record("p0_advisory_security_live", secOverview.json?.live_data ? "PASS" : "WARN",
+        `live_data=${secOverview.json?.live_data}`);
+    }
+    if (dora.status === 200) {
+      record("p0_advisory_dora_live", dora.json?.data_sufficient ? "PASS" : "WARN",
+        `data_sufficient=${dora.json?.data_sufficient}`);
+    }
+  }
+
   const outPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "smoke-p0-p2-results.json");
   writeFileSync(outPath, JSON.stringify(results, null, 2));
   console.log(`\nResults written to ${outPath}`);

@@ -63,6 +63,10 @@ function renderObsConnectBanner(providerLabel, integrationKey) {
     <a href="${escapeHtml(href)}" data-nav="${escapeHtml(href)}">Connect ${escapeHtml(providerLabel)}</a>
   </div>`;
 }
+function obsEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
 function obsNeedsConnectBanner(result, defaultProvider, integrationKey) {
   if (!result) return true;
   if (result.simulated) return true;
@@ -106,6 +110,7 @@ function renderObsMetrics() {
     ? renderOpsDataFidelityBadge(computeOpsDataFidelity(state))
     : "";
   return `<div class="container">${renderHeader("Metrics Explorer", "Prometheus, Datadog, and cloud metrics")}
+    ${typeof renderObserveNav === "function" ? renderObserveNav() : ""}
     ${renderAlerts()}
     ${fidelityBadge}
     ${needsBanner ? renderObsConnectBanner("Prometheus or Datadog", "PROMETHEUS") : ""}
@@ -118,8 +123,18 @@ function renderObsMetrics() {
       <p class="muted" style="font-size:11px;margin-top:6px;">Providers: ${escapeHtml(providers || "PROMETHEUS")}</p>
       ${statusLine}
     </section>
-    <section class="card"><h2>Query results</h2><div class="ops-list">${seriesRows || `<p class="muted">${result ? "No series returned." : "Run a query to see time series."}</p>`}</div></section>
-    <section class="card"><h2>Discovered metrics</h2><div class="ops-list">${top || `<p class="muted">No metrics discovered — connect a metrics backend.</p>`}</div></section>
+    <section class="card"><h2>Query results</h2><div class="responsive-table-wrap"><div class="ops-list">${seriesRows || obsEmpty({
+      title: result ? "No series returned" : "Run a metrics query",
+      message: result ? "Adjust your PromQL query or time window." : "Enter a PromQL query above to load time series.",
+      ctaLabel: needsBanner ? "Connect Prometheus" : null,
+      ctaHref: needsBanner ? "/integrations/onboarding?provider=PROMETHEUS" : null,
+    })}</div></div></section>
+    <section class="card"><h2>Discovered metrics</h2><div class="ops-list">${top || obsEmpty({
+      title: "No metrics discovered",
+      message: "Connect Prometheus or Datadog to discover available metrics.",
+      ctaLabel: "Connect Prometheus",
+      ctaHref: "/integrations/onboarding?provider=PROMETHEUS",
+    })}</div></section>
   </div>`;
 }
 function renderObsLogs() {
@@ -130,6 +145,7 @@ function renderObsLogs() {
   const simulated = result && result.simulated;
   const unavailable = result && result.unavailable_reason;
   const hasBackend = result && (marketplaceBacked(result) || !simulated);
+  const needsBanner = obsNeedsConnectBanner(result, "Loki or Elastic", "LOKI");
   const statusLine = result
     ? `<p class="muted" style="font-size:11px;margin-top:8px;">
         ${provider ? `Provider: <strong>${escapeHtml(String(provider))}</strong>` : ""}
@@ -139,14 +155,10 @@ function renderObsLogs() {
         ${result.total != null ? ` · ${result.total} line(s)` : ""}
       </p>`
     : `<p class="muted" style="font-size:11px;margin-top:8px;">Connect Loki, Elastic, or CloudWatch under <a href="/integrations" data-nav="/integrations">Integrations</a> for live log search.</p>`;
-  const emptyMsg = !result
-    ? "Run a search to see log lines."
-    : unavailable && simulated
-      ? `No log backend configured (${escapeHtml(String(unavailable))}). <a href="/integrations" data-nav="/integrations">Connect a log provider</a>.`
-      : "No lines matched.";
   return `<div class="container">${renderHeader("Logs Explorer", "Search connected log backends")}
+    ${typeof renderObserveNav === "function" ? renderObserveNav() : ""}
     ${renderAlerts()}
-    ${obsNeedsConnectBanner(result, "Loki or Elastic", "LOKI") ? renderObsConnectBanner("Loki, Elastic, or CloudWatch", "LOKI") : ""}
+    ${needsBanner ? renderObsConnectBanner("Loki, Elastic, or CloudWatch", "LOKI") : ""}
     <section class="card">
       <form data-obs-log-search style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
         <label style="flex:1;min-width:200px;">Query<input name="query" placeholder="error OR service name" value="${escapeHtml(state.obsLogQuery || "")}" style="width:100%;font-size:12px;" /></label>
@@ -160,7 +172,16 @@ function renderObsLogs() {
         const text = typeof line === "string" ? line : (line.message || line.line || JSON.stringify(line));
         const ts = typeof line === "object" && line && line.ts ? `<span class="muted">${escapeHtml(String(line.ts))}</span> ` : "";
         return `<div style="font-size:11px;font-family:monospace;margin:2px 0;white-space:pre-wrap;word-break:break-word;">${ts}${escapeHtml(String(text).slice(0, 500))}</div>`;
-      }).join("") : `<p class="muted">${emptyMsg}</p>`}
+      }).join("") : obsEmpty({
+        title: !result ? "Search logs" : "No log lines matched",
+        message: !result
+          ? "Enter a query to search connected log backends."
+          : (unavailable && simulated
+            ? `No log backend configured (${String(unavailable)}).`
+            : "Try a broader query or connect a log provider."),
+        ctaLabel: needsBanner ? "Connect Loki" : null,
+        ctaHref: needsBanner ? "/integrations/onboarding?provider=LOKI" : null,
+      })}
       ${result && !hasBackend && !entries.length ? `<p style="margin-top:12px;"><a class="btn btn-secondary btn-sm" href="/integrations" data-nav="/integrations">Connect log provider</a></p>` : ""}
     </section>
   </div>`;
@@ -194,6 +215,7 @@ function renderObsTraces() {
       </article>`;
   }).join("");
   return `<div class="container">${renderHeader("Trace Explorer", "OpenTelemetry, Jaeger, Zipkin, Tempo")}
+    ${typeof renderObserveNav === "function" ? renderObserveNav() : ""}
     ${renderAlerts()}
     ${needsBanner ? (typeof renderOpsConnectBanner === "function"
       ? renderOpsConnectBanner("OpenTelemetry, Jaeger, or Tempo", "OPENTELEMETRY")
@@ -205,7 +227,12 @@ function renderObsTraces() {
       </form>
       ${statusLine}
     </section>
-    <section class="card"><h2>Traces</h2>${traceRows || `<p class="muted">${result ? "No traces matched." : "Search to load trace spans."}</p>`}</section>
+    <section class="card"><h2>Traces</h2>${traceRows || obsEmpty({
+      title: result ? "No traces matched" : "Search traces",
+      message: result ? "Adjust your service name or trace ID filter." : "Search by service name or trace ID to load spans.",
+      ctaLabel: needsBanner ? "Connect OpenTelemetry" : null,
+      ctaHref: needsBanner ? "/integrations/onboarding?provider=OPENTELEMETRY" : null,
+    })}</section>
   </div>`;
 }
 function bindObservabilityUiEvents() {

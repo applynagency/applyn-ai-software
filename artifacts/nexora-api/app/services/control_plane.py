@@ -498,6 +498,89 @@ class ControlPlaneService:
             ],
         }
 
+    async def run_dr_exercise(self, user: User, org_context: OrgContext) -> dict:
+        """Advisory DR tabletop exercise — checklist only; never executes automated failover."""
+        organization_id = org_context.requires_organization
+        self._ensure_read(user, org_context)
+        summary = await self.federation_summary(user, org_context)
+        dr = summary["dr_readiness"]
+        checklist: list[dict] = [
+            {
+                "phase": "detection",
+                "action": "Confirm incident scope, blast radius, and primary cluster health signals.",
+                "automated": False,
+                "owner": "incident_commander",
+            },
+            {
+                "phase": "decision",
+                "action": "Human approval required before any traffic shift or failover action.",
+                "automated": False,
+                "owner": "incident_commander",
+            },
+        ]
+        if dr.get("multi_cluster"):
+            checklist.extend([
+                {
+                    "phase": "inventory",
+                    "action": (
+                        f"Validate {dr.get('failover_candidates', 0)} healthy failover candidate(s) "
+                        "in federation inventory."
+                    ),
+                    "automated": True,
+                    "owner": "platform",
+                },
+                {
+                    "phase": "runbook",
+                    "action": "Execute documented failover runbook steps (DNS, ingress, data replication).",
+                    "automated": False,
+                    "owner": "sre",
+                },
+                {
+                    "phase": "verification",
+                    "action": "Smoke-test critical services on candidate cluster before cutover.",
+                    "automated": False,
+                    "owner": "sre",
+                },
+            ])
+        else:
+            checklist.append({
+                "phase": "prerequisite",
+                "action": "Register a secondary cluster to enable multi-cluster DR inventory.",
+                "automated": False,
+                "owner": "platform",
+            })
+        if dr.get("multi_region"):
+            checklist.append({
+                "phase": "geo",
+                "action": "Confirm cross-region replication lag and RPO/RTO targets with stakeholders.",
+                "automated": False,
+                "owner": "sre",
+            })
+        exercise_id = make_idempotency_key("dr-exercise", organization_id, str(len(summary["clusters"])))
+        await self.audit.log(
+            action="control_plane.dr_exercise",
+            resource_type="Federation",
+            resource_id=organization_id,
+            user_id=user.id,
+            organization_id=organization_id,
+            details={
+                "exercise_id": exercise_id,
+                "multi_cluster": dr.get("multi_cluster"),
+                "failover_candidates": dr.get("failover_candidates"),
+            },
+        )
+        return {
+            "exercise_id": exercise_id,
+            "mode": "advisory_tabletop",
+            "automated_failover": False,
+            "human_approval_required": True,
+            "dr_orchestration": "advisory_exercise" if dr.get("multi_cluster") else summary["dr_orchestration"],
+            "dr_readiness": dr,
+            "checklist": checklist,
+            "recommended_actions": summary["recommended_actions"],
+            "clusters": summary["clusters"],
+        }
+
     # ------------------------------------------------------------- policies
     async def list_policy_findings(
         self, user: User, org_context: OrgContext, cluster_id: str,

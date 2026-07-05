@@ -5,6 +5,59 @@
  * renderSkeleton, renderListFilters, canWriteResources, navigate, statCard, etc.
  */
 
+function devEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
+
+function devAppTabEmpty(tab, appLabel) {
+  const name = appLabel || "this application";
+  const map = {
+    builds: {
+      title: "No builds yet",
+      message: `Start a build for ${name} from the factory or connect CI.`,
+      ctaLabel: "Open Build Center",
+      ctaHref: "/builds",
+      secondaryLabel: "Create application",
+      secondaryHref: "/applications/create",
+    },
+    deployments: {
+      title: "No deployments yet",
+      message: `Publish ${name} live once the build passes review.`,
+      ctaLabel: "Deployments",
+      ctaHref: "/deployments",
+    },
+    releases: {
+      title: "No releases yet",
+      message: `Create a release record when ${name} is ready for customers.`,
+      ctaLabel: "Release management",
+      ctaHref: "/releases",
+    },
+    versions: {
+      title: "No versions yet",
+      message: `Version history appears after the first successful build of ${name}.`,
+      ctaLabel: "Build Center",
+      ctaHref: "/builds",
+    },
+  };
+  return devEmpty(map[tab] || { title: "Nothing here yet", message: "Connect workflows or run a build to populate this tab." });
+}
+
+function devAgentRunEmpty(roleTitle, opts) {
+  const o = opts || {};
+  const filtered = Boolean(o.filtered);
+  return devEmpty({
+    title: filtered ? `No ${roleTitle} runs match` : `No ${roleTitle} runs yet`,
+    message: o.message || (filtered
+      ? "Adjust filters or start a new agent run."
+      : `Launch a ${roleTitle} run from a requirement, workflow, or application.`),
+    ctaLabel: o.ctaLabel || "Create application",
+    ctaHref: o.ctaHref || "/applications/create",
+    secondaryLabel: o.secondaryLabel || "Workflows",
+    secondaryHref: o.secondaryHref || "/workflows",
+  });
+}
+
 function renderDashboardHero(applications) {
   if (!DEVELOPMENT_UI_ENABLED) {
     return "";
@@ -160,7 +213,12 @@ function renderRecentBuilds() {
         <a class="btn btn-secondary" href="/builds" data-nav="/builds">View All Builds</a>
       </div>
       ${builds.length === 0
-        ? `<p class="muted">No builds running yet. Create an application to start your first build.</p>`
+        ? devEmpty({
+          title: "No builds yet",
+          message: "Create an application to start your first AI-generated build.",
+          ctaLabel: "Create application",
+          ctaHref: "/applications/create",
+        })
         : `<div class="build-progress-list">
             ${builds.map((build) => {
               const percent = buildProgressPercent(build);
@@ -285,7 +343,7 @@ function renderProductOwner() {
       <section class="card">
         <h2>Run History (${filteredRuns.length})</h2>
         ${renderListFilters()}
-        ${filteredRuns.length === 0 ? `<p class="muted">No Product Owner runs yet.</p>` : `
+        ${filteredRuns.length === 0 ? devAgentRunEmpty("Product Owner") : `
           <div class="table-scroll">
             <div class="table-grid table-grid-workflows">
               <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Summary</div><div>Created</div><div></div></div>
@@ -367,7 +425,15 @@ function renderWorkflows() {
       </section>
       <section class="card">
         <h2>Workflows Dashboard (${state.workflows.length})</h2>
-        ${state.workflows.length === 0 ? `<p class="muted">No workflows yet. Create one or apply a template.</p>` : `
+        ${state.workflows.length === 0 ? devEmpty({
+          title: "No workflows yet",
+          message: "Create a workflow or apply a template to define your software delivery process.",
+          ctaLabel: "Create workflow",
+          ctaHref: "/workflows/create",
+          secondaryLabel: "Browse templates",
+          secondaryHref: "/workflow-templates",
+        }) : `
+          <div class="responsive-table-wrap">
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head">
               <div>Name</div><div>Status</div><div>Stages</div><div>Teams</div><div>Rules</div><div>Updated</div><div>Actions</div>
@@ -387,6 +453,7 @@ function renderWorkflows() {
                 </div>
               </div>
             `).join("")}
+          </div>
           </div>
         `}
       </section>
@@ -489,7 +556,10 @@ function renderWorkflowDetailTab(workflow) {
               <button class="btn" type="submit">Add stage</button>
             </form>
           ` : ""}
-          ${workflow.stages.length === 0 ? `<p class="muted">No stages yet.</p>` : workflow.stages.map((stage) => `
+          ${workflow.stages.length === 0 ? devEmpty({
+            title: "No stages yet",
+            message: canWriteWorkflows() ? "Use the form above to add your first stage." : "Stages define how work flows through this pipeline.",
+          }) : workflow.stages.map((stage) => `
             <div class="list-item">
               <div class="list-item-header">
                 <div>
@@ -524,7 +594,10 @@ function renderWorkflowDetailTab(workflow) {
                   <button class="btn btn-secondary" type="submit">Assign team</button>
                 </form>
               ` : ""}
-              ${(stage.team_assignments || []).length === 0 ? `<p class="muted">No teams assigned.</p>` : `
+              ${(stage.team_assignments || []).length === 0 ? devEmpty({
+                title: "No teams assigned",
+                message: "Assign teams to this stage for ownership and approvals.",
+              }) : `
                 <div class="table-grid table-grid-mappings">
                   <div class="table-row table-head"><div>Order</div><div>Team</div><div>Actions</div></div>
                   ${stage.team_assignments.map((assignment) => `
@@ -559,7 +632,10 @@ function renderWorkflowDetailTab(workflow) {
               <button class="btn" type="submit">Add rule</button>
             </form>
           ` : ""}
-          ${workflow.rules.length === 0 ? `<p class="muted">No rules configured.</p>` : workflow.rules.map((rule) => `
+          ${workflow.rules.length === 0 ? devEmpty({
+            title: "No rules configured",
+            message: "Add automation rules to gate stages and trigger actions.",
+          }) : workflow.rules.map((rule) => `
             <div class="list-item">
               <strong>${escapeHtml(rule.rule_type)}</strong>
               <pre class="code-block">${escapeHtml(JSON.stringify(rule.configuration_json, null, 2))}</pre>
@@ -677,7 +753,7 @@ function renderWorkflowExecutions() {
       <section class="card">
         <h2>Executions (${filteredExecutions.length})</h2>
         ${renderListFilters()}
-        ${filteredExecutions.length === 0 ? `<p class="muted">No executions match your filters.</p>` : `
+        ${filteredExecutions.length === 0 ? devAgentRunEmpty("Workflow execution", { filtered: true, ctaLabel: "View workflows", ctaHref: "/workflows", secondaryLabel: null, secondaryHref: null }) : `
           <div class="table-scroll">
             <div class="table-grid table-grid-workflows">
               <div class="table-row table-head">
@@ -803,7 +879,7 @@ function renderBusinessAnalyst() {
       <section class="card">
         <h2>Run History (${filteredRuns.length})</h2>
         ${renderListFilters()}
-        ${filteredRuns.length === 0 ? `<p class="muted">No Business Analyst runs match your filters.</p>` : `
+        ${filteredRuns.length === 0 ? devAgentRunEmpty("Business Analyst", { filtered: true }) : `
           <div class="table-scroll">
             <div class="table-grid table-grid-workflows">
               <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Score</div><div>Duration</div><div>Created</div><div></div></div>
@@ -913,7 +989,7 @@ function renderBackendArchitect() {
       ` : `<p class="muted">You need write access to run the Backend Architect agent.</p>`}
       <section class="card">
         <h2>Run History (${state.backendArchitectRuns.length})</h2>
-        ${state.backendArchitectRuns.length === 0 ? `<p class="muted">No Backend Architect runs yet.</p>` : `
+        ${state.backendArchitectRuns.length === 0 ? devAgentRunEmpty("Backend Architect") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Score</div><div>Tokens</div><div>Created</div><div></div></div>
             ${state.backendArchitectRuns.map((run) => `
@@ -1073,7 +1149,7 @@ function renderBackendV1() {
       ` : `<p class="muted">You need write access to run the Backend Developer V1 agent.</p>`}
       <section class="card">
         <h2>Run History (${state.backendV1Runs.length})</h2>
-        ${state.backendV1Runs.length === 0 ? `<p class="muted">No Backend Developer V1 runs yet.</p>` : `
+        ${state.backendV1Runs.length === 0 ? devAgentRunEmpty("Backend Developer V1") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Score</div><div>Tokens</div><div>Created</div><div></div></div>
             ${state.backendV1Runs.map((run) => `
@@ -1244,7 +1320,7 @@ function renderBackendV2() {
       ` : `<p class="muted">You need write access to run the Backend Developer V2 agent.</p>`}
       <section class="card">
         <h2>Run History (${state.backendV2Runs.length})</h2>
-        ${state.backendV2Runs.length === 0 ? `<p class="muted">No Backend Developer V2 runs yet.</p>` : `
+        ${state.backendV2Runs.length === 0 ? devAgentRunEmpty("Backend Developer V2") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Score</div><div>Tokens</div><div>Created</div><div></div></div>
             ${state.backendV2Runs.map((run) => `
@@ -1463,7 +1539,7 @@ function renderUiux() {
       ` : `<p class="muted">You need write access to run the UI/UX Designer agent.</p>`}
       <section class="card">
         <h2>Run History (${state.uiuxRuns.length})</h2>
-        ${state.uiuxRuns.length === 0 ? `<p class="muted">No UI/UX Designer runs yet.</p>` : `
+        ${state.uiuxRuns.length === 0 ? devAgentRunEmpty("UI/UX Designer") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Score</div><div>Tokens</div><div>Created</div><div></div></div>
             ${state.uiuxRuns.map((run) => `
@@ -1591,7 +1667,7 @@ function renderFrontendArchitect() {
       ` : `<p class="muted">You need write access to run the Frontend Architect agent.</p>`}
       <section class="card">
         <h2>Run History (${state.frontendArchitectRuns.length})</h2>
-        ${state.frontendArchitectRuns.length === 0 ? `<p class="muted">No Frontend Architect runs yet.</p>` : `
+        ${state.frontendArchitectRuns.length === 0 ? devAgentRunEmpty("Frontend Architect") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Score</div><div>Tokens</div><div>Created</div><div></div></div>
             ${state.frontendArchitectRuns.map((run) => `
@@ -1750,7 +1826,7 @@ function renderFrontendV1() {
       ` : `<p class="muted">You need write access to run the Frontend Developer V1 agent.</p>`}
       <section class="card">
         <h2>Run History (${state.frontendV1Runs.length})</h2>
-        ${state.frontendV1Runs.length === 0 ? `<p class="muted">No Frontend Developer V1 runs yet.</p>` : `
+        ${state.frontendV1Runs.length === 0 ? devAgentRunEmpty("Frontend Developer V1") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Score</div><div>Tokens</div><div>Created</div><div></div></div>
             ${state.frontendV1Runs.map((run) => `
@@ -1939,7 +2015,7 @@ function renderFrontendV2() {
       ` : `<p class="muted">You need write access to run the Frontend Developer V2 agent.</p>`}
       <section class="card">
         <h2>Run History (${state.frontendV2Runs.length})</h2>
-        ${state.frontendV2Runs.length === 0 ? `<p class="muted">No Frontend Developer V2 runs yet.</p>` : `
+        ${state.frontendV2Runs.length === 0 ? devAgentRunEmpty("Frontend Developer V2") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Score</div><div>Tokens</div><div>Created</div><div></div></div>
             ${state.frontendV2Runs.map((run) => `
@@ -2142,7 +2218,7 @@ function renderFrontendV3() {
       ` : `<p class="muted">You need write access to run the Frontend Developer V3 agent.</p>`}
       <section class="card">
         <h2>Run History (${state.frontendV3Runs.length})</h2>
-        ${state.frontendV3Runs.length === 0 ? `<p class="muted">No Frontend Developer V3 runs yet.</p>` : `
+        ${state.frontendV3Runs.length === 0 ? devAgentRunEmpty("Frontend Developer V3") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Score</div><div>Tokens</div><div>Created</div><div></div></div>
             ${state.frontendV3Runs.map((run) => `
@@ -2274,7 +2350,7 @@ function renderBackendV3() {
       ` : `<p class="muted">You need write access to run the Backend Developer V3 agent.</p>`}
       <section class="card">
         <h2>Run History (${state.backendV3Runs.length})</h2>
-        ${state.backendV3Runs.length === 0 ? `<p class="muted">No Backend Developer V3 runs yet.</p>` : `
+        ${state.backendV3Runs.length === 0 ? devAgentRunEmpty("Backend Developer V3") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Score</div><div>Tokens</div><div>Created</div><div></div></div>
             ${state.backendV3Runs.map((run) => `
@@ -2423,7 +2499,7 @@ function renderBackendCodeReview() {
       ` : `<p class="muted">You need write access to run the Backend Code Review agent.</p>`}
       <section class="card">
         <h2>Run History (${state.backendCodeReviewRuns.length})</h2>
-        ${state.backendCodeReviewRuns.length === 0 ? `<p class="muted">No Backend Code Review runs yet.</p>` : `
+        ${state.backendCodeReviewRuns.length === 0 ? devAgentRunEmpty("Backend Code Review") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Score</div><div>Approval</div><div>Created</div><div></div></div>
             ${state.backendCodeReviewRuns.map((run) => `
@@ -2579,7 +2655,7 @@ function renderFrontendCodeReview() {
       ` : `<p class="muted">You need write access to run the Frontend Code Review agent.</p>`}
       <section class="card">
         <h2>Run History (${state.frontendCodeReviewRuns.length})</h2>
-        ${state.frontendCodeReviewRuns.length === 0 ? `<p class="muted">No Frontend Code Review runs yet.</p>` : `
+        ${state.frontendCodeReviewRuns.length === 0 ? devAgentRunEmpty("Frontend Code Review") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Score</div><div>Approval</div><div>Created</div><div></div></div>
             ${state.frontendCodeReviewRuns.map((run) => `
@@ -2754,7 +2830,7 @@ function renderBackendExecution() {
       ` : `<p class="muted">You need write access to run the Backend Execution agent.</p>`}
       <section class="card">
         <h2>Run History (${state.backendExecutionRuns.length})</h2>
-        ${state.backendExecutionRuns.length === 0 ? `<p class="muted">No Backend Execution runs yet.</p>` : `
+        ${state.backendExecutionRuns.length === 0 ? devAgentRunEmpty("Backend Execution") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Build</div><div>Score</div><div>Approval</div><div>Created</div><div></div></div>
             ${state.backendExecutionRuns.map((run) => `
@@ -2906,7 +2982,7 @@ function renderFrontendExecution() {
       ` : `<p class="muted">You need write access to run the Frontend Execution agent.</p>`}
       <section class="card">
         <h2>Run History (${state.frontendExecutionRuns.length})</h2>
-        ${state.frontendExecutionRuns.length === 0 ? `<p class="muted">No Frontend Execution runs yet.</p>` : `
+        ${state.frontendExecutionRuns.length === 0 ? devAgentRunEmpty("Frontend Execution") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Build</div><div>Approval</div><div>Created</div><div></div></div>
             ${state.frontendExecutionRuns.map((run) => `
@@ -3035,7 +3111,7 @@ function renderQAArchitect() {
       ` : `<p class="muted">You need write access to run the QA Architect agent.</p>`}
       <section class="card">
         <h2>Run History (${state.qaArchitectRuns.length})</h2>
-        ${state.qaArchitectRuns.length === 0 ? `<p class="muted">No QA Architect runs yet.</p>` : `
+        ${state.qaArchitectRuns.length === 0 ? devAgentRunEmpty("QA Architect") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Score</div><div>Created</div><div></div></div>
             ${state.qaArchitectRuns.map((run) => `
@@ -3172,7 +3248,7 @@ function renderUnitTests() {
       ` : `<p class="muted">You need write access to run the Unit Test Generator.</p>`}
       <section class="card">
         <h2>Run History (${state.unitTestRuns.length})</h2>
-        ${state.unitTestRuns.length === 0 ? `<p class="muted">No unit test generator runs yet.</p>` : `
+        ${state.unitTestRuns.length === 0 ? devAgentRunEmpty("Unit Test Generator") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Score</div><div>Created</div><div></div></div>
             ${state.unitTestRuns.map((run) => `
@@ -3289,7 +3365,7 @@ function renderQAAgentRunPage({ title, subtitle, formId, apiPath, navBase, runs,
       ` : `<p class="muted">You need write access to run this agent.</p>`}
       <section class="card">
         <h2>Run History (${runs.length})</h2>
-        ${runs.length === 0 ? `<p class="muted">No runs yet.</p>` : `
+        ${runs.length === 0 ? devAgentRunEmpty("Agent") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Score</div><div>Created</div><div></div></div>
             ${runs.map((run) => `
@@ -3623,7 +3699,7 @@ function renderFullstackAssembly() {
       ` : `<p class="muted">You need write access to run the Full Stack Assembly agent.</p>`}
       <section class="card">
         <h2>Run History (${state.fullstackAssemblyRuns.length})</h2>
-        ${state.fullstackAssemblyRuns.length === 0 ? `<p class="muted">No Full Stack Assembly runs yet.</p>` : `
+        ${state.fullstackAssemblyRuns.length === 0 ? devAgentRunEmpty("Full Stack Assembly") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Assembly</div><div>Score</div><div>Created</div><div></div></div>
             ${state.fullstackAssemblyRuns.map((run) => `
@@ -4000,6 +4076,7 @@ function renderApplicationDetail() {
     || (state.requirements[0]?.id)
     || "";
   const currentVersion = v?.version || appModel?.version || matchingVersions[0]?.version || "—";
+  const appLabel = appModel?.name || v?.name || appModel?.title || "this application";
 
   const lifecycleActions = (links) => `
     <div class="actions" style="margin-bottom: 16px">
@@ -4031,7 +4108,7 @@ function renderApplicationDetail() {
       <section class="card">
         <h2>Builds (${matchingBuilds.length})</h2>
         ${lifecycleActions([{ label: "Open Build Center", path: "/builds" }])}
-        ${matchingBuilds.length === 0 ? `<p class="muted">No builds yet for this application.</p>` : matchingBuilds.map((build) => `
+        ${matchingBuilds.length === 0 ? devAppTabEmpty("builds", appLabel) : matchingBuilds.map((build) => `
           <div class="list-item">
             <div class="list-item-header">
               <div>
@@ -4058,7 +4135,7 @@ function renderApplicationDetail() {
             <button class="btn" type="submit">Deploy</button>
           </form>
         ` : `<p class="muted">This application needs to finish building before it can be deployed.</p>`) : ""}
-        ${matchingDeployments.length === 0 ? `<p class="muted">No deployments yet for this application.</p>` : matchingDeployments.map((run) => `
+        ${matchingDeployments.length === 0 ? devAppTabEmpty("deployments", appLabel) : matchingDeployments.map((run) => `
           <div class="list-item">
             <div class="list-item-header">
               <div>
@@ -4097,7 +4174,7 @@ function renderApplicationDetail() {
             <button class="btn" type="submit">Create Release</button>
           </form>
         ` : `<p class="muted">Finish building this application before publishing a release.</p>`) : ""}
-        ${matchingReleases.length === 0 ? `<p class="muted">No releases yet for this application.</p>` : matchingReleases.map((release) => `
+        ${matchingReleases.length === 0 ? devAppTabEmpty("releases", appLabel) : matchingReleases.map((release) => `
           <div class="list-item">
             <h3>${escapeHtml(release.change_summary || "Release")}</h3>
             <p class="muted">${formatDate(release.release_date)}</p>
@@ -4152,7 +4229,7 @@ function renderApplicationDetail() {
     content = `
       <section class="card">
         <h2>Versions (${matchingVersions.length})</h2>
-        ${matchingVersions.length === 0 ? `<p class="muted">No versions yet for this application.</p>` : `
+        ${matchingVersions.length === 0 ? devAppTabEmpty("versions", appLabel) : `
           <div class="table-scroll">
             <div class="table-grid table-grid-workflows">
               <div class="table-row table-head"><div>Version</div><div>Status</div><div>Release Date</div><div>Deployment URL</div><div></div></div>
@@ -4354,7 +4431,12 @@ function renderReleases() {
       <section class="card">
         <h2>Release History (${(state.lifecycleReleases || []).length})</h2>
         ${(state.lifecycleReleases || []).length === 0
-          ? `<p class="muted">No releases yet.</p>`
+          ? devEmpty({
+            title: "No releases yet",
+            message: "Publish a release when your application is ready for production.",
+            ctaLabel: "Applications",
+            ctaHref: "/applications",
+          })
           : `<div class="table-grid table-grid-workflows">
               <div class="table-row table-head"><div>Date</div><div>Change Summary</div><div>Deployment URL</div></div>
               ${(state.lifecycleReleases || []).map((r) => `
@@ -4379,7 +4461,12 @@ function renderBuilds() {
       <section class="card">
         <h2>Builds (${builds.length})</h2>
         ${renderListFilters()}
-        ${builds.length === 0 ? `<p class="muted">No builds found.</p>` : `
+        ${builds.length === 0 ? devEmpty({
+          title: "No builds found",
+          message: "Adjust filters or create an application to start your first build.",
+          ctaLabel: "Create application",
+          ctaHref: "/applications/create",
+        }) : `
           <div class="table-scroll">
             <div class="table-grid table-grid-builds">
               <div class="table-row table-head">
@@ -4676,7 +4763,10 @@ function renderAiTeamDetail() {
         </div>
         ${canWrite && state.aiAgentFormOpen && !state.aiAgentEditId ? `<div class="credential-add" style="margin-top:12px;"><h3>Add Agent</h3>${renderAiAgentForm(team.id, null)}</div>` : ""}
         ${agents.length === 0
-          ? `<p class="muted" style="margin-top:12px;">No agents yet. ${canWrite ? "Add your first agent above." : ""}</p>`
+          ? devEmpty({
+            title: "No agents yet",
+            message: canWrite ? "Use Add Agent above to create your first team member." : "Agents in this team will appear here.",
+          })
           : `
           <div class="ai-agent-list" style="margin-top:12px;">
             ${agents.map((a) => {
@@ -7571,7 +7661,7 @@ function renderApprovals() {
       ` : `<p class="muted">You need write access to run the Approval Workflow agent.</p>`}
       <section class="card">
         <h2>Approval History (${state.approvalRuns.length})</h2>
-        ${state.approvalRuns.length === 0 ? `<p class="muted">No approval runs yet.</p>` : `
+        ${state.approvalRuns.length === 0 ? devAgentRunEmpty("Approval") : `
           <div class="table-grid table-grid-workflows">
             <div class="table-row table-head"><div>Status</div><div>Requirement</div><div>Approval</div><div>Recommendation</div><div>Score</div><div></div></div>
             ${state.approvalRuns.map((run) => `
@@ -7799,7 +7889,12 @@ function renderDeployments() {
       ` : `<p class="muted">You need write access to run deployments.</p>`}
       <section class="card">
         <h2>Deployment History (${state.deploymentRuns.length})</h2>
-        ${state.deploymentRuns.length === 0 ? `<p class="muted">No deployments yet.</p>` : `
+        ${state.deploymentRuns.length === 0 ? devEmpty({
+          title: "No deployments yet",
+          message: "Deploy an application once it passes review to see history here.",
+          ctaLabel: "Applications",
+          ctaHref: "/applications",
+        }) : `
           <div class="table-grid table-grid-deployments">
             <div class="table-row table-head"><div>Application</div><div>Status</div><div>Live URL</div><div>Deployed</div><div></div></div>
             ${state.deploymentRuns.map((run) => `
@@ -7898,7 +7993,14 @@ function renderAgents() {
       </section>
       <section class="card">
         <h2>Agents Dashboard (${state.aiAgents.length})</h2>
-        ${state.aiAgents.length === 0 ? `<p class="muted">No agents yet. Create one or apply a template.</p>` : `
+        ${state.aiAgents.length === 0 ? devEmpty({
+          title: "No agents yet",
+          message: "Create a custom agent or apply a template to get started.",
+          ctaLabel: canWriteAiAgents() ? "Create agent" : undefined,
+          ctaHref: canWriteAiAgents() ? "/agents/create" : undefined,
+          secondaryLabel: canWriteAiAgents() ? "Browse templates" : undefined,
+          secondaryHref: canWriteAiAgents() ? "/agent-templates" : undefined,
+        }) : `
           <div class="table-grid table-grid-agents">
             <div class="table-row table-head">
               <div>Name</div><div>Status</div><div>Inputs</div><div>Outputs</div><div>Assignments</div><div>Updated</div><div>Actions</div>

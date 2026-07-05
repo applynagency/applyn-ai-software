@@ -279,6 +279,10 @@ function countCriticalIncidents(incidents) {
     return !["RESOLVED", "CLOSED"].includes(status) && /CRITICAL|SEV1|SEV_1|P1/.test(sev);
   }).length;
 }
+function occEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
 function isDashboardQuiet(snapshot) {
   if (!snapshot) return true;
   return snapshot.openIncidents === 0
@@ -715,7 +719,12 @@ function renderOpsAttentionList(stateObj, snapshot) {
     return `
       <section class="card" id="ops-attention">
         <h2 class="ops-panel-title">Needs attention</h2>
-        <p class="muted">No urgent incidents, approvals, or at-risk services.</p>
+        ${occEmpty({
+          title: "All clear",
+          message: "No urgent incidents, approvals, or at-risk services right now.",
+          secondaryLabel: "Service health",
+          secondaryHref: "/services",
+        })}
       </section>`;
   }
   return `

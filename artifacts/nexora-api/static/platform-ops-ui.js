@@ -19,6 +19,11 @@ function peHas(key) {
   return typeof hasVerifiedIntegration === "function" && hasVerifiedIntegration(key);
 }
 
+function peEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
+
 async function loadPlatformEngineering() {
   try { state.peDashboard = await api("/v1/platform-engineering/dashboard"); } catch { state.peDashboard = null; }
   try { state.peTemplates = await api("/v1/platform-engineering/templates"); } catch { state.peTemplates = []; }
@@ -70,7 +75,10 @@ function renderPeTemplates() {
     <div class="ops-list-row"><span><strong>${escapeHtml(t.name)}</strong> <span class="muted">${escapeHtml(t.kind)}</span></span>
     <span>${t.is_builtin ? "Built-in" : "Custom"}</span></div>`).join("");
   return `<div class="container">${renderHeader("Platform Templates", "AKS, EKS, GKE, and environment templates")}${renderAlerts()}
-    <section class="card"><h2>Templates (${tpls.length})</h2><div class="ops-list">${rows || `<p class="muted">No templates.</p>`}</div></section>
+    <section class="card"><h2>Templates (${tpls.length})</h2><div class="ops-list">${rows || peEmpty({
+      title: "No platform templates",
+      message: "Built-in AKS, EKS, and GKE templates appear after platform engineering is initialized.",
+    })}</div></section>
   </div>`;
 }
 function renderPeInfrastructure() {
@@ -97,8 +105,16 @@ function renderPeInfrastructure() {
     <section class="card" style="border-left:3px solid #f59e0b;margin-bottom:12px;">
       <p class="muted" style="font-size:13px;margin:0;">When Terraform Cloud is connected and live preflight passes, <strong>plan/apply/destroy</strong> enqueue real TFC runs. Otherwise runs stay simulated — treat those as advisory only.</p>
     </section>
-    <section class="card"><h2>Stacks</h2><div class="ops-list">${stackRows || `<p class="muted">No stacks.</p>`}</div></section>
-    <section class="card"><h2>Recent Runs</h2><div class="ops-list">${runRows || `<p class="muted">No runs.</p>`}</div></section>
+    <section class="card"><h2>Stacks</h2><div class="ops-list">${stackRows || peEmpty({
+      title: "No Terraform stacks",
+      message: "Connect Terraform Cloud and sync to manage infrastructure stacks.",
+      ctaLabel: "Connect Terraform",
+      ctaHref: "/integrations/onboarding?provider=TERRAFORM",
+    })}</div></section>
+    <section class="card"><h2>Recent Runs</h2><div class="ops-list">${runRows || peEmpty({
+      title: "No stack runs",
+      message: "Plan, apply, or destroy operations appear here after stacks are connected.",
+    })}</div></section>
   </div>`;
 }
 function renderPeProvisioning() {
@@ -110,7 +126,12 @@ function renderPeProvisioning() {
   return `<div class="container">${renderHeader("Provisioning", "Cluster provisioning runs")}${renderAlerts()}
     ${peConnectBanner("Kubernetes", "KUBERNETES", !envs.length && !peHas("KUBERNETES"))}
     <section class="card"><h2>Environments (${envs.length})</h2></section>
-    <section class="card"><h2>Provision Runs</h2><div class="ops-list">${rows || `<p class="muted">No provisions.</p>`}</div></section>
+    <section class="card"><h2>Provision Runs</h2><div class="ops-list">${rows || peEmpty({
+      title: "No provisioning runs",
+      message: "Cluster provisioning history appears after Kubernetes environments are configured.",
+      ctaLabel: "Connect Kubernetes",
+      ctaHref: "/integrations/onboarding?provider=KUBERNETES",
+    })}</div></section>
   </div>`;
 }
 function renderPeCatalog() {
@@ -119,7 +140,12 @@ function renderPeCatalog() {
     <div class="ops-list-row"><span>${escapeHtml(i.name)} <span class="muted">${escapeHtml(i.kind)}</span></span></div>`).join("");
   return `<div class="container">${renderHeader("Platform Catalog", "Self-service infrastructure requests")}${renderAlerts()}
     ${peConnectBanner("Terraform Cloud", "TERRAFORM", !items.length && !peHas("TERRAFORM"))}
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">Catalog empty.</p>`}</div></section>
+    <section class="card"><div class="ops-list">${rows || peEmpty({
+      title: "Catalog empty",
+      message: "Self-service infrastructure requests populate after Terraform is connected.",
+      ctaLabel: "Connect Terraform",
+      ctaHref: "/integrations/onboarding?provider=TERRAFORM",
+    })}</div></section>
   </div>`;
 }
 function renderPeSecrets() {
@@ -128,7 +154,12 @@ function renderPeSecrets() {
     <div class="ops-list-row"><span>${escapeHtml(s.name)}</span><span class="muted">${escapeHtml(s.backend)}</span></div>`).join("");
   return `<div class="container">${renderHeader("Secrets", "Secret references — values never exposed")}${renderAlerts()}
     ${peConnectBanner("HashiCorp Vault", "HASHICORP_VAULT", !secrets.length && !peHas("HASHICORP_VAULT"))}
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">No secret refs.</p>`}</div></section>
+    <section class="card"><div class="ops-list">${rows || peEmpty({
+      title: "No secret references",
+      message: "Vault and cloud secret backends surface references here — values are never exposed.",
+      ctaLabel: "Connect Vault",
+      ctaHref: "/integrations/onboarding?provider=HASHICORP_VAULT",
+    })}</div></section>
   </div>`;
 }
 function renderPeDrift() {
@@ -141,7 +172,10 @@ function renderPeDrift() {
   return `<div class="container">${renderHeader("Drift Detection", "Terraform, cloud, K8s, and GitOps drift")}${renderAlerts()}
     ${peConnectBanner("Terraform or Flux CD", "TERRAFORM", !drift.length && !peHas("TERRAFORM") && !peHas("FLUX"))}
     ${canWrite ? `<section class="card"><button class="btn btn-primary" type="button" data-pe-drift-scan>Scan for Drift</button></section>` : ""}
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">No drift detected.</p>`}</div></section>
+    <section class="card"><div class="ops-list">${rows || peEmpty({
+      title: "No drift detected",
+      message: "Run a drift scan after connecting Terraform, Kubernetes, or Flux CD.",
+    })}</div></section>
   </div>`;
 }
 function renderPeCompliance() {
@@ -151,7 +185,10 @@ function renderPeCompliance() {
     ${peConnectBanner("Kubernetes or AWS", "KUBERNETES", !c && !peHas("KUBERNETES") && !peHas("AWS"))}
     ${c ? `<section class="card"><div class="ops-stats">
       ${rdMetric("Score", c.score)} ${rdMetric("Grade", c.grade)} ${rdMetric("Findings", (c.findings || []).length)}
-    </div></section>` : `<p class="muted">No compliance scan yet.</p>`}
+    </div></section>` : peEmpty({
+      title: "No compliance scan yet",
+      message: "Run a compliance scan to score tagging, encryption, RBAC, and network policies.",
+    })}
     ${canWrite ? `<section class="card"><button class="btn btn-primary" type="button" data-pe-compliance-scan>Run Compliance Scan</button></section>` : ""}
   </div>`;
 }

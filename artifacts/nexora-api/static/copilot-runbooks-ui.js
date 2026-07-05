@@ -92,6 +92,10 @@ function renderRunbookDetail(rb) {
 function impactBadge2(cat) {
   return `<span class="risk-score-badge risk-medium">${escapeHtml((cat || "").replace(/_/g, " "))}</span>`;
 }
+function copEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
 function renderCopilotMessage(m) {
   const isUser = m.role === "USER";
   const bubbleStyle = isUser
@@ -119,7 +123,10 @@ function renderCopilot() {
           <span>${escapeHtml(s.title || "Conversation")}</span>
           <span class="muted">${s.message_count || 0} msg</span>
         </div>`).join("")
-    : `<p class="muted">No conversations yet.</p>`;
+    : copEmpty({
+      title: "No conversations yet",
+      message: "Start a new conversation to ask about incidents, SLOs, deployments, and reliability data.",
+    });
 
   const thread = messages.length
     ? messages.map(renderCopilotMessage).join("")
@@ -141,7 +148,7 @@ function renderCopilot() {
       ${renderHeader("Copilot", "Ask about incidents, alerts, and deployments — grounded in your connected tools")}
       ${renderAlerts()}
       ${connectBanner}
-      <div style="display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start;">
+      <div style="display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start;" class="copilot-layout">
         <section class="card">
           <div class="card-header"><div><h2 style="font-size:15px;">Conversations</h2></div>
             <button class="btn btn-primary" style="padding:4px 10px;font-size:12px;" data-copilot-new>+ New</button>
@@ -199,7 +206,12 @@ function renderRunbooks() {
           <button class="btn btn-secondary" type="submit">Search</button>
         </form>
         <div class="ops-list" style="margin-top:12px;">
-          ${list.length === 0 ? `<p class="muted">No runbooks yet. Generate one above.</p>` : list.map((rb) => `
+          ${list.length === 0 ? copEmpty({
+            title: "No runbooks yet",
+            message: "Generate a runbook from incident RCA, recommendations, and postmortems.",
+            ctaLabel: "View incidents",
+            ctaHref: "/incidents",
+          }) : list.map((rb) => `
             <div class="ops-list-row" style="cursor:pointer;" data-open-runbook="${rb.id}">
               <span>${escapeHtml(rb.title)} ${impactBadge2(rb.category)}</span>
               <span class="muted">v${rb.version} · ${escapeHtml(rb.status)} · ${rb.source_incident_count} incident(s)</span>

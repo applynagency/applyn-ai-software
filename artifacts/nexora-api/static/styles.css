@@ -288,6 +288,127 @@ select {
   padding: 24px 32px 48px;
 }
 
+.page-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: -8px 0 12px;
+  font-size: 13px;
+}
+
+.page-crumb {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.page-crumb:hover {
+  text-decoration: underline;
+}
+
+.page-crumb.current {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.page-crumb-sep {
+  color: var(--muted);
+  margin: 0 2px;
+}
+
+.module-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 16px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.module-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.module-tab:hover {
+  color: var(--text);
+  background: var(--bg-subtle, #f8fafc);
+}
+
+.module-tab.active {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 25%, transparent);
+  font-weight: 600;
+}
+
+.workflow-next-strip {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--bg-muted, #f8fafc);
+  border: 1px solid var(--border);
+}
+
+.workflow-next-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.workflow-next-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workflow-next-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface, #fff);
+  text-decoration: none;
+  color: inherit;
+  min-width: 140px;
+  max-width: 220px;
+}
+
+.workflow-next-chip:hover {
+  border-color: var(--primary);
+  background: var(--primary-soft, #eff6ff);
+}
+
+.workflow-next-chip-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.workflow-next-chip-hint {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.sidebar-nav-ctl.active {
+  color: var(--primary);
+  font-weight: 600;
+}
+
 .card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -4629,8 +4750,25 @@ h3 {
   .responsive-table-wrap .billing-payment-grid,
   .responsive-table-wrap .table-grid-services,
   .responsive-table-wrap .table-grid-alerts,
+  .responsive-table-wrap .table-grid-audit,
   .responsive-table-wrap .delivery-table {
     min-width: 640px;
+  }
+
+  .war-room-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .discovery-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .copilot-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .responsive-table-wrap .table-grid-workflows {
+    min-width: 720px;
   }
 
   .responsive-table-wrap .table-row.table-head {

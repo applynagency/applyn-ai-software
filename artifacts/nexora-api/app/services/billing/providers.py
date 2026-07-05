@@ -184,6 +184,45 @@ class StripeProvider(BillingProvider):
             data = resp.json()
             return {"url": data.get("url"), "stub": False, "message": None}
 
+    async def list_payment_methods(self, organization_id: str, subscription) -> list[dict]:
+        """Read-only card metadata from Stripe — never returns PAN or tokens."""
+        if not self.configured:
+            return []
+        customer_id = getattr(subscription, "external_customer_id", None)
+        if not customer_id:
+            return []
+        import httpx
+
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            cust_resp = await client.get(
+                f"https://api.stripe.com/v1/customers/{customer_id}",
+                headers={"Authorization": f"Bearer {settings.STRIPE_API_KEY}"},
+            )
+            cust_resp.raise_for_status()
+            customer = cust_resp.json()
+            default_pm = (customer.get("invoice_settings") or {}).get("default_payment_method")
+
+            pm_resp = await client.get(
+                "https://api.stripe.com/v1/payment_methods",
+                headers={"Authorization": f"Bearer {settings.STRIPE_API_KEY}"},
+                params={"customer": customer_id, "type": "card", "limit": 10},
+            )
+            pm_resp.raise_for_status()
+            methods = pm_resp.json().get("data", [])
+
+        items: list[dict] = []
+        for pm in methods:
+            card = pm.get("card") or {}
+            items.append({
+                "id": pm.get("id"),
+                "brand": card.get("brand"),
+                "last4": card.get("last4"),
+                "exp_month": card.get("exp_month"),
+                "exp_year": card.get("exp_year"),
+                "is_default": pm.get("id") == default_pm,
+            })
+        return items
+
     async def create_portal_session(
         self,
         *,

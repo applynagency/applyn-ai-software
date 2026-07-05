@@ -6,6 +6,11 @@
  * pilotConfirmationTokenMemory, clearPilotConfirmationToken, ...).
  */
 
+function pilotEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
+
 function pilotSourceModeBadge(mode) {
   const m = (mode || "UNAVAILABLE").toUpperCase();
   const colors = { LIVE: "#166534", SIMULATED: "#92400e", OFFLINE: "#475569", UNAVAILABLE: "#94a3b8" };
@@ -297,16 +302,27 @@ function renderPilot() {
       </div>
       ${checklist}
     </section>
-    <section class="card"><h2>Integration wizard paths</h2>${paths || "<p class='muted'>No paths.</p>"}</section>
+    <section class="card"><h2>Integration wizard paths</h2>${paths || pilotEmpty({
+      title: "No wizard paths",
+      message: "Complete customer onboarding to surface integration setup paths.",
+      ctaLabel: "Customer onboarding",
+      ctaHref: "/customer-onboarding",
+    })}</section>
     <section class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <h2>Read-only assessment</h2>
         ${canWriteResources() ? `<button class="btn btn-secondary" type="button" data-pilot-run-assessment>Run assessment</button>` : ""}
       </div>
-      ${assess ? `<ul style="margin-top:8px;">${recs}</ul>` : "<p class='muted'>No assessment yet.</p>"}
+      ${assess ? `<ul style="margin-top:8px;">${recs}</ul>` : pilotEmpty({
+        title: "No assessment yet",
+        message: canWriteResources() ? "Run assessment above to score pilot readiness." : "Your operator will run a read-only assessment.",
+      })}
     </section>
     <section class="card"><h2>Pilot scorecard</h2>${scoreRows}</section>
-    <section class="card"><h2>Safe operation catalog</h2><p class="muted">Non-production only · allowlisted reversible operations</p>${catalog || "<p class='muted'>No templates.</p>"}</section>
+    <section class="card"><h2>Safe operation catalog</h2><p class="muted">Non-production only · allowlisted reversible operations</p>${catalog || pilotEmpty({
+      title: "No operation templates",
+      message: "Safe operation templates load from the pilot catalog after enrollment.",
+    })}</section>
     <section class="card">
       <h2>Safe live operations</h2>
       <p class="muted">Customer approval required · two-step confirmation · LiveMutationGate enforced</p>
@@ -365,13 +381,13 @@ function renderPilotOperationsHealth() {
         <div><h2>Operations readiness</h2><p class="muted">Read-only evaluator — no mutations performed</p></div>
         <span style="font-size:12px;padding:4px 10px;border-radius:4px;background:${verdictColor};color:#fff;">${escapeHtml(verdict)}</span>
       </div>
-      ${checks || "<p class='muted'>No checks available.</p>"}
+      ${checks || pilotEmpty({ title: "No checks available", message: "Delivery readiness checks appear after integrations sync." })}
       ${remediation ? `<ul style="margin-top:8px;font-size:12px;">${remediation}</ul>` : ""}
       <p class="muted" style="font-size:12px;margin-top:8px;">Runbook: docs/operations/CUSTOMER_PILOT_OPERATIONS_READINESS.md</p>
     </section>
     <section class="card">
       <h2>Notification delivery metrics</h2>
-      ${statusRows || "<p class='muted'>No delivery records yet.</p>"}
+      ${statusRows || pilotEmpty({ title: "No delivery records", message: "Connect CI/CD integrations to populate delivery status." })}
       <p class="muted" style="font-size:12px;">Failed: ${escapeHtml(String(notif.failed_count || 0))} · Retrying: ${escapeHtml(String(notif.retrying_count || 0))} · Oldest queued: ${notif.oldest_queued_seconds != null ? `${Math.round(notif.oldest_queued_seconds)}s` : "—"}</p>
       <p class="muted" style="font-size:12px;">Recovery runbook: docs/operations/CUSTOMER_PILOT_NOTIFICATION_RECOVERY.md</p>
     </section>
@@ -417,7 +433,7 @@ function renderPilotDeploymentReadiness() {
         <span style="font-size:12px;padding:4px 10px;border-radius:4px;background:${verdictColor};color:#fff;">${escapeHtml(verdict)}</span>
       </div>
       <p class="muted" style="font-size:12px;">Environment: ${escapeHtml(dep.environment || "—")} · Operations: ${escapeHtml(ops.verdict || dep.operations_verdict || "—")}</p>
-      ${checks || "<p class='muted'>No checks available.</p>"}
+      ${checks || pilotEmpty({ title: "No checks available", message: "Delivery readiness checks appear after integrations sync." })}
       ${remediation ? `<ul style="margin-top:8px;font-size:12px;">${remediation}</ul>` : ""}
       <p class="muted" style="font-size:12px;margin-top:8px;">Runbook: docs/operations/CUSTOMER_PILOT_DEPLOYMENT_READINESS.md</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
@@ -485,7 +501,12 @@ function renderPilotExecution() {
       <span class="badge" style="font-size:11px;">${escapeHtml(stateLabel)}</span>
       <span class="muted" style="font-size:12px;"> · ${escapeHtml(row.status || "—")}</span>
     </button>`;
-  }).join("") : `<p class="muted">No pilot live operations for this organization.</p>`;
+  }).join("") : pilotEmpty({
+    title: "No pilot operations",
+    message: "Scoped live operations appear after customer approval and operator enrollment.",
+    ctaLabel: "Pilot console",
+    ctaHref: "/pilot/execution",
+  });
   const stageRows = (state.pilotExecutionStatus?.stages || []).map((s) => `
     <div class="ops-list-row"><span>${escapeHtml(s.title || s.stage_key)}</span><span class="badge">${escapeHtml(s.status)}</span></div>`).join("");
   const intGroups = dedupePilotIntegrations(handoff.integration_readiness || []);
@@ -540,9 +561,14 @@ function renderPilotExecution() {
         ${approval.approver_name ? ` · ${escapeHtml(approval.approver_name)}` : ""}
         ${approval.expires_at ? ` · expires ${escapeHtml(approval.expires_at)}` : ""}</p>
       <h3 style="margin-top:12px;">Stage timeline</h3>
-      ${stageRows || "<p class='muted'>No stages.</p>"}
+      ${stageRows || pilotEmpty({ title: "No stages", message: "Execution stages appear as the pilot operation progresses." })}
       <h3 style="margin-top:12px;">Integration readiness</h3>
-      ${intRows || "<p class='muted'>No integrations.</p>"}
+      ${intRows || pilotEmpty({
+        title: "No integrations",
+        message: "Connect integrations during onboarding to unlock pilot checks.",
+        ctaLabel: "Integrations",
+        ctaHref: "/integrations/onboarding",
+      })}
       <h3 style="margin-top:12px;">Before-state summary</h3>
       ${renderPilotBeforeStatePanel(handoff.before_state)}
     </section>` : ""}
@@ -615,7 +641,12 @@ function renderPilotEvidence() {
     ${renderAlerts()}
     <section class="card">
       <h2>Select operation</h2>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">${opSelect || "<p class='muted'>No operations.</p>"}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">${opSelect || pilotEmpty({
+        title: "No operations",
+        message: "Pilot operations with evidence appear after your operator runs a scoped change.",
+        ctaLabel: "Pilot operations",
+        ctaHref: "/pilot/operations",
+      })}</div>
     </section>
     ${evidence ? `<section class="card">
       <h2>Evidence summary</h2>
@@ -640,7 +671,10 @@ function renderPilotEvidence() {
         <button class="btn btn-secondary" type="button" data-pilot-evidence-export="pdf" ${selectedId ? "" : "disabled"}>Export PDF</button>
         <button class="btn btn-secondary" type="button" data-pilot-evidence-export-org>Org evidence pack</button>
       </div>
-    </section>` : (selectedId ? "<section class='card'><p class='muted'>No evidence returned for this operation.</p></section>" : "")}
+    </section>` : (selectedId ? `<section class='card'>${pilotEmpty({
+      title: "No evidence returned",
+      message: "Evidence is generated server-side after the operation completes.",
+    })}</section>` : "")}
     <a href="/pilot/execution${selectedId ? `?op=${encodeURIComponent(selectedId)}` : ""}" class="btn btn-secondary">Execution Console</a>
   </div>`;
 }

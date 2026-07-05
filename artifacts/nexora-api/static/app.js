@@ -240,6 +240,7 @@ const state = {
   loading: false,
   navOpen: false,
   navGroupCollapsed: {},
+  navFocusDensity: null,
   searchQuery: "",
   statusFilter: "",
   productOwnerRuns: [],
@@ -586,82 +587,15 @@ function renderPilotOrgBlockedPanel(title = "Pilot Center") {
 }
 
 
-/** P2 — retired hub routes → incident-first product surfaces. */
+/** P2 — retired hub routes live in route-registry.js (resolveNexoraRetiredRoute). */
 function resolveP2RouteRedirect(path) {
-  const exact = {
-    "/operations": "/",
-    "/operations-overview": "/",
-    "/monitoring": "/alerts",
-    "/service-health": "/services",
-    "/incident-response": "/incidents",
-    "/incident-response/oncall": "/incidents/on-call",
-    "/incident-response/escalation": "/incidents/on-call",
-    "/incident-response/major": "/incidents",
-    "/incident-response/status": "/incidents",
-    "/incident-response/status-pages": "/incidents",
-    "/incident-response/comms": "/incidents",
-    "/incident-response/communications": "/incidents",
-    "/incident-response/analytics": "/incidents",
-    "/observability-platform": "/alerts",
-    "/ops-workspace": "/incidents",
-    "/ops-workspace/queue": "/incidents",
-    "/ops-workspace/changes": "/delivery/changes",
-    "/ops-workspace/maintenance": "/incidents",
-    "/ops-workspace/slo": "/services",
-    "/ops-workspace/cost": "/",
-    "/ops-workspace/executive": "/reliability-dashboard",
-    "/operator": "/copilot",
-    "/operator/recommendations": "/copilot",
-    "/operator/goals": "/copilot",
-    "/operator/policies": "/copilot",
-    "/operator/history": "/copilot",
-    "/operator/learning": "/copilot",
-    "/operator/simulations": "/copilot",
-    "/operator/savings": "/copilot",
-    "/delivery/operations": "/delivery",
-    "/delivery/promotion-queue": "/delivery",
-    "/delivery/freeze-windows": "/delivery",
-    "/delivery/release-analytics": "/delivery/dora",
-    "/observability-platform/metrics": "/metrics",
-    "/observability-platform/logs": "/logs",
-    "/observability-platform/traces": "/traces",
-    "/observability-platform/service-map": "/discovery",
-    "/observability-platform/slo": "/services",
-    "/observability-platform/alerts": "/alerts",
-    "/observability-platform/correlation": "/alerts",
-  };
-  return exact[path] || null;
+  return typeof resolveNexoraRetiredRoute === "function" ? resolveNexoraRetiredRoute(path) : null;
 }
 
-const P2_REDIRECT_LABELS = {
-  "/": "Command Center",
-  "/incidents": "Incidents",
-  "/incidents/on-call": "On-call",
-  "/alerts": "Alerts",
-  "/services": "Services",
-  "/delivery": "Delivery",
-  "/delivery/changes": "Change requests",
-  "/delivery/dora": "DORA metrics",
-  "/copilot": "Copilot",
-  "/metrics": "Metrics",
-  "/logs": "Logs",
-  "/traces": "Traces",
-  "/discovery": "Service discovery",
-  "/reliability-dashboard": "Reliability dashboard",
-  "/ops-workspace": "Ops workspace",
-  "/operations": "Operations hub",
-  "/operations-overview": "Operations overview",
-  "/monitoring": "Monitoring",
-  "/service-health": "Service health",
-  "/incident-response": "Incident response",
-  "/observability-platform": "Observability",
-  "/operator": "Operator console",
-};
-
 function formatP2RedirectMessage(fromPath, toPath) {
-  const fromLabel = P2_REDIRECT_LABELS[fromPath] || fromPath;
-  const toLabel = P2_REDIRECT_LABELS[toPath] || toPath;
-  return `${fromLabel} was retired — redirected to ${toLabel}.`;
+  return typeof formatNexoraRetiredRedirectMessage === "function"
+    ? formatNexoraRetiredRedirectMessage(fromPath, toPath)
+    : `${fromPath} was retired — redirected to ${toPath}.`;
 }
 
 
@@ -680,22 +614,19 @@ function parseRoute(pathname) {
     const resolved = parseRoute(p2Redirect);
     return { ...resolved, redirectFrom: path };
   }
-  if (path === "/") return { page: "dashboard" };
+  const registryRoute = typeof resolveRouteFromRegistry === "function"
+    ? resolveRouteFromRegistry(path, queryString)
+    : null;
+  if (registryRoute) return registryRoute;
   if (path === "/product-owner") return { page: "product-owner" };
   const poMatch = path.match(/^\/product-owner\/([^/]+)$/);
   if (poMatch) return { page: "product-owner-detail", id: poMatch[1] };
-  if (path === "/organizations") return { page: "organizations" };
-  if (path === "/organization") return { page: "organization" };
-  if (path === "/organizations/create") return { page: "organizations-create" };
-  if (path === "/organization/create") return { page: "organizations-create" };
   if (path === "/invitations/accept") {
     const token = new URLSearchParams(queryString).get("token") || "";
     return { page: "invitation-accept", token };
   }
   const inviteMatch = path.match(/^\/invitations\/accept\/([^/]+)$/);
   if (inviteMatch) return { page: "invitation-accept", token: inviteMatch[1] };
-  const orgMatch = path.match(/^\/organizations\/([^/]+)$/);
-  if (orgMatch) return { page: "organization-detail", id: orgMatch[1] };
   if (path === "/teams") return { page: "teams" };
   if (path === "/teams/create") return { page: "teams-create" };
   if (path === "/team-templates") return { page: "team-templates" };
@@ -812,182 +743,13 @@ function parseRoute(pathname) {
   const aiWorkflowMatch = path.match(/^\/ai-team-workflows\/([^/]+)$/);
   if (aiWorkflowMatch) return { page: "ai-team-workflow-detail", id: aiWorkflowMatch[1] };
   if (path === "/ai-tools") return { page: "ai-tools" };
-  if (path === "/alerts") return { page: "alerts" };
-  if (path === "/logs") return { page: "obs-platform-logs" };
-  if (path === "/metrics") return { page: "obs-platform-metrics" };
-  if (path === "/traces") return { page: "obs-platform-traces" };
-  const postmortemMatch = path.match(/^\/postmortems\/([^/]+)$/);
-  if (postmortemMatch) return { page: "postmortem-detail", id: decodeURIComponent(postmortemMatch[1]) };
-  if (path === "/incidents/on-call") return { page: "incidents-on-call" };
-  if (path === "/incidents") return { page: "incidents" };
-  const incidentTimelineMatch = path.match(/^\/incidents\/([^/]+)\/timeline$/);
-  if (incidentTimelineMatch) return { page: "incident-timeline", id: decodeURIComponent(incidentTimelineMatch[1]) };
-  const incidentAlertsMatch = path.match(/^\/incidents\/([^/]+)\/alerts$/);
-  if (incidentAlertsMatch) return { page: "incident-alerts", id: decodeURIComponent(incidentAlertsMatch[1]) };
-  const incidentMatch = path.match(/^\/incidents\/([^/]+)$/);
-  if (incidentMatch) return { page: "incident-detail", id: decodeURIComponent(incidentMatch[1]) };
-  if (path === "/monitoring") return { page: "monitoring" };
-  if (path === "/services") return { page: "service-health" };
-  const serviceMatch = path.match(/^\/services\/([^/]+)$/);
-  if (serviceMatch) return { page: "service-detail", id: serviceMatch[1] };
-  if (path === "/deployment-safety") return { page: "deployment-safety" };
-  if (path === "/capacity") return { page: "capacity" };
-  if (path === "/cost-optimization") return { page: "cost-optimization" };
-  if (path === "/dependencies") return { page: "dependencies" };
-  if (path === "/change-failure") return { page: "change-failure" };
-  if (path === "/runbooks") return { page: "runbooks" };
-  if (path === "/copilot") return { page: "copilot" };
-  if (path === "/reliability-dashboard") return { page: "reliability-dashboard" };
-  if (path === "/reliability-maturity") return { page: "reliability-maturity" };
-  if (path === "/architecture") return { page: "architecture" };
-  if (path === "/executive-reports") return { page: "executive-reports" };
-  if (path === "/war-rooms") return { page: "war-rooms" };
-  if (path === "/discovery") return { page: "discovery" };
-  if (path === "/control-plane") return { page: "control-plane" };
-  if (path === "/control-plane/cloud") return { page: "control-plane-cloud" };
-  if (path === "/control-plane/clusters") return { page: "control-plane-clusters" };
-  const cpClusterMatch = path.match(/^\/control-plane\/clusters\/([^/]+)$/);
-  if (cpClusterMatch) return { page: "control-plane-cluster-detail", id: cpClusterMatch[1] };
-  const cpK8sMatch = path.match(/^\/control-plane\/clusters\/([^/]+)\/k8s(?:\/([a-z-]+))?$/);
-  if (cpK8sMatch) return { page: `cp-k8s-${cpK8sMatch[2] || "overview"}`, id: cpK8sMatch[1] };
-  if (path === "/control-plane/inventory") return { page: "control-plane-inventory" };
-  if (path === "/control-plane/operations") return { page: "control-plane-operations" };
-  if (path === "/delivery") return { page: "delivery" };
-  if (path === "/delivery/approvals") return { page: "delivery-approvals" };
-  const dlvChangeMatch = path.match(/^\/delivery\/changes\/([^/]+)$/);
-  if (dlvChangeMatch) return { page: "delivery-change-detail", id: dlvChangeMatch[1] };
-  if (path === "/delivery/changes") return { page: "delivery-changes" };
-  const dlvDeployMatch = path.match(/^\/delivery\/deployments\/([^/]+)$/);
-  if (dlvDeployMatch) return { page: "delivery-deployment-detail", id: dlvDeployMatch[1] };
-  if (path === "/delivery/deployments") return { page: "delivery-deployments" };
-  if (path === "/delivery/repositories") return { page: "delivery-repositories" };
-  const dlvRepoMatch = path.match(/^\/delivery\/repositories\/([^/]+)$/);
-  if (dlvRepoMatch) return { page: "delivery-repository-detail", id: dlvRepoMatch[1] };
-  if (path === "/delivery/pipelines") return { page: "delivery-pipelines" };
-  if (path === "/delivery/releases") return { page: "delivery-releases" };
-  if (path === "/delivery/gitops") return { page: "delivery-gitops" };
-  if (path === "/delivery/security") return { page: "delivery-security" };
-  if (path === "/delivery/dora") return { page: "delivery-dora" };
-  if (path === "/delivery/release-reliability") return { page: "delivery-rr" };
-  const dlvRrMatch = path.match(/^\/delivery\/release-reliability\/([^/]+)$/);
-  if (dlvRrMatch) return { page: "delivery-rr-detail", reliabilityId: dlvRrMatch[1] };
-  if (path === "/platform-engineering") return { page: "platform-engineering" };
-  if (path === "/platform-engineering/templates") return { page: "pe-templates" };
-  if (path === "/platform-engineering/infrastructure") return { page: "pe-infrastructure" };
-  if (path === "/platform-engineering/provisioning") return { page: "pe-provisioning" };
-  if (path === "/platform-engineering/catalog") return { page: "pe-catalog" };
-  if (path === "/platform-engineering/secrets") return { page: "pe-secrets" };
-  if (path === "/platform-engineering/drift") return { page: "pe-drift" };
-  if (path === "/platform-engineering/compliance") return { page: "pe-compliance" };
-  if (path === "/incident-response/oncall") return { page: "ir-oncall" };
-  if (path === "/incident-response/escalation") return { page: "ir-escalation" };
-  if (path === "/incident-response/major") return { page: "ir-major" };
-  if (path === "/incident-response/status-pages") return { page: "ir-status" };
-  if (path === "/incident-response/communications") return { page: "ir-comms" };
-  if (path === "/incident-response/postmortems") return { page: "ir-postmortems" };
-  if (path === "/incident-response/analytics") return { page: "ir-analytics" };
-  if (path === "/security-platform") return { page: "sec-dashboard" };
-  if (path === "/security-platform/findings") return { page: "sec-findings" };
-  if (path === "/security-platform/vulnerabilities") return { page: "sec-vulns" };
-  if (path === "/security-platform/kubernetes") return { page: "sec-k8s" };
-  if (path === "/security-platform/cloud") return { page: "sec-cloud" };
-  if (path === "/security-platform/compliance") return { page: "sec-compliance" };
-  if (path === "/security-platform/remediation") return { page: "sec-remediation" };
-  if (path === "/security-platform/analytics") return { page: "sec-analytics" };
-  if (path === "/security-platform/providers") return { page: "sec-providers" };
-  if (path === "/security-platform/scan-runs") return { page: "sec-scan-runs" };
-  if (path === "/security-platform/sbom") return { page: "sec-sbom" };
-  if (path === "/security-platform/sla") return { page: "sec-sla" };
-  if (path === "/security-platform/backfill") return { page: "sec-backfill" };
-  const secRemExec = path.match(/^\/security-platform\/remediation\/([^/]+)$/);
-  if (secRemExec) return { page: "sec-rem-exec", proposalId: secRemExec[1] };
-  if (path === "/integrations/onboarding") return { page: "integration-onboarding" };
-  const integrationHealthMatch = path.match(/^\/integrations\/([^/]+)\/health$/);
-  if (integrationHealthMatch) return { page: "integration-health", connectionId: decodeURIComponent(integrationHealthMatch[1]) };
-  const integrationDetailMatch = path.match(/^\/integrations\/([^/]+)$/);
-  if (integrationDetailMatch) return { page: "integration-detail", connectionId: decodeURIComponent(integrationDetailMatch[1]) };
-  if (path === "/integrations") return { page: "integrations" };
-  if (path === "/connections-secrets") return { page: "connections-secrets" };
-  if (path === "/customer-onboarding") return { page: "customer-onboarding" };
-  if (path === "/customer-pilot") return { page: "customer-pilot" };
-  if (path === "/customer-pilot/readiness") return { page: "customer-pilot-readiness" };
-  if (path === "/customer-pilot/operation") return { page: "customer-pilot-operation" };
-  if (path === "/customer-pilot/approval") return { page: "customer-pilot-approval" };
-  if (path === "/customer-pilot/execution") return { page: "customer-pilot-execution" };
-  if (path === "/customer-pilot/evidence") return { page: "customer-pilot-evidence" };
-  if (path === "/customer-pilot/closeout") return { page: "customer-pilot-closeout" };
-  if (path === "/customer-pilot/timeline") return { page: "customer-pilot-timeline" };
-  if (path === "/customer-pilot/communications") return { page: "customer-pilot-communications" };
-  if (path === "/customer-pilot/preferences") return { page: "customer-pilot-preferences" };
-  if (path === "/pilot") return { page: "pilot" };
-  if (path === "/pilot/operations-health") return { page: "pilot-operations-health" };
-  if (path === "/pilot/deployment-readiness") return { page: "pilot-deployment-readiness" };
-  if (path === "/pilot/execution") {
-    const op = new URLSearchParams(queryString).get("op") || "";
-    return { page: "pilot-execution", operationId: op || null };
-  }
-  if (path === "/pilot/evidence") {
-    const op = new URLSearchParams(queryString).get("op") || "";
-    return { page: "pilot-evidence", operationId: op || null };
-  }
-  if (path === "/onboarding") return { page: "onboarding" };
-  // Sprint 51F — Customer Documentation Portal (Help Center) UI.
-  if (path === "/help") {
-    const q = new URLSearchParams(queryString).get("q") || "";
-    return { page: "help-home", q };
-  }
-  if (path === "/help/search") {
-    const params = new URLSearchParams(queryString);
-    return {
-      page: "help-search",
-      q: params.get("q") || "",
-      category: params.get("category") || "",
-      guide: params.get("guide") || "",
-    };
-  }
-  if (path === "/help/api") return { page: "help-api" };
-  if (path === "/help/troubleshooting") return { page: "help-troubleshooting" };
-  if (path === "/help/getting-started") return { page: "help-getting-started" };
-  if (path === "/help/onboarding") return { page: "help-onboarding" };
-  if (path === "/help/demos") return { page: "help-demos" };
-  if (path === "/help/tours") return { page: "help-tours" };
-  const helpCatMatch = path.match(/^\/help\/c\/([^/]+)$/);
-  if (helpCatMatch) return { page: "help-category", key: helpCatMatch[1] };
-  const helpArtMatch = path.match(/^\/help\/a\/([^/]+)$/);
-  if (helpArtMatch) return { page: "help-article", id: helpArtMatch[1] };
-  if (path === "/organization/settings/sso") return { page: "organization-sso" };
-  if (path === "/organization/settings/audit") return { page: "organization-audit" };
-  if (path === "/operations/jobs" || path === "/jobs") return { page: "operations-jobs" };
-  if (path === "/billing/payment-methods") return { page: "billing-payment-methods" };
-  if (path === "/billing/subscription") return { page: "billing-subscription" };
-  if (path === "/billing/invoices") return { page: "billing-invoices" };
-  if (path === "/billing") return { page: "billing" };
-  if (path === "/catalog") return { page: "catalog" };
-  const catalogCatMatch = path.match(/^\/catalog\/category\/([^/]+)$/);
-  if (catalogCatMatch) return { page: "catalog-category", categoryId: decodeURIComponent(catalogCatMatch[1]) };
-  const catalogModMatch = path.match(/^\/catalog\/module\/([^/]+)$/);
-  if (catalogModMatch) return { page: "catalog-module", moduleId: decodeURIComponent(catalogModMatch[1]) };
-  if (path === "/feature-unavailable") {
-    const params = new URLSearchParams(queryString);
-    return {
-      page: "feature-unavailable",
-      reason: params.get("reason") || "unavailable",
-      module: params.get("module") || "",
-      from: params.get("from") || "",
-    };
-  }
-  if (path === "/settings") {
-    const tab = new URLSearchParams(queryString).get("tab") || "profile";
-    const allowed = new Set(["profile", "security", "sessions", "api-keys", "service-accounts", "audit", "notifications"]);
-    return { page: "settings", settingsTab: allowed.has(tab) ? tab : "profile" };
-  }
   if (path === "/approvals") return { page: "approvals" };
   const approvalMatch = path.match(/^\/approvals\/([^/]+)$/);
   if (approvalMatch) return { page: "approval-detail", id: approvalMatch[1] };
   if (path === "/deployments") return { page: "deployments" };
   const deploymentMatch = path.match(/^\/deployments\/([^/]+)$/);
   if (deploymentMatch) return { page: "deployment-detail", id: deploymentMatch[1] };
-  return { page: "dashboard" };
+  return { page: "not-found", unknownPath: path };
 }
 
 class ApiError extends Error {
@@ -1777,6 +1539,7 @@ async function loadDashboard() {
 }
 
 async function loadRouteData() {
+  if (state.route.page === "not-found") return;
   if (state.route.page === "dashboard") {
     await loadDashboard();
   } else if (state.route.page === "builds") {
@@ -3771,6 +3534,7 @@ const NAV_GROUPS = [
       { label: "Incidents", path: "/incidents", icon: "incident", match: ["incidents", "incident-detail", "incident-timeline", "incident-alerts"] },
       { label: "Alerts", path: "/alerts", icon: "zap", match: ["alerts", "monitoring"] },
       { label: "On-call", path: "/incidents/on-call", icon: "calendar", match: ["incidents-on-call"] },
+      { label: "War rooms", path: "/war-rooms", icon: "zap", match: ["war-rooms"] },
       { label: "AI Copilot", path: "/copilot", icon: "chat", match: ["copilot"] },
       { label: "Runbooks", path: "/runbooks", icon: "book", match: ["runbooks"] },
       { label: "Postmortems", path: "/incident-response/postmortems", icon: "file", match: ["ir-postmortems", "postmortem-detail"] },
@@ -3782,10 +3546,22 @@ const NAV_GROUPS = [
     discipline: "sre",
     module: "observability",
     items: [
-      { label: "Service Health", path: "/services", icon: "health", match: ["service-health", "service-detail"] },
+      { label: "Services", path: "/services", icon: "health", match: ["service-health", "service-detail"] },
+      { label: "Monitoring dashboard", path: "/monitoring", icon: "activity", match: ["monitoring"] },
       { label: "Logs", path: "/logs", icon: "monitor", match: ["obs-platform-logs"] },
       { label: "Metrics", path: "/metrics", icon: "bar-chart", match: ["obs-platform-metrics"] },
       { label: "Traces", path: "/traces", icon: "activity", match: ["obs-platform-traces"] },
+    ],
+  },
+  {
+    id: "know",
+    title: "Know your estate",
+    discipline: "sre",
+    module: "knowledge-graph",
+    items: [
+      { label: "Architecture map", path: "/architecture", icon: "map", match: ["architecture"] },
+      { label: "Dependencies", path: "/dependencies", icon: "share", match: ["dependencies"] },
+      { label: "Discovery", path: "/discovery", icon: "search", match: ["discovery"] },
     ],
   },
   {
@@ -3796,7 +3572,6 @@ const NAV_GROUPS = [
     items: [
       { label: "Integrations", path: "/integrations", icon: "plug", match: ["integrations", "integration-onboarding", "integration-detail", "integration-health"] },
       { label: "Connections & Secrets", path: "/connections-secrets", icon: "lock", match: ["connections-secrets"] },
-      { label: "Discovery", path: "/discovery", icon: "search", match: ["discovery"] },
     ],
   },
   {
@@ -3812,6 +3587,9 @@ const NAV_GROUPS = [
       { label: "Pipelines", path: "/delivery/pipelines", icon: "play", match: ["delivery-pipelines"] },
       { label: "GitOps", path: "/delivery/gitops", icon: "git", match: ["delivery-gitops"] },
       { label: "Repositories", path: "/delivery/repositories", icon: "folder", match: ["delivery-repositories", "delivery-repository-detail"] },
+      { label: "Releases", path: "/delivery/releases", icon: "file", match: ["delivery-releases"] },
+      { label: "Security scans", path: "/delivery/security", icon: "shield", match: ["delivery-security"] },
+      { label: "Release reliability", path: "/delivery/release-reliability", icon: "activity", match: ["delivery-rr", "delivery-rr-detail", "delivery-rr-analytics", "delivery-promotion", "delivery-freeze"] },
     ],
   },
   {
@@ -3825,7 +3603,7 @@ const NAV_GROUPS = [
       { label: "Templates", path: "/platform-engineering/templates", icon: "file", match: ["pe-templates"] },
       { label: "Infrastructure", path: "/platform-engineering/infrastructure", icon: "cloud", match: ["pe-infrastructure"] },
       { label: "Provisioning", path: "/platform-engineering/provisioning", icon: "upload", match: ["pe-provisioning"] },
-      { label: "Catalog", path: "/platform-engineering/catalog", icon: "grid", match: ["pe-catalog"] },
+      { label: "Service templates", path: "/platform-engineering/catalog", icon: "grid", match: ["pe-catalog"] },
       { label: "Secrets", path: "/platform-engineering/secrets", icon: "lock", match: ["pe-secrets"] },
       { label: "Drift", path: "/platform-engineering/drift", icon: "activity", match: ["pe-drift"] },
       { label: "Compliance", path: "/platform-engineering/compliance", icon: "shield", match: ["pe-compliance"] },
@@ -3836,27 +3614,39 @@ const NAV_GROUPS = [
     title: "Secure",
     discipline: "devops",
     module: "security",
-    defaultCollapsed: true,
     items: [
       { label: "Security overview", path: "/security-platform", icon: "shield", match: ["sec-dashboard", "sec-analytics", "sec-providers", "sec-scan-runs", "sec-sbom", "sec-sla", "sec-backfill", "sec-rem-exec"] },
       { label: "Findings", path: "/security-platform/findings", icon: "alert", match: ["sec-findings"] },
       { label: "Vulnerabilities", path: "/security-platform/vulnerabilities", icon: "zap", match: ["sec-vulns"] },
       { label: "Kubernetes security", path: "/security-platform/kubernetes", icon: "cloud", match: ["sec-k8s"] },
+      { label: "Cloud posture", path: "/security-platform/cloud", icon: "cloud", match: ["sec-cloud"] },
+      { label: "Compliance", path: "/security-platform/compliance", icon: "shield", match: ["sec-compliance"] },
       { label: "Remediation", path: "/security-platform/remediation", icon: "check-circle", match: ["sec-remediation"] },
     ],
   },
   {
-    id: "advanced",
-    title: "Advanced",
+    id: "reliability",
+    title: "Reliability",
+    discipline: "sre",
+    module: null,
+    items: [
+      { label: "Dashboard", path: "/reliability-dashboard", icon: "barchart", match: ["reliability-dashboard"] },
+      { label: "Maturity", path: "/reliability-maturity", icon: "target", match: ["reliability-maturity"] },
+      { label: "Executive reports", path: "/executive-reports", icon: "file", match: ["executive-reports"] },
+      { label: "Deployment safety", path: "/deployment-safety", icon: "target", match: ["deployment-safety"] },
+      { label: "Change failure risk", path: "/change-failure", icon: "alert", match: ["change-failure"] },
+      { label: "Capacity planning", path: "/capacity", icon: "barchart", match: ["capacity"] },
+      { label: "Cost optimization", path: "/cost-optimization", icon: "dollar", match: ["cost-optimization"] },
+    ],
+  },
+  {
+    id: "platform-ops",
+    title: "Platform ops",
     discipline: "devops",
     module: "devops",
-    defaultCollapsed: true,
     items: [
-      { label: "War Room", path: "/war-rooms", icon: "zap", match: ["war-rooms"] },
-      { label: "DORA Metrics", path: "/delivery/dora", icon: "bar-chart", match: ["delivery-dora"] },
-      { label: "Control Plane", path: "/control-plane/clusters", icon: "cloud", match: ["control-plane", "control-plane-cloud", "control-plane-clusters", "control-plane-cluster-detail", "control-plane-inventory", "control-plane-operations"] },
-      { label: "Reliability Reports", path: "/reliability-dashboard", icon: "barchart", match: ["reliability-dashboard", "reliability-maturity", "executive-reports"] },
-      { label: "Safety & Capacity", path: "/deployment-safety", icon: "target", match: ["deployment-safety", "change-failure", "capacity", "cost-optimization"] },
+      { label: "Control plane", path: "/control-plane", icon: "cloud", match: ["control-plane", "control-plane-cloud", "control-plane-clusters", "control-plane-cluster-detail", "control-plane-inventory", "control-plane-operations", "cp-k8s-overview", "cp-k8s-pods", "cp-k8s-nodes", "cp-k8s-namespaces", "cp-k8s-deployments", "cp-k8s-storage", "cp-k8s-networking", "cp-k8s-diagnostics"] },
+      { label: "DORA metrics", path: "/delivery/dora", icon: "bar-chart", match: ["delivery-dora"] },
     ],
   },
   {
@@ -3890,6 +3680,30 @@ const NAV_GROUPS = [
       { label: "Workflows", path: "/ai-team-workflows", icon: "workflow", match: ["ai-team-workflows", "ai-team-workflow-create", "ai-team-workflow-detail"] },
     ],
   },
+  // ── Pilot lanes (visible when pilot mode is enabled) ─────────────────────
+  {
+    id: "customer-pilot-nav",
+    title: "Customer Pilot",
+    discipline: "platform",
+    module: null,
+    pilotOnlyGroup: true,
+    items: [
+      { label: "Pilot portal", path: "/customer-pilot", icon: "shield", match: ["customer-pilot", "customer-pilot-readiness", "customer-pilot-operation", "customer-pilot-approval", "customer-pilot-execution", "customer-pilot-evidence", "customer-pilot-closeout", "customer-pilot-timeline", "customer-pilot-communications", "customer-pilot-preferences"], pilotOnly: true, customerPilotOnly: true },
+      { label: "Pilot integrations", path: "/customer-onboarding", icon: "wand", match: ["customer-onboarding"], pilotOnly: true },
+    ],
+  },
+  {
+    id: "operator-pilot-nav",
+    title: "Operator Console",
+    discipline: "platform",
+    module: null,
+    pilotOnlyGroup: true,
+    items: [
+      { label: "Pilot center", path: "/pilot", icon: "target", match: ["pilot", "pilot-operations-health", "pilot-deployment-readiness", "pilot-execution", "pilot-evidence"], pilotOnly: true },
+      { label: "Execution console", path: "/pilot/execution", icon: "terminal", match: ["pilot-execution"], pilotOnly: true, operatorPilotOnly: true },
+      { label: "Pilot evidence", path: "/pilot/evidence", icon: "file", match: ["pilot-evidence"], pilotOnly: true, operatorPilotOnly: true },
+    ],
+  },
   // ── Platform: org admin & help ────────────────────────────────────────────
   {
     id: "platform",
@@ -3899,11 +3713,7 @@ const NAV_GROUPS = [
     items: [
       { label: "Current organization", path: "/organization", icon: "building", match: ["organization"] },
       { label: "Organizations", path: "/organizations", icon: "building", match: ["organizations", "organizations-create", "organization-detail"] },
-      { label: "Setup Wizard", path: "/onboarding", icon: "wand", match: ["onboarding"] },
-      { label: "Customer Pilot", path: "/customer-pilot", icon: "shield", match: ["customer-pilot", "customer-pilot-readiness", "customer-pilot-operation", "customer-pilot-approval", "customer-pilot-execution", "customer-pilot-evidence", "customer-pilot-closeout", "customer-pilot-timeline", "customer-pilot-communications", "customer-pilot-preferences"], pilotOnly: true, customerPilotOnly: true },
-      { label: "Pilot Center", path: "/pilot", icon: "target", match: ["pilot", "pilot-operations-health", "pilot-deployment-readiness", "pilot-execution", "pilot-evidence"], pilotOnly: true },
-      { label: "Execution Console", path: "/pilot/execution", icon: "terminal", match: ["pilot-execution"], pilotOnly: true, operatorPilotOnly: true },
-      { label: "Pilot Evidence", path: "/pilot/evidence", icon: "file", match: ["pilot-evidence"], pilotOnly: true, operatorPilotOnly: true },
+      { label: "Org setup wizard", path: "/onboarding", icon: "wand", match: ["onboarding"] },
       { label: "SSO", path: "/organization/settings/sso", icon: "shield", match: ["organization-sso"], adminOnly: true, requiresSso: true },
       { label: "Audit trail", path: "/organization/settings/audit", icon: "file", match: ["organization-audit"], adminOnly: true, requiresAudit: true },
       { label: "Jobs", path: "/operations/jobs", icon: "activity", match: ["operations-jobs"], adminOnly: true, requiresJobs: true },
@@ -3927,7 +3737,7 @@ const NAV_GROUPS = [
           "help-demos", "help-tours",
         ],
       },
-      { label: "Module catalog", path: "/catalog", icon: "grid", match: ["catalog", "catalog-category", "catalog-module", "feature-unavailable"] },
+      { label: "All modules", path: "/catalog", icon: "grid", match: ["catalog", "catalog-category", "catalog-module", "feature-unavailable"] },
     ],
   },
 ];
@@ -3968,6 +3778,36 @@ const INTERNAL_NAV_ITEMS = [
 const PRIMARY_NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
 
 const NAV_COLLAPSED_STORAGE_KEY = "nexora_nav_collapsed";
+const NAV_FOCUS_DENSITY_KEY = "nexora_nav_focus_density";
+
+function loadNavFocusDensity() {
+  try {
+    const raw = localStorage.getItem(NAV_FOCUS_DENSITY_KEY);
+    if (raw === "0" || raw === "false") return false;
+    if (raw === "1" || raw === "true") return true;
+  } catch (_e) { /* ignore */ }
+  return !DEVELOPMENT_UI_ENABLED;
+}
+
+function isNavFocusDensityEnabled() {
+  if (DEVELOPMENT_UI_ENABLED) return false;
+  if (state.navFocusDensity === null || state.navFocusDensity === undefined) {
+    state.navFocusDensity = loadNavFocusDensity();
+  }
+  return Boolean(state.navFocusDensity);
+}
+
+function saveNavFocusDensity(enabled) {
+  state.navFocusDensity = Boolean(enabled);
+  try {
+    localStorage.setItem(NAV_FOCUS_DENSITY_KEY, state.navFocusDensity ? "1" : "0");
+  } catch (_e) { /* ignore */ }
+}
+
+function toggleNavFocusDensity() {
+  saveNavFocusDensity(!isNavFocusDensityEnabled());
+  render();
+}
 
 function navGroupKey(group) {
   if (group?.id) return group.id;
@@ -4003,6 +3843,9 @@ function isNavGroupCollapsed(group) {
   const key = navGroupKey(group);
   if (Object.prototype.hasOwnProperty.call(state.navGroupCollapsed, key)) {
     return Boolean(state.navGroupCollapsed[key]);
+  }
+  if (isNavFocusDensityEnabled() && group.discipline && group.id !== "help" && !navGroupHasActiveRoute(group)) {
+    return true;
   }
   return Boolean(group.defaultCollapsed);
 }
@@ -4095,8 +3938,11 @@ function renderSidebar() {
       <span>${escapeHtml(item.label)}</span>
     </a>`;
   const titledGroups = visibleNavGroups().filter((g) => g.title).length;
+  const focusOn = isNavFocusDensityEnabled();
   const navControls = titledGroups > 2 ? `
     <div class="sidebar-nav-controls">
+      <button type="button" class="sidebar-nav-ctl${focusOn ? " active" : ""}" id="nav-focus-toggle" title="Show only the active workflow lane">${focusOn ? "Focus" : "Show all"}</button>
+      <span class="sidebar-nav-ctl-sep" aria-hidden="true">·</span>
       <button type="button" class="sidebar-nav-ctl" id="nav-expand-all" title="Expand all sections">Expand</button>
       <span class="sidebar-nav-ctl-sep" aria-hidden="true">·</span>
       <button type="button" class="sidebar-nav-ctl" id="nav-collapse-all" title="Collapse all sections">Collapse</button>
@@ -4153,8 +3999,90 @@ function renderSidebar() {
     </aside>`;
 }
 
-function renderHeader(title, subtitle) {
+function renderPageBreadcrumbs(crumbs) {
+  if (!crumbs || !crumbs.length) return "";
+  return `<nav class="page-breadcrumbs" aria-label="Breadcrumb">${crumbs.map((c, i) => {
+    const last = i === crumbs.length - 1;
+    if (last || !c.path) return `<span class="page-crumb current">${escapeHtml(c.label)}</span>`;
+    return `<a class="page-crumb" href="${escapeHtml(c.path)}" data-nav="${escapeHtml(c.path)}">${escapeHtml(c.label)}</a><span class="page-crumb-sep" aria-hidden="true">/</span>`;
+  }).join("")}</nav>`;
+}
+
+function renderModuleTabs(tabs) {
+  if (!tabs || !tabs.length) return "";
+  const page = state.route?.page;
+  const path = (typeof window !== "undefined" ? window.location.pathname : "").replace(/\/$/, "") || "/";
+  const links = tabs.map((t) => {
+    const active = (t.match && t.match.includes(page))
+      || path === t.path
+      || (t.path !== "/" && t.path.length > 1 && path.startsWith(`${t.path}/`));
+    return `<a class="module-tab${active ? " active" : ""}" href="${escapeHtml(t.path)}" data-nav="${escapeHtml(t.path)}">${escapeHtml(t.label)}</a>`;
+  }).join("");
+  return `<nav class="module-tabs" aria-label="Section navigation">${links}</nav>`;
+}
+
+const KNOW_ESTATE_MODULE_TABS = [
+  { label: "Architecture", path: "/architecture", match: ["architecture"] },
+  { label: "Dependencies", path: "/dependencies", match: ["dependencies"] },
+  { label: "Discovery", path: "/discovery", match: ["discovery"] },
+];
+
+const OBSERVE_MODULE_TABS = [
+  { label: "Services", path: "/services", match: ["service-health", "service-detail"] },
+  { label: "Monitoring", path: "/monitoring", match: ["monitoring"] },
+  { label: "Logs", path: "/logs", match: ["obs-platform-logs"] },
+  { label: "Metrics", path: "/metrics", match: ["obs-platform-metrics"] },
+  { label: "Traces", path: "/traces", match: ["obs-platform-traces"] },
+];
+
+const RELIABILITY_MODULE_TABS = [
+  { label: "Dashboard", path: "/reliability-dashboard", match: ["reliability-dashboard"] },
+  { label: "Maturity", path: "/reliability-maturity", match: ["reliability-maturity"] },
+  { label: "Executive reports", path: "/executive-reports", match: ["executive-reports"] },
+  { label: "Deployment safety", path: "/deployment-safety", match: ["deployment-safety"] },
+  { label: "Change failure", path: "/change-failure", match: ["change-failure"] },
+  { label: "Capacity", path: "/capacity", match: ["capacity"] },
+  { label: "Cost optimization", path: "/cost-optimization", match: ["cost-optimization"] },
+];
+
+function renderKnowEstateNav() {
+  return renderModuleTabs(KNOW_ESTATE_MODULE_TABS);
+}
+
+function renderObserveNav() {
+  return renderModuleTabs(OBSERVE_MODULE_TABS);
+}
+
+function renderReliabilityModuleNav() {
+  return renderModuleTabs(RELIABILITY_MODULE_TABS);
+}
+
+function renderNotFoundPage() {
+  const path = state.route?.unknownPath
+    || (typeof window !== "undefined" ? window.location.pathname : "");
+  return `
+    <div class="container">
+      ${renderHeader("Page not found", "That route is not registered in Nexora")}
+      ${renderAlerts()}
+      <section class="card">
+        <h2>404 — Not found</h2>
+        <p class="muted"><code>${escapeHtml(path)}</code> does not match any page. Check the URL or use the links below.</p>
+        <div class="actions" style="margin-top:12px;flex-wrap:wrap;gap:8px;">
+          <a class="btn btn-primary" href="/" data-nav="/">Command Center</a>
+          <a class="btn btn-secondary" href="/catalog" data-nav="/catalog">All modules</a>
+          <a class="btn btn-secondary" href="/help" data-nav="/help">Help Center</a>
+        </div>
+      </section>
+    </div>`;
+}
+
+function renderHeader(title, subtitle, opts = {}) {
   const activeOrg = state.organizations.find((org) => org.id === state.activeOrganization);
+  const page = state.route?.page;
+  const showWorkflow = opts.workflow !== false && state.user && page
+    && page !== "not-found" && page !== "feature-unavailable"
+    && typeof renderWorkflowNextStrip === "function";
+  const workflow = showWorkflow ? renderWorkflowNextStrip(page) : "";
   return `
     <header class="app-header">
       <div class="app-topbar">
@@ -4165,6 +4093,7 @@ function renderHeader(title, subtitle) {
           <div class="page-heading">
             <h1>${escapeHtml(title)}</h1>
             <p class="muted">${escapeHtml(subtitle)}</p>
+            ${workflow}
           </div>
         </div>
         <div class="header-actions">
@@ -4439,21 +4368,25 @@ function visibleNavGroups() {
     if (item.adminOnly && !isOrgAdminRole()) return false;
     if (item.requiresSso && !(state.identityCapabilities?.sso)) return false;
     if (item.requiresBilling && !(state.billingEnabled)) return false;
+    if (item.requiresAudit && !(state.operationsCapabilities?.audit)) return false;
+    if (item.requiresJobs && !(state.operationsCapabilities?.jobs)) return false;
     if (item.pilotOnly && !state.pilotModeEnabled) return false;
     if (item.customerPilotOnly && !state.customerPilotVisible) return false;
     if (item.operatorPilotOnly && !canAccessOperatorPilotConsole()) return false;
     return true;
   });
-  if (!state.pilotModeEnabled) {
-    return groups.map((g) => ({
+  const visible = groups
+    .filter((g) => !g.pilotOnlyGroup || state.pilotModeEnabled)
+    .map((g) => ({
       ...g,
-      items: filterItems((g.items || []).filter((item) => !item.pilotOnly)),
-    }));
-  }
-  return groups.map((g) => ({
-    ...g,
-    items: filterItems(g.items),
-  }));
+      items: filterItems(
+        g.pilotOnlyGroup || state.pilotModeEnabled
+          ? g.items
+          : (g.items || []).filter((item) => !item.pilotOnly),
+      ),
+    }))
+    .filter((g) => (g.items || []).length > 0);
+  return visible;
 }
 
 function visiblePlatformModules() {
@@ -5010,7 +4943,12 @@ function renderTeams() {
       <section class="card">
         <h2>Teams Dashboard (${filteredTeams.length})</h2>
         ${renderListFilters()}
-        ${filteredTeams.length === 0 ? `<p class="muted">No teams match your filters.</p>` : `
+        ${filteredTeams.length === 0 ? renderStructuredEmptyState({
+          title: "No teams match",
+          message: "Adjust filters or create a team to organize ownership.",
+          ctaLabel: "Teams",
+          ctaHref: "/teams",
+        }) : `
           <div class="table-scroll">
             <div class="table-grid table-grid-teams">
               <div class="table-row table-head">
@@ -5401,7 +5339,12 @@ function tierBadge(tier) {
 function dependencyGraphSvg(graph) {
   const nodes = (graph && graph.nodes) || [];
   const edges = (graph && graph.edges) || [];
-  if (!nodes.length) return `<p class="muted">No services in the catalog yet.</p>`;
+  if (!nodes.length) return renderStructuredEmptyState({
+    title: "No services in catalog",
+    message: "Run discovery or create services to populate the catalog.",
+    ctaLabel: "Discovery",
+    ctaHref: "/discovery",
+  });
   const w = 640, h = 420, cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 50;
   const pos = {};
   nodes.forEach((n, i) => {
@@ -5917,6 +5860,8 @@ function renderPage() {
       return lazyProductCatalogView("renderProductCatalogModuleDetail");
     case "feature-unavailable":
       return renderFeatureUnavailableRoute();
+    case "not-found":
+      return renderNotFoundPage();
     case "approvals":
       return lazyDevelopmentView("renderApprovals");
     case "approval-detail":
@@ -7072,6 +7017,7 @@ function bindEvents() {
   });
   document.getElementById("nav-expand-all")?.addEventListener("click", expandAllNavGroups);
   document.getElementById("nav-collapse-all")?.addEventListener("click", collapseAllNavGroups);
+  document.getElementById("nav-focus-toggle")?.addEventListener("click", toggleNavFocusDensity);
 
   document.getElementById("refresh-btn")?.addEventListener("click", async () => {
     try {

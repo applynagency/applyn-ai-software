@@ -7,9 +7,16 @@ fully editable via the admin API afterwards (no hardcoded limits at runtime).
 
 from __future__ import annotations
 
+import os
+
 from app.models.billing import PlanTier, UsageMetric
 
 M = UsageMetric
+
+
+def _stripe_price_for_slug(slug: str) -> str | None:
+    """Resolve Stripe Price id from STRIPE_PRICE_<SLUG> env (e.g. STRIPE_PRICE_STARTER)."""
+    return os.environ.get(f"STRIPE_PRICE_{slug.upper()}") or None
 
 
 def _limits(**kw: int) -> dict:
@@ -57,6 +64,7 @@ def default_plans() -> list[dict]:
             "tier": PlanTier.STARTER.value,
             "description": "For small teams.",
             "price_cents": 4900,
+            "external_price_id": _stripe_price_for_slug("starter"),
             "trial_days": 14,
             "support_tier": "email",
             "limits": _limits(
@@ -79,6 +87,7 @@ def default_plans() -> list[dict]:
             "tier": PlanTier.PROFESSIONAL.value,
             "description": "For growing engineering organizations.",
             "price_cents": 19900,
+            "external_price_id": _stripe_price_for_slug("professional"),
             "trial_days": 14,
             "support_tier": "business_hours",
             "limits": _limits(
@@ -101,6 +110,7 @@ def default_plans() -> list[dict]:
             "tier": PlanTier.BUSINESS.value,
             "description": "For large organizations with compliance needs.",
             "price_cents": 49900,
+            "external_price_id": _stripe_price_for_slug("business"),
             "trial_days": 14,
             "support_tier": "priority",
             "limits": _limits(

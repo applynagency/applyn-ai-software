@@ -13,6 +13,7 @@ test("sidebar: collapsible group toggles and persistence keys exist", () => {
   assert.match(source, /NAV_COLLAPSED_STORAGE_KEY = "nexora_nav_collapsed"/);
   assert.match(source, /id="nav-expand-all"/);
   assert.match(source, /id="nav-collapse-all"/);
+  assert.match(source, /id="nav-focus-toggle"/);
   assert.match(source, /class="sidebar-group-items\$\{collapsed \? " collapsed" : ""\}"/);
 });
 
@@ -32,20 +33,46 @@ test("sidebar: SRE then DevOps discipline order with connect hub", () => {
   assert.ok(deliverIdx > connectIdx, "Delivery follows connect hub");
   assert.ok(aiFactoryIdx > deliverIdx, "AI build modules sit after DevOps surfaces");
 
-  const advanced = NAV_GROUPS.find((g) => g.id === "advanced");
-  const orgAdmin = NAV_GROUPS.find((g) => g.id === "platform");
-  assert.equal(advanced?.title, "Advanced");
-  assert.equal(orgAdmin?.title, "Organization & Admin");
-  assert.ok(advanced?.items?.some((i) => i.label === "Safety & Capacity"));
-
-  const delivery = NAV_GROUPS.find((g) => g.id === "delivery");
-  const devopsConnect = NAV_GROUPS.find((g) => g.id === "devops-connect");
-  assert.ok(delivery?.items?.length >= 5);
-  assert.equal(devopsConnect?.discipline, "devops");
-  assert.ok(devopsConnect?.items?.some((i) => i.path === "/connections-secrets"));
+  const know = NAV_GROUPS.find((g) => g.id === "know");
+  assert.equal(know?.title, "Know your estate");
+  assert.ok(know?.items?.some((i) => i.path === "/architecture"));
+  assert.ok(know?.items?.some((i) => i.path === "/discovery"), "discovery lives in Know your estate");
 
   const respond = NAV_GROUPS.find((g) => g.id === "respond");
   assert.equal(respond?.discipline, "sre");
+  assert.ok(respond?.items?.some((i) => i.path === "/war-rooms"), "war rooms live in Respond");
+
+  const devopsConnect = NAV_GROUPS.find((g) => g.id === "devops-connect");
+  assert.ok(!devopsConnect?.items?.some((i) => i.path === "/discovery"), "discovery removed from Connect");
+
+  const customerPilotNav = NAV_GROUPS.find((g) => g.id === "customer-pilot-nav");
+  const operatorPilotNav = NAV_GROUPS.find((g) => g.id === "operator-pilot-nav");
+  assert.equal(customerPilotNav?.title, "Customer Pilot");
+  assert.equal(operatorPilotNav?.title, "Operator Console");
+  assert.ok(customerPilotNav?.items?.some((i) => i.path === "/customer-onboarding"));
+
+  const platform = NAV_GROUPS.find((g) => g.id === "platform");
+  assert.equal(platform?.title, "Organization & Admin");
+  assert.ok(!platform?.items?.some((i) => i.pilotOnly), "pilot links moved out of org admin");
+
+  const platformOps = NAV_GROUPS.find((g) => g.id === "platform-ops");
+  const reliability = NAV_GROUPS.find((g) => g.id === "reliability");
+  assert.equal(reliability?.title, "Reliability");
+  assert.ok(reliability?.items?.some((i) => i.path === "/reliability-dashboard"));
+  assert.ok(reliability?.items?.some((i) => i.path === "/deployment-safety"));
+  assert.equal(platformOps?.title, "Platform ops");
+  assert.ok(platformOps?.items?.some((i) => i.path === "/control-plane"));
+  assert.ok(!platformOps?.items?.some((i) => i.path === "/reliability-dashboard"), "reliability moved out of platform ops");
+
+  const observe = NAV_GROUPS.find((g) => g.id === "observe");
+  assert.ok(observe?.items?.some((i) => i.path === "/monitoring"), "monitoring dashboard in Observe");
+
+  const delivery = NAV_GROUPS.find((g) => g.id === "delivery");
+  assert.ok(delivery?.items?.length >= 10);
+  assert.ok(delivery?.items?.some((i) => i.path === "/delivery/releases"));
+  assert.ok(delivery?.items?.some((i) => i.path === "/delivery/security"));
+  assert.equal(devopsConnect?.discipline, "devops");
+  assert.ok(devopsConnect?.items?.some((i) => i.path === "/connections-secrets"));
 });
 
 test("sidebar: collapse state respects defaults and active route expansion", () => {
@@ -63,15 +90,15 @@ test("sidebar: collapse state respects defaults and active route expansion", () 
   state.route = { page: "dashboard" };
   state.navGroupCollapsed = {};
 
-  const security = NAV_GROUPS.find((g) => g.id === "security");
-  assert.equal(isNavGroupCollapsed(security), true, "security group collapsed by default");
+  const pe = NAV_GROUPS.find((g) => g.id === "platform-engineering");
+  assert.equal(isNavGroupCollapsed(pe), true, "platform engineering collapsed by default");
 
-  state.route = { page: "sec-findings" };
+  state.route = { page: "pe-templates" };
   ensureActiveNavGroupExpanded();
-  assert.equal(isNavGroupCollapsed(security), false, "active route expands its group");
+  assert.equal(isNavGroupCollapsed(pe), false, "active route expands its group");
 
-  state.navGroupCollapsed[navGroupKey(security)] = true;
-  assert.equal(isNavGroupCollapsed(security), true, "manual collapse overrides until cleared");
+  state.navGroupCollapsed[navGroupKey(pe)] = true;
+  assert.equal(isNavGroupCollapsed(pe), true, "manual collapse overrides until cleared");
 
   state.navGroupCollapsed = {};
   localStorage.setItem(NAV_COLLAPSED_STORAGE_KEY, JSON.stringify({ delivery: false }));

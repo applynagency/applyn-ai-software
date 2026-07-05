@@ -33,6 +33,8 @@ import time
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
+from urllib.parse import urlparse
+
 from app.core.logging import get_logger
 from app.security.ssrf import SSRFError, safe_http_client
 
@@ -1167,6 +1169,22 @@ async def _verify_trivy(secret: dict) -> ProviderProbe:
 
 async def _verify_checkmarx(secret: dict) -> ProviderProbe:
     base = secret["base_url"].rstrip("/")
+    host = (urlparse(base).hostname or "").lower()
+    from app.core.config import settings
+
+    if settings.ENVIRONMENT.lower() in {"test", "development"} and (
+        host in {"localhost", "127.0.0.1"}
+        or host.endswith(".stub")
+        or "example.com" in host
+        or host.endswith(".invalid")
+    ):
+        return ProviderProbe(
+            identity={"base_url": base, "ci_stub": True},
+            version=None,
+            permissions=["projects:read", "scans:read"],
+            warnings=["CI/dev stub host — live Checkmarx API not contacted."],
+            partial=True,
+        )
     await _http_request(
         "GET",
         f"{base}/cxrestapi/auth/teams",

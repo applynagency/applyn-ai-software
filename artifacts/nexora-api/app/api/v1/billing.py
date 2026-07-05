@@ -28,6 +28,7 @@ from app.schemas.billing import (
     LicenseResponse,
     LicenseValidateRequest,
     PaymentMethodListResponse,
+    PaymentMethodView,
     PlanCloneRequest,
     PlanCreate,
     PlanListResponse,
@@ -172,8 +173,13 @@ async def list_payment_methods(session: DBSession, ctx: OrgContextDep):
     org_id = _require_org_admin(ctx)
     stripe = StripeProvider(session)
     configured = stripe.configured
+    items: list[PaymentMethodView] = []
+    if configured:
+        sub = await SubscriptionService(session).get_or_create(org_id)
+        raw = await stripe.list_payment_methods(org_id, sub)
+        items = [PaymentMethodView.model_validate(row) for row in raw]
     return PaymentMethodListResponse(
-        items=[],
+        items=items,
         stripe_configured=configured,
         self_serve_enabled=configured,
     )

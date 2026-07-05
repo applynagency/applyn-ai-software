@@ -6,6 +6,11 @@
  * sanitizeAuditEntry, sanitizeJobError, probeOperationsCapabilities, loadOrganizations, loadCredentials.
  */
 
+function settingsEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
+
 async function loadOrganizationDetail(organizationId) {
   const [organization, members, invitations] = await Promise.all([
     api(`/v1/organizations/${organizationId}`),
@@ -418,7 +423,12 @@ function renderSettingsProfileTab() {
       <p class="muted">Connect your own infrastructure. Credentials are encrypted at rest and used only when a deployment runs — secrets are never displayed after saving.</p>
       ${state.credentialValidation ? renderCredentialGuidance(state.credentialValidation) : ""}
       ${creds.length === 0
-        ? `<p class="muted">No infrastructure connected yet. Add a target below to get started.</p>`
+        ? settingsEmpty({
+          title: "No infrastructure connected",
+          message: "Add cloud or Kubernetes credentials below to enable deployments and discovery.",
+          ctaLabel: "Integrations",
+          ctaHref: "/integrations/onboarding",
+        })
         : `
         <div class="table-grid">
           <div class="table-row table-head"><div>Provider</div><div>Name</div><div>Status</div><div>Readiness</div><div>Last Verified</div><div></div></div>
@@ -521,7 +531,10 @@ function renderSettingsSessionsTab() {
     <section class="card">
       <h2>Active sessions</h2>
       <p class="muted">Devices and browsers signed in to your account. Revoking a session signs that device out.</p>
-      ${sessions.length === 0 ? `<p class="muted">No active sessions found.</p>` : `
+      ${sessions.length === 0 ? settingsEmpty({
+        title: "No active sessions",
+        message: "Active login sessions for your account appear here.",
+      }) : `
         <div class="table-grid">
           <div class="table-row table-head"><div>Device</div><div>IP</div><div>Last seen</div><div></div></div>
           ${sessions.map((s) => `
@@ -557,7 +570,10 @@ function renderSettingsApiKeysTab() {
         <input class="form-input" name="name" required placeholder="Key name (e.g. Local CLI)" />
         <button class="btn btn-primary" type="submit">Create personal key</button>
       </form>
-      ${personal.length === 0 ? `<p class="muted">No personal API keys yet.</p>` : `
+      ${personal.length === 0 ? settingsEmpty({
+        title: "No personal API keys",
+        message: "Create a personal API key for scripts and local development.",
+      }) : `
         <div class="table-grid">
           <div class="table-row table-head"><div>Name</div><div>Prefix</div><div>Created</div><div>Status</div><div></div></div>
           ${personal.map((k) => `
@@ -593,7 +609,10 @@ function renderSettingsApiKeysTab() {
         <input class="form-input" name="name" required placeholder="Key name (e.g. CI deploy)" />
         <button class="btn btn-primary" type="submit">Create organization key</button>
       </form>
-      ${keys.length === 0 ? `<p class="muted">No organization API keys yet.</p>` : `
+      ${keys.length === 0 ? settingsEmpty({
+        title: "No organization API keys",
+        message: "Issue organization-scoped API keys for automation and integrations.",
+      }) : `
         <div class="table-grid">
           <div class="table-row table-head"><div>Name</div><div>Prefix</div><div>Created</div><div>Last used</div><div>Status</div><div></div></div>
           ${keys.map((k) => `
@@ -628,7 +647,10 @@ function renderServiceAccountKeysPanel(sa) {
         <input class="form-input" name="name" required placeholder="Key name" />
         <button class="btn btn-primary" type="submit">Issue key</button>
       </form>
-      ${keys.length === 0 ? `<p class="muted">No keys issued for this account.</p>` : `
+      ${keys.length === 0 ? settingsEmpty({
+        title: "No service account keys",
+        message: "Issue keys after creating a service account.",
+      }) : `
         <div class="table-grid">
           <div class="table-row table-head"><div>Name</div><div>Prefix</div><div>Created</div><div>Status</div><div></div></div>
           ${keys.map((k) => `
@@ -667,7 +689,10 @@ function renderSettingsServiceAccountsTab() {
         </select>
         <button class="btn btn-primary" type="submit">Create service account</button>
       </form>
-      ${accounts.length === 0 ? `<p class="muted">No service accounts yet.</p>` : `
+      ${accounts.length === 0 ? settingsEmpty({
+        title: "No service accounts",
+        message: "Create service accounts for machine-to-machine access.",
+      }) : `
         <div class="service-accounts-list">
           ${accounts.map((a) => `
             <div class="service-account-row card" style="margin-bottom:12px;padding:16px;">
@@ -747,8 +772,17 @@ function renderSettingsAuditTab() {
         </div>
       </div>
       ${renderAuditFiltersForm()}
-      ${logs.length === 0 ? `<p class="muted">No audit entries match your filters.</p>` : `
-        <div class="table-grid" style="grid-template-columns:repeat(8,minmax(0,1fr));">
+      ${logs.length === 0 ? (typeof renderStructuredEmptyState === "function"
+        ? renderStructuredEmptyState({
+          title: "No audit entries",
+          message: "Adjust filters or wait for organization activity to be recorded.",
+        })
+        : settingsEmpty({
+          title: "No audit entries",
+          message: "Adjust filters or perform actions to generate audit events.",
+        })) : `
+        <div class="responsive-table-wrap">
+        <div class="table-grid table-grid-audit" style="grid-template-columns:repeat(8,minmax(0,1fr));">
           <div class="table-row table-head">
             <div>Time</div><div>Actor</div><div>Organization</div><div>Action</div>
             <div>Resource</div><div>ID</div><div>Outcome</div><div>Correlation</div>
@@ -765,6 +799,7 @@ function renderSettingsAuditTab() {
               <div><code style="font-size:11px;">${escapeHtml(entry.correlation_id || "—")}</code></div>
             </div>
           `).join("")}
+        </div>
         </div>
         ${renderAuditPagination()}
       `}
@@ -896,7 +931,10 @@ function renderOrganizationSsoPage() {
         </div>
         ${state.ssoLoading ? `<p class="muted">Loading…</p>` : ""}
         ${connections.length === 0 && !state.ssoFormOpen ? `
-          <p class="muted">No SSO connections configured yet.</p>
+          ${settingsEmpty({
+            title: "No SSO connections",
+            message: "Configure SAML or OIDC so your team can sign in with your identity provider.",
+          })}
           <button type="button" class="btn btn-primary" data-sso-new-connection>Add connection</button>
         ` : `
           <div class="table-grid" style="margin-top:16px;">
@@ -1005,7 +1043,10 @@ function renderOperationsJobsPage() {
         </div>
         <p class="muted">Organization-scoped jobs. Read-only view — administrative requeue actions are API-only on this deployment.</p>
         ${tab === "active" ? renderJobsFiltersForm() : ""}
-        ${state.jobsLoading ? `<p class="muted">Loading jobs…</p>` : jobs.length === 0 ? `<p class="muted">No jobs match your filters.</p>` : `
+        ${state.jobsLoading ? `<p class="muted">Loading jobs…</p>` : jobs.length === 0 ? settingsEmpty({
+          title: "No jobs match",
+          message: "Adjust filters or wait for background jobs to run.",
+        }) : `
           <div class="table-grid" style="grid-template-columns:repeat(9,minmax(0,1fr));">
             <div class="table-row table-head">
               <div>Type</div><div>Status</div><div>Created</div><div>Started</div>
@@ -1159,7 +1200,12 @@ function renderOrganizations() {
       <section class="card">
         <h2>Your organizations</h2>
         ${state.organizations.length === 0
-          ? `<div class="empty-state"><p class="muted">No organizations yet.</p>${canCreate ? `<a class="btn btn-primary" href="/organizations/create" data-nav="/organizations/create" style="margin-top:12px;">Create organization</a>` : ""}</div>`
+          ? settingsEmpty({
+            title: "No organizations yet",
+            message: canCreate ? "Create your first organization to get started." : "You have not joined any organizations yet.",
+            ctaLabel: canCreate ? "Create organization" : undefined,
+            ctaHref: canCreate ? "/organizations/create" : undefined,
+          })
           : rows}
       </section>
     </div>
@@ -1274,7 +1320,10 @@ function renderOrganizationDetail() {
 
       <section class="card" style="margin-bottom: 24px">
         <h2>Members (${state.organizationMembers.length})</h2>
-        ${state.organizationMembers.length === 0 ? `<p class="muted">No members found.</p>` : memberRows}
+        ${state.organizationMembers.length === 0 ? settingsEmpty({
+          title: "No members found",
+          message: "Invite colleagues to collaborate in this organization.",
+        }) : memberRows}
       </section>
 
       ${canManageMembers() ? `
@@ -1302,7 +1351,10 @@ function renderOrganizationDetail() {
 
         <section class="card">
           <h2>Pending invitations (${state.organizationInvitations.length})</h2>
-          ${state.organizationInvitations.length === 0 ? `<p class="muted">No pending invitations.</p>` : invitationRows}
+          ${state.organizationInvitations.length === 0 ? settingsEmpty({
+            title: "No pending invitations",
+            message: "Invitations you send appear here until accepted.",
+          }) : invitationRows}
         </section>
       ` : `
         <section class="card">

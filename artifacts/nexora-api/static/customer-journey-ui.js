@@ -4,6 +4,11 @@
  * canWriteResources, isOwnerRole.
  */
 
+function cjEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
+
 async function loadOnboarding() {
   try {
     let sid = state.onboardingId;
@@ -84,10 +89,41 @@ async function loadCustomerPilot() {
     state.error = error.message;
   }
 }
+function renderOnboardingPathsCard() {
+  const paths = [
+    { label: "Org setup wizard", desc: "First-time organization setup — you are on this page.", href: "/onboarding", current: true },
+    { label: "Integration setup", desc: "Connect GitHub, Kubernetes, and observability tools.", href: "/integrations/onboarding" },
+    { label: "Help: onboarding guide", desc: "Documentation and walkthroughs.", href: "/help/onboarding" },
+  ];
+  if (state.pilotModeEnabled) {
+    paths.splice(1, 0, {
+      label: "Pilot integrations",
+      desc: "Connect tools for pilot environments (separate from org setup).",
+      href: "/customer-onboarding",
+    });
+  }
+  return `
+    <section class="card" style="margin-bottom:16px;">
+      <h2 style="margin-top:0;">Onboarding paths</h2>
+      <p class="muted" style="font-size:13px;">Nexora has separate onboarding flows — pick the one that matches your goal.</p>
+      <div class="ops-list">
+        ${paths.map((p) => `
+          <div class="ops-list-row" style="align-items:flex-start;">
+            <span>
+              ${p.current
+    ? `<strong>${escapeHtml(p.label)} <span class="muted" style="font-weight:400;">(you are here)</span></strong>`
+    : `<strong><a href="${escapeHtml(p.href)}" data-nav="${escapeHtml(p.href)}">${escapeHtml(p.label)}</a></strong>`}
+              <div class="muted" style="font-size:12px;">${escapeHtml(p.desc)}</div>
+            </span>
+          </div>`).join("")}
+      </div>
+    </section>`;
+}
+
 function renderOnboarding() {
   const ob = state.onboarding;
   if (!ob) {
-    return `<div class="container">${renderHeader("Guided Setup Wizard", "Onboard in under 10 minutes")}${renderAlerts()}<section class="card"><p class="muted">Starting wizard…</p></section></div>`;
+    return `<div class="container">${renderHeader("Org setup wizard", "First-time organization setup")}${renderAlerts()}${renderOnboardingPathsCard()}<section class="card"><p class="muted">Starting wizard…</p></section></div>`;
   }
   const canWrite = canWriteResources();
   const done = ob.status === "COMPLETED";
@@ -116,8 +152,9 @@ function renderOnboarding() {
 
   return `
     <div class="container">
-      ${renderHeader("Guided Setup Wizard", "Onboard in under 10 minutes")}
+      ${renderHeader("Org setup wizard", "First-time organization setup")}
       ${renderAlerts()}
+      ${renderOnboardingPathsCard()}
       <section class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <h2 style="margin:0;">Progress: ${pct}%</h2>
@@ -204,7 +241,10 @@ function renderCustomerPilot() {
   if (page === "customer-pilot-timeline") {
     body = `<section class="card" aria-live="polite"><h2>Audit timeline</h2>${expiryBanner}<ul>${timelineHtml || "<li class='muted'>No events yet.</li>"}</ul><button class="btn btn-secondary" type="button" data-customer-pilot-timeline-export>Export timeline</button></section><section class="card"><h2>Stage summary</h2><ul>${stageHtml}</ul></section>`;
   } else if (page === "customer-pilot-communications") {
-    body = `<section class="card"><h2>Messages</h2>${commRows || "<p class='muted'>No messages yet.</p>"}</section>`;
+    body = `<section class="card"><h2>Messages</h2>${commRows || cjEmpty({
+      title: "No messages yet",
+      message: "Operator and system updates appear here during your pilot.",
+    })}</section>`;
   } else if (page === "customer-pilot-preferences") {
     body = `<section class="card"><h2>Notification preferences</h2>${canAdmin ? `<form data-customer-pilot-prefs><label><input type="checkbox" name="in_app_enabled" ${prefs?.in_app_enabled !== false ? "checked" : ""}/> In-app</label><label><input type="checkbox" name="approval_reminders_enabled" ${prefs?.approval_reminders_enabled !== false ? "checked" : ""}/> Approval reminders</label><label><input type="checkbox" name="evidence_ready_enabled" ${prefs?.evidence_ready_enabled !== false ? "checked" : ""}/> Evidence ready</label><label><input type="checkbox" name="closeout_notifications_enabled" ${prefs?.closeout_notifications_enabled !== false ? "checked" : ""}/> Closeout</label><label>Timezone <input class="form-input" name="timezone" value="${escapeHtml(prefs?.timezone || "UTC")}"/></label><button class="btn btn-primary" type="submit">Save</button></form>` : "<p class='muted'>Admin access required.</p>"}</section>`;
   } else if (page === "customer-pilot-readiness") {
@@ -222,9 +262,15 @@ function renderCustomerPilot() {
       ${ops.degradation_notice ? `<p class="muted" role="status">${escapeHtml(ops.degradation_notice)}</p>` : ""}
     </section>`;
   } else if (page === "customer-pilot-operation") {
-    body = op ? `<section class="card"><h2>Proposed operation</h2><p><strong>${escapeHtml(op.action)}</strong> on <code>${escapeHtml(op.resource_name)}</code></p><p class="muted">Environment: ${escapeHtml(scope.environment_name || "—")} (${escapeHtml(scope.environment_tier || "non-production")})</p><p>Rollback plan: ${escapeHtml(op.rollback_plan || "—")}</p><p>Status: <span class="badge">${escapeHtml(op.status)}</span></p></section>` : `<section class="card"><p class="muted">No operation proposed.</p></section>`;
+    body = op ? `<section class="card"><h2>Proposed operation</h2><p><strong>${escapeHtml(op.action)}</strong> on <code>${escapeHtml(op.resource_name)}</code></p><p class="muted">Environment: ${escapeHtml(scope.environment_name || "—")} (${escapeHtml(scope.environment_tier || "non-production")})</p><p>Rollback plan: ${escapeHtml(op.rollback_plan || "—")}</p><p>Status: <span class="badge">${escapeHtml(op.status)}</span></p></section>` : `<section class="card">${cjEmpty({
+      title: "No operation proposed",
+      message: "Your operator has not proposed a scoped pilot operation yet.",
+    })}</section>`;
   } else if (page === "customer-pilot-approval") {
-    body = pkg ? `<section class="card"><h2>Immutable approval package</h2><pre style="white-space:pre-wrap;font-size:12px;">${escapeHtml(pkg.markdown || JSON.stringify(pkg.package, null, 2))}</pre>${approvalModal}</section>` : `<section class="card"><p class="muted">No approval package available.</p></section>`;
+    body = pkg ? `<section class="card"><h2>Immutable approval package</h2><pre style="white-space:pre-wrap;font-size:12px;">${escapeHtml(pkg.markdown || JSON.stringify(pkg.package, null, 2))}</pre>${approvalModal}</section>` : `<section class="card">${cjEmpty({
+      title: "No approval package",
+      message: "An immutable approval package is generated when your operator proposes an operation.",
+    })}</section>`;
   } else if (page === "customer-pilot-execution") {
     body = `<section class="card"><h2>Execution status</h2><p>Operation: <span class="badge">${escapeHtml(exec?.status || ov?.operation_summary?.status || "—")}</span></p><p>Operator confirmation: <span class="badge">${exec?.ready_for_operator_confirmation ? "READY_FOR_OPERATOR_CONFIRMATION" : "AWAITING_GATES"}</span></p><p class="muted">Customers cannot execute or confirm operations from this portal.</p>${(exec?.blockers || []).length ? `<ul>${exec.blockers.map((b) => `<li>${escapeHtml(b)}</li>`).join("")}</ul>` : ""}</section>`;
   } else if (page === "customer-pilot-evidence") {

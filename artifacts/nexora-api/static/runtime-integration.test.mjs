@@ -39,6 +39,14 @@ test("parseRoute resolves organizations and pilot deep links", () => {
   assert.equal(parseRoute("/customer-onboarding").page, "customer-onboarding");
 });
 
+test("parseRoute returns not-found for unknown paths", () => {
+  const { parseRoute } = loadFrontendExports();
+  const r = parseRoute("/this-route-does-not-exist");
+  assert.equal(r.page, "not-found");
+  assert.equal(r.unknownPath, "/this-route-does-not-exist");
+  assert.notEqual(parseRoute("/organizations").page, "not-found");
+});
+
 test("parseRoute marks retired hub routes with redirectFrom", () => {
   const { parseRoute } = loadFrontendExports();
   const ops = parseRoute("/ops-workspace");

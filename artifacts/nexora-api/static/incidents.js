@@ -335,6 +335,11 @@ function renderIncidentListFilters() {
     </form>`;
 }
 
+function incEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
+
 function renderIncidentsList() {
   if (state.incidentsDenied) {
     return renderAccessDeniedPage("Incidents", "You do not have permission to view incidents.");
@@ -384,16 +389,14 @@ function renderIncidentsList() {
       <p class="muted" style="font-size:12px;"><a href="/alerts" data-nav="/alerts">Alerts</a> · <a href="/copilot" data-nav="/copilot">AI Copilot</a> · <a href="/incidents/on-call" data-nav="/incidents/on-call">On-call</a></p>
       ${renderIncidentListFilters()}
       <section class="card">
-        ${items.length === 0 ? (typeof renderStructuredEmptyState === "function"
-          ? renderStructuredEmptyState({
-            title: "No incidents match",
-            message: "Adjust filters or connect incident management tools to ingest alerts.",
-            ctaLabel: "Connect PagerDuty",
-            ctaHref: "/integrations/onboarding?provider=PAGERDUTY",
-            secondaryLabel: "View alerts",
-            secondaryHref: "/alerts",
-          })
-          : `<p class="muted">No incidents match your filters.</p>`) : `
+        ${items.length === 0 ? incEmpty({
+          title: "No incidents match",
+          message: "Adjust filters or connect incident management tools to ingest alerts.",
+          ctaLabel: "Connect PagerDuty",
+          ctaHref: "/integrations/onboarding?provider=PAGERDUTY",
+          secondaryLabel: "View alerts",
+          secondaryHref: "/alerts",
+        }) : `
         <div class="responsive-table-wrap">
         <div class="table-grid incidents-table-grid" style="margin-top:8px;">
           <div class="table-row table-head"><div>Title</div><div>Status</div><div>Service</div><div>Assignee</div><div>Created</div><div>Alerts</div><div></div></div>
@@ -638,11 +641,14 @@ function renderIncidentDetail() {
   return `
     <div class="container">
       ${renderHeader(inc.title, "Incident resolution")}
+      ${typeof renderPageBreadcrumbs === "function" ? renderPageBreadcrumbs([
+        { label: "Incidents", path: "/incidents" },
+        { label: String(inc.title || inc.id).slice(0, 48) },
+      ]) : ""}
       ${renderAlerts()}
       <p class="muted" style="font-size:12px;">
-        <a href="/incidents" data-nav="/incidents">← Incidents</a> ·
         <a href="/incidents/${encodeURIComponent(inc.id)}/timeline" data-nav="/incidents/${encodeURIComponent(inc.id)}/timeline">Timeline</a> ·
-        <a href="/incidents/${encodeURIComponent(inc.id)}/alerts" data-nav="/incidents/${encodeURIComponent(inc.id)}/alerts">Alerts</a>
+        <a href="/incidents/${encodeURIComponent(inc.id)}/alerts" data-nav="/incidents/${encodeURIComponent(inc.id)}/alerts">Linked alerts</a>
       </p>
       <section class="card">
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -682,10 +688,16 @@ function renderIncidentTimeline() {
   const tl = state.incidentTimeline;
   const ci = state.incidentChangeIntel;
   const events = state.incidentLifecycleEvents || [];
+  const incTitle = String(inc.title || inc.id).slice(0, 48);
 
   return `
     <div class="container">
       ${renderHeader("Timeline", inc.title)}
+      ${typeof renderPageBreadcrumbs === "function" ? renderPageBreadcrumbs([
+        { label: "Incidents", path: "/incidents" },
+        { label: incTitle, path: `/incidents/${encodeURIComponent(inc.id)}` },
+        { label: "Timeline" },
+      ]) : ""}
       ${renderAlerts()}
       <p class="muted"><a href="/incidents/${encodeURIComponent(inc.id)}" data-nav="/incidents/${encodeURIComponent(inc.id)}">← Incident detail</a></p>
       ${renderIncidentConfidenceCard(tl)}
@@ -695,7 +707,10 @@ function renderIncidentTimeline() {
       ${renderIncidentEventTimeline(tl)}
       <section class="card">
         <h2>Lifecycle events</h2>
-        ${events.length === 0 ? `<p class="muted">No lifecycle events.</p>` : `
+        ${events.length === 0 ? incEmpty({
+          title: "No lifecycle events",
+          message: "Status transitions and notes appear as the incident progresses.",
+        }) : `
         <div class="ai-timeline">${events.map((e) => `
           <div class="ai-timeline-step">
             <span class="ai-tool-provider">${escapeHtml(e.event_type)}</span>
@@ -711,13 +726,24 @@ function renderIncidentAlerts() {
   const inc = state.incidentDetail;
   if (!inc) return renderFeatureUnavailablePage("Not found", "Incident alerts unavailable.");
   const alerts = state.incidentLinkedAlerts || [];
+  const incTitle = String(inc.title || inc.id).slice(0, 48);
   return `
     <div class="container">
       ${renderHeader("Linked alerts", inc.title)}
+      ${typeof renderPageBreadcrumbs === "function" ? renderPageBreadcrumbs([
+        { label: "Incidents", path: "/incidents" },
+        { label: incTitle, path: `/incidents/${encodeURIComponent(inc.id)}` },
+        { label: "Linked alerts" },
+      ]) : ""}
       ${renderAlerts()}
       <p class="muted"><a href="/incidents/${encodeURIComponent(inc.id)}" data-nav="/incidents/${encodeURIComponent(inc.id)}">← Incident detail</a> · <a href="/alerts" data-nav="/alerts">All alerts</a></p>
       <section class="card">
-        ${state.incidentAlertsLoading ? `<p class="muted">Loading…</p>` : alerts.length === 0 ? `<p class="muted">No linked alerts for this incident.</p>` : `
+        ${state.incidentAlertsLoading ? `<p class="muted">Loading…</p>` : alerts.length === 0 ? incEmpty({
+          title: "No linked alerts",
+          message: "Alerts correlated with this incident appear here after observability tools are connected.",
+          ctaLabel: "View all alerts",
+          ctaHref: "/alerts",
+        }) : `
         <div class="ops-list">${alerts.map((a) => `
           <div class="ops-list-row" style="flex-direction:column;align-items:stretch;">
             <div style="display:flex;justify-content:space-between;">
@@ -761,14 +787,12 @@ function renderAlertsList() {
         <span class="muted" style="font-size:12px;">Background monitoring runs every ~60s when MONITORING_ENABLED=true.</span>
       </p>
       <section class="card">
-        ${items.length === 0 ? (typeof renderStructuredEmptyState === "function"
-          ? renderStructuredEmptyState({
-            title: "No alerts ingested",
-            message: "Connect Prometheus or Alertmanager, then poll providers or enable background monitoring.",
-            ctaLabel: "Connect Prometheus",
-            ctaHref: "/integrations/onboarding?provider=PROMETHEUS",
-          })
-          : `<p class="muted">No alerts ingested yet. Connect tools and poll, or enable background monitoring.</p>`) : `
+        ${items.length === 0 ? incEmpty({
+          title: "No alerts ingested",
+          message: "Connect Prometheus or Alertmanager, then poll providers or enable background monitoring.",
+          ctaLabel: "Connect Prometheus",
+          ctaHref: "/integrations/onboarding?provider=PROMETHEUS",
+        }) : `
         <div class="responsive-table-wrap alerts-mobile-list">
         <div class="ops-list">${items.map((a) => {
           const open = selectedId === a.id;
@@ -846,6 +870,10 @@ function renderPostmortemDetail() {
   return `
     <div class="container">
       ${renderHeader(pm.title || "Postmortem", `${escapeHtml(pm.status || "DRAFT")}${pm.severity ? ` · ${escapeHtml(pm.severity)}` : ""}`)}
+      ${typeof renderPageBreadcrumbs === "function" ? renderPageBreadcrumbs([
+        { label: "Postmortems", path: "/incident-response/postmortems" },
+        { label: String(pm.title || pm.id || "Postmortem").slice(0, 48) },
+      ]) : ""}
       ${renderAlerts()}
       <p class="muted" style="font-size:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
         <a href="/incident-response/postmortems" data-nav="/incident-response/postmortems">← All postmortems</a>
@@ -903,19 +931,33 @@ function renderIncidentsOnCall() {
         ${s.description ? `<span class="muted" style="font-size:11px;">${escapeHtml(truncateIncidentText(s.description, 120))}</span>` : ""}
       </div>`);
   }).join("");
+  const onCallBanner = typeof hasVerifiedIntegration === "function"
+    && !["PAGERDUTY", "OPSGENIE", "SERVICENOW"].some((k) => hasVerifiedIntegration(k))
+    && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner("PagerDuty or Opsgenie", "PAGERDUTY", "Connect paging tools to sync external on-call schedules.")
+    : "";
   return `
     <div class="container">
       ${renderHeader("On-call", "Schedules and escalation")}
       ${renderAlerts()}
+      ${onCallBanner}
       <p class="muted"><a href="/incidents" data-nav="/incidents">← Incidents</a></p>
       <section class="card">
         <h2>Current on-call</h2>
-        ${current.length === 0 ? `<p class="muted">No active on-call assignments.</p>` : `
+        ${current.length === 0 ? incEmpty({
+          title: "No active on-call",
+          message: "Create a schedule below or connect PagerDuty to import rotations.",
+          ctaLabel: "Connect PagerDuty",
+          ctaHref: "/integrations/onboarding?provider=PAGERDUTY",
+        }) : `
         <ul>${current.map((c) => `<li class="muted" style="font-size:12px;">${escapeHtml(c.service_name || c.schedule_name || "Schedule")} → ${escapeHtml(onCallUserLabel(c))}</li>`).join("")}</ul>`}
       </section>
       <section class="card">
         <h2>Schedules (${schedules.length})</h2>
-        ${schedules.length === 0 ? `<p class="muted">No schedules configured.</p>` : `
+        ${schedules.length === 0 ? incEmpty({
+          title: "No schedules configured",
+          message: "Create an on-call schedule or connect PagerDuty for imported rotations.",
+        }) : `
         <ul>${schedules.map((s) => `<li class="muted" style="font-size:12px;">${escapeHtml(s.name || s.id)}${s.team ? ` · ${escapeHtml(s.team)}` : ""}${s.current_oncall_user_id ? ` · on-call: ${escapeHtml(onCallUserLabel(s))}` : ""}</li>`).join("")}</ul>`}
         ${canWriteResources() ? `
         <form data-oncall-schedule-create style="margin-top:12px;display:grid;gap:8px;max-width:480px;">
@@ -933,12 +975,20 @@ function renderIncidentsOnCall() {
       <section class="card">
         <h2>External schedules</h2>
         <p class="muted" style="font-size:12px;">PagerDuty schedules from verified integrations — read-only mirror for cross-tool on-call context.</p>
-        ${externalRows || `<p class="muted">No external schedules. Connect <a href="/integrations/onboarding?provider=PAGERDUTY" data-nav="/integrations/onboarding?provider=PAGERDUTY">PagerDuty</a> to visualize imported rotations.</p>`}
+        ${externalRows || incEmpty({
+          title: "No external schedules",
+          message: "PagerDuty schedules sync when a verified integration is connected.",
+          ctaLabel: "Connect PagerDuty",
+          ctaHref: "/integrations/onboarding?provider=PAGERDUTY",
+        })}
       </section>
       <section class="card">
         <h2>Escalation policies (${policies.length})</h2>
         <p class="muted" style="font-size:12px;">When incidents are not acknowledged, Nexora pages responders via Slack, Teams, and email.</p>
-        ${policies.length === 0 ? `<p class="muted">No escalation policies yet.</p>` : `
+        ${policies.length === 0 ? incEmpty({
+          title: "No escalation policies",
+          message: "Create a policy to page responders when incidents are not acknowledged.",
+        }) : `
         <div class="ops-list">${policies.map((p) => {
           const steps = (p.steps || []).map((s) =>
             `<span class="muted" style="font-size:11px;display:block;">${s.after_minutes}m → ${escapeHtml(s.target_type)} · ${escapeHtml(s.channels || "slack,email")}</span>`

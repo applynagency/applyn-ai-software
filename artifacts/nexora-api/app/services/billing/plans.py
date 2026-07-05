@@ -124,8 +124,10 @@ class PlanService:
     async def seed_defaults(self) -> int:
         """Insert any missing default plans. Idempotent. Returns count created."""
         created = 0
+        updated = False
         for spec in default_plans():
-            if await self.get_by_slug(spec["slug"]) is None:
+            existing = await self.get_by_slug(spec["slug"])
+            if existing is None:
                 plan = Plan(
                     name=spec["name"], slug=spec["slug"], tier=spec["tier"],
                     description=spec.get("description"),
@@ -133,11 +135,15 @@ class PlanService:
                     limits=spec.get("limits") or {}, features=spec.get("features") or {},
                     quota_policy=spec.get("quota_policy") or {},
                     price_cents=spec.get("price_cents", 0),
+                    external_price_id=spec.get("external_price_id"),
                     trial_days=spec.get("trial_days", 0),
                     support_tier=spec.get("support_tier", "community"),
                 )
                 self.session.add(plan)
                 created += 1
-        if created:
+            elif spec.get("external_price_id") and not existing.external_price_id:
+                existing.external_price_id = spec["external_price_id"]
+                updated = True
+        if created or updated:
             await self.session.flush()
         return created

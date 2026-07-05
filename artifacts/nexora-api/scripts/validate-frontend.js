@@ -8,6 +8,7 @@ const { readFileSync } = require("node:fs");
 const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
+const routeRegistryJsPath = path.join(root, "static", "route-registry.js");
 const appJsPath = path.join(root, "static", "app.js");
 const helpJsPath = path.join(root, "static", "help.js");
 const pilotOperatorJsPath = path.join(root, "static", "pilot-operator.js");
@@ -36,7 +37,7 @@ function fail(message) {
   process.exit(1);
 }
 
-for (const file of [appJsPath, helpJsPath, pilotOperatorJsPath, billingJsPath, productCatalogJsPath, operationsOverviewJsPath, integrationOnboardingJsPath, incidentsJsPath, deliveryJsPath, warRoomsJsPath, observabilityUiJsPath, developmentUiJsPath, securityPlatformJsPath, platformOpsUiJsPath, controlPlaneJsPath, incidentResponseUiJsPath, discoveryUiJsPath, reliabilityOpsUiJsPath, customerJourneyUiJsPath, copilotRunbooksUiJsPath, opsCommandCenterUiJsPath, settingsOrgUiJsPath]) {
+for (const file of [routeRegistryJsPath, appJsPath, helpJsPath, pilotOperatorJsPath, billingJsPath, productCatalogJsPath, operationsOverviewJsPath, integrationOnboardingJsPath, incidentsJsPath, deliveryJsPath, warRoomsJsPath, observabilityUiJsPath, developmentUiJsPath, securityPlatformJsPath, platformOpsUiJsPath, controlPlaneJsPath, incidentResponseUiJsPath, discoveryUiJsPath, reliabilityOpsUiJsPath, customerJourneyUiJsPath, copilotRunbooksUiJsPath, opsCommandCenterUiJsPath, settingsOrgUiJsPath]) {
   try {
     execSync(`node --check "${file}"`, { stdio: "pipe" });
   } catch (error) {

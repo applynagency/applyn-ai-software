@@ -65,7 +65,26 @@ function renderCpFederationCard() {
     </div>
     ${dr.multi_cluster ? `<p class="muted" style="font-size:11px;">Multi-cluster: yes · Multi-region: ${dr.multi_region ? "yes" : "no"} · Failover candidates: ${dr.failover_candidates ?? 0}</p>` : ""}
     ${actions ? `<ul style="margin:8px 0 0;padding-left:18px;">${actions}</ul>` : ""}
-    <div class="ops-list">${clusterRows || `<p class="muted">Register clusters to build a cross-cluster inventory view.</p>`}</div>
+    ${`<div class="actions" style="margin:10px 0;"><button type="button" class="btn btn-primary btn-sm" data-cp-dr-exercise>Run DR tabletop exercise</button></div>`}
+    ${state.cpDrExercise ? (() => {
+      const ex = state.cpDrExercise;
+      const steps = (ex.checklist || []).map((s) => `
+        <div class="ops-list-row" style="flex-direction:column;align-items:stretch;">
+          <span><strong>${escapeHtml(s.phase)}</strong> ${s.automated ? `<span class="badge" style="font-size:10px;">automated signal</span>` : `<span class="badge" style="font-size:10px;">human required</span>`}</span>
+          <span class="muted" style="font-size:12px;">${escapeHtml(s.action)}</span>
+        </div>`).join("");
+      return `<section class="card" style="margin-top:10px;border-left:3px solid #f59e0b;">
+        <h3 style="margin:0;">DR exercise <span class="muted" style="font-size:12px;">${escapeHtml(ex.exercise_id || "")}</span></h3>
+        <p class="muted" style="font-size:12px;">Advisory tabletop only — <strong>no automated failover executed</strong>. Human approval required for any production cutover.</p>
+        <div class="ops-list">${steps}</div>
+      </section>`;
+    })() : ""}
+    <div class="ops-list">${clusterRows || cpEmpty({
+      title: "No federation clusters",
+      message: "Register multiple clusters to build cross-cluster inventory and DR advisory.",
+      ctaLabel: "Register cluster",
+      ctaHref: "/control-plane/clusters",
+    })}</div>
   </section>`;
 }
 function cpNeedsConnect() {
@@ -74,6 +93,24 @@ function cpNeedsConnect() {
     && !hasVerifiedIntegration("AZURE")
     && !hasVerifiedIntegration("GCP");
 }
+function cpEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
+
+var CP_MODULE_TABS = [
+  { label: "Overview", path: "/control-plane", match: ["control-plane"] },
+  { label: "Cloud", path: "/control-plane/cloud", match: ["control-plane-cloud"] },
+  { label: "Clusters", path: "/control-plane/clusters", match: ["control-plane-clusters", "control-plane-cluster-detail", "cp-k8s-overview", "cp-k8s-pods", "cp-k8s-nodes", "cp-k8s-namespaces", "cp-k8s-deployments", "cp-k8s-storage", "cp-k8s-networking", "cp-k8s-diagnostics"] },
+  { label: "Inventory", path: "/control-plane/inventory", match: ["control-plane-inventory"] },
+  { label: "Operations", path: "/control-plane/operations", match: ["control-plane-operations"] },
+];
+
+function renderCpNav() {
+  if (typeof renderModuleTabs !== "function") return "";
+  return renderModuleTabs(CP_MODULE_TABS);
+}
+
 function renderControlPlane() {
   const page = state.route.page;
   if (page === "control-plane-cloud") return renderControlPlaneCloud();
@@ -95,6 +132,7 @@ function renderControlPlaneOverview() {
   return `
     <div class="container">
       ${renderHeader("Control Plane", "Multi-cloud and Kubernetes operations")}
+      ${renderCpNav()}
       ${renderAlerts()}
       ${banner}
       <section class="card">
@@ -148,12 +186,18 @@ function renderControlPlaneCloud() {
   return `
     <div class="container">
       ${renderHeader("Cloud Accounts", "Multi-cloud inventory and cost visibility")}
+      ${renderCpNav()}
       ${renderAlerts()}
       ${cpNeedsConnect() && typeof renderOpsConnectBanner === "function"
     ? renderOpsConnectBanner("AWS, Azure, or GCP", "AWS", "Register cloud credentials to sync inventory and cost visibility.")
     : ""}
       ${registerForm}
-      <section class="card"><h2>Accounts (${accounts.length})</h2><div class="ops-list">${rows || `<p class="muted">No cloud accounts yet.</p>`}</div></section>
+      <section class="card"><h2>Accounts (${accounts.length})</h2><div class="ops-list">${rows || cpEmpty({
+        title: "No cloud accounts",
+        message: "Register AWS, Azure, or GCP credentials to sync inventory.",
+        ctaLabel: "Connect AWS",
+        ctaHref: "/integrations/onboarding?provider=AWS",
+      })}</div></section>
     </div>`;
 }
 function renderControlPlaneClusters() {
@@ -189,12 +233,18 @@ function renderControlPlaneClusters() {
   return `
     <div class="container">
       ${renderHeader("Kubernetes Clusters", "Connect, discover, and operate clusters")}
+      ${renderCpNav()}
       ${renderAlerts()}
       <section class="card" style="border-left:3px solid #e2e8f0;margin-bottom:12px;">
-        <p class="muted" style="font-size:13px;margin:0;"><strong>${clusters.length}</strong> cluster(s) registered. Multi-cluster federation and DR orchestration are roadmap — register each cluster separately and use Inventory for cross-cluster visibility.</p>
+        <p class="muted" style="font-size:13px;margin:0;"><strong>${clusters.length}</strong> cluster(s) registered. Advisory DR readiness and tabletop exercises ship today; automated failover orchestration is not executed from this UI. Use Inventory for cross-cluster visibility.</p>
       </section>
       ${registerForm}
-      <section class="card"><h2>Clusters (${clusters.length})</h2><div class="ops-list">${rows || `<p class="muted">No clusters registered.</p>`}</div></section>
+      <section class="card"><h2>Clusters (${clusters.length})</h2><div class="ops-list">${rows || cpEmpty({
+        title: "No clusters registered",
+        message: "Add a kubeconfig credential and register your first cluster.",
+        ctaLabel: "Connect Kubernetes",
+        ctaHref: "/integrations/onboarding?provider=KUBERNETES",
+      })}</div></section>
     </div>`;
 }
 function renderControlPlaneClusterDetail() {
@@ -216,6 +266,12 @@ function renderControlPlaneClusterDetail() {
   return `
     <div class="container">
       ${renderHeader(c.name, `${c.distribution} · ${c.api_endpoint || "simulated endpoint"}`)}
+      ${typeof renderPageBreadcrumbs === "function" ? renderPageBreadcrumbs([
+        { label: "Control Plane", path: "/control-plane" },
+        { label: "Clusters", path: "/control-plane/clusters" },
+        { label: c.name },
+      ]) : ""}
+      ${renderCpNav()}
       ${renderAlerts()}
       <section class="card">
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -226,23 +282,41 @@ function renderControlPlaneClusterDetail() {
           <a class="btn btn-secondary" href="/control-plane/clusters">Back</a>
         </div>
       </section>
-      <section class="card"><h2>Workloads</h2><div class="ops-list">${workloadRows || `<p class="muted">Run discovery to populate workloads.</p>`}</div></section>
+      <section class="card"><h2>Workloads</h2><div class="ops-list">${workloadRows || cpEmpty({
+        title: "No workloads discovered",
+        message: canWrite ? "Use Discover above to populate deployments, pods, and stateful sets." : "Run cluster discovery to populate workloads.",
+      })}</div></section>
       <section class="card"><h2>Policy Findings (${policies.length})</h2>
         <div class="ops-list">${policies.slice(0, 20).map((p) => `
           <div class="ops-list-row">
             <span><strong>${escapeHtml(p.policy)}</strong> ${escapeHtml(p.namespace || "")}/${escapeHtml(p.resource_name)}<br/><span class="muted">${escapeHtml(p.message)}</span></span>
             <span>${cpHealthBadge(p.severity)}</span>
-          </div>`).join("") || `<p class="muted">No policy findings.</p>`}
+          </div>`).join("") || cpEmpty({
+        title: "No policy findings",
+        message: "Run discovery to evaluate cluster policy posture. Findings appear after the first scan.",
+      })}
         </div>
       </section>
       <section class="card"><h2>Helm Releases (${helm.length})</h2>
         <div class="ops-list">${helm.map((h) => `
-          <div class="ops-list-row"><span><strong>${escapeHtml(h.name)}</strong> ${escapeHtml(h.namespace)} · ${escapeHtml(h.chart)}</span><span>${cpHealthBadge(h.status)} rev ${h.revision}</span></div>`).join("") || `<p class="muted">No Helm releases.</p>`}
+          <div class="ops-list-row"><span><strong>${escapeHtml(h.name)}</strong> ${escapeHtml(h.namespace)} · ${escapeHtml(h.chart)}</span><span>${cpHealthBadge(h.status)} rev ${h.revision}</span></div>`).join("") || cpEmpty({
+        title: "No Helm releases",
+        message: "Helm releases appear after cluster discovery when Tiller or Helm 3 releases are present.",
+        secondaryLabel: "Delivery GitOps",
+        secondaryHref: "/delivery/gitops",
+      })}
         </div>
       </section>
       <section class="card"><h2>GitOps (${gitops.length})</h2>
         <div class="ops-list">${gitops.map((g) => `
-          <div class="ops-list-row"><span><strong>${escapeHtml(g.engine)}</strong> ${escapeHtml(g.name)} · ${escapeHtml(g.revision)}</span><span>${cpHealthBadge(g.health)} sync ${escapeHtml(g.sync_status)}${g.drift ? " · drift" : ""}</span></div>`).join("") || `<p class="muted">No GitOps applications detected.</p>`}
+          <div class="ops-list-row"><span><strong>${escapeHtml(g.engine)}</strong> ${escapeHtml(g.name)} · ${escapeHtml(g.revision)}</span><span>${cpHealthBadge(g.health)} sync ${escapeHtml(g.sync_status)}${g.drift ? " · drift" : ""}</span></div>`).join("") || cpEmpty({
+        title: "No GitOps applications",
+        message: "Connect Argo CD or Flux and run discovery to surface GitOps applications on this cluster.",
+        ctaLabel: "Connect Argo CD",
+        ctaHref: "/integrations/onboarding?provider=ARGOCD",
+        secondaryLabel: "Delivery GitOps",
+        secondaryHref: "/delivery/gitops",
+      })}
         </div>
       </section>
     </div>`;
@@ -268,6 +342,7 @@ function renderCpK8s() {
   const h = o.health_score || {};
   return `<div class="container">
     ${renderHeader(`K8s Ops — ${escapeHtml(c.name)}`, "Advanced Kubernetes operations")}
+    ${renderCpNav()}
     ${renderAlerts()}
     ${tabs}
     <section class="card"><div class="ops-stats">
@@ -286,8 +361,11 @@ function renderCpK8sList(title, data, cluster, tabs) {
   const rows = items.map((i) => `
     <div class="ops-list-row"><span>${escapeHtml(i.namespace || "")}/${escapeHtml(i.name)}</span>
     <span class="muted">${escapeHtml(i.kind || "")}</span></div>`).join("");
-  return `<div class="container">${renderHeader(`K8s ${title}`, cluster.name)}${renderAlerts()}${tabs}
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">No ${title.toLowerCase()}.</p>`}</div></section>
+  return `<div class="container">${renderHeader(`K8s ${title}`, cluster.name)}${renderCpNav()}${renderAlerts()}${tabs}
+    <section class="card"><div class="ops-list">${rows || cpEmpty({
+      title: `No ${title.toLowerCase()}`,
+      message: "Run cluster discovery to populate Kubernetes resources.",
+    })}</div></section>
   </div>`;
 }
 function renderCpK8sDiagnostics(cluster, tabs, clusterId) {
@@ -296,9 +374,12 @@ function renderCpK8sDiagnostics(cluster, tabs, clusterId) {
   const rows = diags.map((d) => `
     <div class="ops-list-row"><span>${escapeHtml(d.resource_kind)} ${escapeHtml(d.namespace || "")}/${escapeHtml(d.resource_name)}</span>
     <span class="muted">${new Date(d.created_at).toLocaleString()}</span></div>`).join("");
-  return `<div class="container">${renderHeader("K8s Diagnostics", cluster.name)}${renderAlerts()}${tabs}
+  return `<div class="container">${renderHeader("K8s Diagnostics", cluster.name)}${renderCpNav()}${renderAlerts()}${tabs}
     ${canWrite ? `<section class="card"><button class="btn btn-primary" type="button" data-cp-k8s-diag="${escapeHtml(clusterId)}">Collect Sample Diagnostics</button></section>` : ""}
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">No diagnostics collected.</p>`}</div></section>
+    <section class="card"><div class="ops-list">${rows || cpEmpty({
+      title: "No diagnostics collected",
+      message: "Collect sample diagnostics to troubleshoot workload issues.",
+    })}</div></section>
   </div>`;
 }
 function renderControlPlaneInventory() {
@@ -316,10 +397,18 @@ function renderControlPlaneInventory() {
   return `
     <div class="container">
       ${renderHeader("Unified Inventory", "Cloud and cluster assets in one view")}
+      ${renderCpNav()}
       ${renderAlerts()}
       ${banner}
       ${renderCpFederationCard()}
-      <section class="card"><h2>Assets (${items.length})</h2><div class="ops-list">${rows || `<p class="muted">No inventory yet — sync cloud accounts and discover clusters.</p>`}</div></section>
+      <section class="card"><h2>Assets (${items.length})</h2><div class="ops-list">${rows || cpEmpty({
+        title: "No inventory assets",
+        message: "Sync cloud accounts and discover clusters to populate unified inventory.",
+        ctaLabel: "Cloud accounts",
+        ctaHref: "/control-plane/cloud",
+        secondaryLabel: "Clusters",
+        secondaryHref: "/control-plane/clusters",
+      })}</div></section>
     </div>`;
 }
 function renderControlPlaneOperations() {
@@ -338,12 +427,26 @@ function renderControlPlaneOperations() {
   return `
     <div class="container">
       ${renderHeader("Operations", "Approval-gated cluster mutations")}
+      ${renderCpNav()}
       ${renderAlerts()}
-      <section class="card"><h2>Operations (${ops.length})</h2><div class="ops-list">${rows || `<p class="muted">No operations yet.</p>`}</div></section>
+      <section class="card"><h2>Operations (${ops.length})</h2><div class="ops-list">${rows || cpEmpty({
+        title: "No control plane operations",
+        message: "Approved cluster and cloud operations appear here after registration.",
+      })}</div></section>
     </div>`;
 }
 
 function bindControlPlaneEvents() {
+  document.querySelector("[data-cp-dr-exercise]")?.addEventListener("click", async () => {
+    state.error = null;
+    state.message = null;
+    try {
+      state.cpDrExercise = await api("/v1/control-plane/federation/dr-exercise", { method: "POST", body: "{}" });
+      state.message = "DR tabletop exercise generated — advisory checklist only, no failover executed.";
+      render();
+    } catch (error) { state.error = error.message; render(); }
+  });
+
   document.querySelectorAll("[data-cp-sync-cloud]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const id = btn.getAttribute("data-cp-sync-cloud");

@@ -8,6 +8,11 @@
 
 const BILLING_SENSITIVE_RE = /secret|token|password|credential|api[_-]?key|bearer|stripe|customer_id|payment_method|webhook/i;
 
+function billEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
+
 function billingUiDisabled() {
   try {
     if (typeof window !== "undefined" && window.__NEXORA_BILLING_UI_ENABLED__ === false) {
@@ -247,7 +252,10 @@ function planForSubscription(subscription, plans) {
 function renderBillingUsageLimits(usage) {
   const metrics = (usage?.metrics || []).filter((m) => m.limit != null && m.limit !== -1);
   if (metrics.length === 0) {
-    return `<p class="muted">No usage limits reported for this plan.</p>`;
+    return billEmpty({
+      title: "No usage limits",
+      message: "Usage metrics appear when your plan defines quota limits.",
+    });
   }
   return `
     <div class="table-grid" style="margin-top:12px;">
@@ -279,7 +287,12 @@ function renderBillingSubscriptionCard() {
         <h2>Subscription</h2>
         <span class="badge ${status.cls}">${escapeHtml(status.label)}</span>
       </div>
-      ${state.billingLoading ? `<p class="muted">Loading…</p>` : !sub ? `<p class="muted">No subscription data available.</p>` : `
+      ${state.billingLoading ? `<p class="muted">Loading…</p>` : !sub ? billEmpty({
+        title: "No subscription",
+        message: "Your organization has no active subscription record yet.",
+        ctaLabel: state.billingStripeSelfServe ? "View plans" : undefined,
+        ctaHref: state.billingStripeSelfServe ? "/billing/subscription" : undefined,
+      }) : `
         <dl class="kv-list" style="margin-top:12px;">
           ${plan?.name ? `<div><dt>Plan</dt><dd>${escapeHtml(plan.name)}</dd></div>` : ""}
           ${interval ? `<div><dt>Billing interval</dt><dd>${escapeHtml(interval)}</dd></div>` : ""}

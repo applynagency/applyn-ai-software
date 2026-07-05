@@ -49,6 +49,11 @@ function discoveryProviderBadge(p) {
   return `<span class="risk-score-badge" style="background:${c}1a;color:${c};font-weight:700;">${escapeHtml(p)}</span>`;
 }
 
+function discEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "No data yet.")}</p>`;
+}
+
 function renderDiscovery() {
   const canWrite = canWriteResources();
   const universalBtn = canWrite
@@ -70,6 +75,7 @@ function renderDiscovery() {
   return `
     <div class="container">
       ${renderHeader("Discovery", "Universal, read-only discovery across every connected integration — the single source of truth for the AI")}
+      ${typeof renderKnowEstateNav === "function" ? renderKnowEstateNav() : ""}
       ${renderAlerts()}
       ${hasAssets ? `<section class="card" style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;">${universalBtn}</section>` : ""}
       ${universalPanel}
@@ -121,7 +127,12 @@ function renderDiscoveryLive() {
       <p class="muted" style="font-size:12px;">Providers: ${(p.providers || []).map(escapeHtml).join(", ") || "none"} · Connections scanned: ${p.scanned_connections}/${p.connection_count} · Latest scan: ${escapeHtml((latest || "").slice(0, 19).replace("T", " "))}</p>
       ${warns}
       <h3 style="margin-top:14px;">Recent Changes</h3>
-      <div class="ops-list">${changeRows || `<p class="muted">No changes detected yet.</p>`}</div>
+      <div class="ops-list">${changeRows || discEmpty({
+        title: "No discovery changes",
+        message: "Run universal discovery to detect added, removed, and modified assets.",
+        ctaLabel: "Connect integrations",
+        ctaHref: "/integrations/onboarding",
+      })}</div>
     </section>`;
 }
 
@@ -181,7 +192,12 @@ function renderUniversalDomainSection(section, assets, summary) {
 function renderDiscoveryStatusPanel(summary) {
   const providers = (summary && summary.providers) || [];
   if (!providers.length) {
-    return `<section class="card"><h2>Discovery Status</h2><p class="muted">No integrations connected yet.</p></section>`;
+    return `<section class="card"><h2>Discovery Status</h2>${discEmpty({
+      title: "No integrations connected",
+      message: "Connect AWS, Azure, Kubernetes, GitHub, or other tools to start universal discovery.",
+      ctaLabel: "Start guided setup",
+      ctaHref: "/integrations/onboarding",
+    })}</section>`;
   }
   const rows = providers.map((p) => {
     const verb = p.supported
@@ -226,7 +242,12 @@ function renderKnowledgeGraphCard(summary, graph) {
 
 function renderDiscoveryTimeline(events) {
   if (!events || !events.length) {
-    return `<section class="card"><h2>Discovery Timeline</h2><p class="muted">No discovery activity yet.</p></section>`;
+    return `<section class="card"><h2>Discovery Timeline</h2>${discEmpty({
+      title: "No discovery activity",
+      message: "Timeline events appear after your first universal discovery run.",
+      ctaLabel: "View integrations",
+      ctaHref: "/integrations",
+    })}</section>`;
   }
   const rows = events.slice(0, 30).map((e) => {
     const color = UNIVERSAL_EVENT_COLORS[e.event_type] || "#64748b";
@@ -275,10 +296,10 @@ function renderUniversalDiscovery() {
       </div>
     </section>
     ${renderDiscoveryStatusPanel(summary)}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="discovery-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
       ${domainSections}
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="discovery-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
       ${renderKnowledgeGraphCard(summary, graph)}
       ${renderDiscoveryTimeline(timeline)}
     </div>`;

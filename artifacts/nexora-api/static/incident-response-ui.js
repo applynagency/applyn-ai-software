@@ -23,6 +23,10 @@ function irConnectBanner() {
   if (!irNeedsConnect() || typeof renderOpsConnectBanner !== "function") return "";
   return renderOpsConnectBanner("PagerDuty or Slack", "PAGERDUTY", "Connect incident and notification tools for on-call, escalation, and analytics.");
 }
+function irEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
 function renderIncidentResponse() {
   const page = state.route.page;
   if (page === "ir-oncall") return renderIrOncall();
@@ -61,7 +65,12 @@ function renderIrOncall() {
   ).join("");
   return `<div class="container">${renderHeader("On-call Dashboard", "Schedules, rotations, and overrides")}${renderAlerts()}
     ${irConnectBanner()}
-    <section class="card"><h2>Current On-call</h2><div class="ops-list">${current || `<p class="muted">No schedules configured.</p>`}</div></section>
+    <section class="card"><h2>Current On-call</h2><div class="ops-list">${current || irEmpty({
+      title: "No on-call schedules",
+      message: "Connect PagerDuty or Opsgenie to sync schedules and rotations.",
+      ctaLabel: "Connect PagerDuty",
+      ctaHref: "/integrations/onboarding?provider=PAGERDUTY",
+    })}</div></section>
   </div>`;
 }
 function renderIrEscalation() {
@@ -70,7 +79,13 @@ function renderIrEscalation() {
     `<div class="ops-list-row"><span>${escapeHtml(p.name)}</span><span class="muted">${p.steps || 0} steps</span></div>`
   ).join("");
   return `<div class="container">${renderHeader("Escalation Policies", "Multi-channel paging and timeouts")}${renderAlerts()}
-    <section class="card"><div class="ops-list">${policies || `<p class="muted">No policies.</p>`}</div></section>
+    ${irConnectBanner()}
+    <section class="card"><div class="ops-list">${policies || irEmpty({
+      title: "No escalation policies",
+      message: "Policies sync from PagerDuty or ServiceNow when connected.",
+      ctaLabel: "Connect PagerDuty",
+      ctaHref: "/integrations/onboarding?provider=PAGERDUTY",
+    })}</div></section>
   </div>`;
 }
 function renderIrMajor() {
@@ -78,7 +93,13 @@ function renderIrMajor() {
     `<div class="ops-list-row"><span>${escapeHtml(m.incident_id)}</span><span class="muted">${escapeHtml(m.status)}</span></div>`
   ).join("");
   return `<div class="container">${renderHeader("Major Incidents", "War rooms, roles, and decision logs")}${renderAlerts()}
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">No active major incidents.</p>`}</div></section>
+    ${irConnectBanner()}
+    <section class="card"><div class="ops-list">${rows || irEmpty({
+      title: "No active major incidents",
+      message: "Declare a major incident from an open incident to coordinate response.",
+      ctaLabel: "View incidents",
+      ctaHref: "/incidents",
+    })}</div></section>
   </div>`;
 }
 function renderIrStatus() {
@@ -86,7 +107,11 @@ function renderIrStatus() {
     `<div class="ops-list-row"><span>${escapeHtml(p.name)}</span><span class="muted">/${escapeHtml(p.slug)}</span></div>`
   ).join("");
   return `<div class="container">${renderHeader("Status Pages", "Public and private component status")}${renderAlerts()}
-    <section class="card"><div class="ops-list">${pages || `<p class="muted">No status pages.</p>`}</div></section>
+    ${irConnectBanner()}
+    <section class="card"><div class="ops-list">${pages || irEmpty({
+      title: "No status pages",
+      message: "Create status pages to communicate component health to customers.",
+    })}</div></section>
   </div>`;
 }
 function renderIrComms() {
@@ -94,7 +119,13 @@ function renderIrComms() {
     `<div class="ops-list-row"><span>${escapeHtml(c.subject)}</span><span class="muted">${escapeHtml(c.kind)} · ${escapeHtml(c.status)}</span></div>`
   ).join("");
   return `<div class="container">${renderHeader("Communications Hub", "Internal, customer, and executive updates")}${renderAlerts()}
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">No communications yet.</p>`}</div></section>
+    ${irConnectBanner()}
+    <section class="card"><div class="ops-list">${rows || irEmpty({
+      title: "No communications yet",
+      message: "Incident communications appear here during major incidents.",
+      ctaLabel: "View major incidents",
+      ctaHref: "/incident-response/major",
+    })}</div></section>
   </div>`;
 }
 function renderIrPostmortems() {
@@ -111,7 +142,14 @@ function renderIrPostmortems() {
   return `<div class="container">${renderHeader("Postmortems", "After resolution — capture lessons and prevent repeats")}${renderAlerts()}
     <p class="muted" style="font-size:12px;margin-bottom:12px;">Generate drafts from resolved incidents, then review and export. <a href="/incidents" data-nav="/incidents">Incidents</a> · <a href="/runbooks" data-nav="/runbooks">Runbooks</a></p>
     <section class="card"><div class="ops-stats">${rdMetric("Pending", pending)}${rdMetric("Completed", completed)}</div></section>
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">No postmortems yet. Resolve an incident and generate a draft from its RCA.</p>`}</div></section>
+    <section class="card"><div class="ops-list">${rows || irEmpty({
+      title: "No postmortems yet",
+      message: "Resolve an incident and generate a draft from its RCA to start a postmortem.",
+      ctaLabel: "View incidents",
+      ctaHref: "/incidents",
+      secondaryLabel: "Runbooks",
+      secondaryHref: "/runbooks",
+    })}</div></section>
   </div>`;
 }
 function renderIrAnalytics() {
@@ -126,6 +164,11 @@ function renderIrAnalytics() {
       ${rdMetric("MTTR", a.mttr_minutes != null ? `${Math.round(a.mttr_minutes)}m` : "—")}
       ${rdMetric("Escalation Success", a.escalation_success_rate != null ? `${Math.round(a.escalation_success_rate * 100)}%` : "—")}
     </div></section>
-    <section class="card"><h2>By Severity</h2><div class="ops-list">${sev || `<p class="muted">No data.</p>`}</div></section>
+    <section class="card"><h2>By Severity</h2><div class="ops-list">${sev || irEmpty({
+      title: "No incident analytics",
+      message: "Analytics populate after incidents are created and resolved.",
+      ctaLabel: "View incidents",
+      ctaHref: "/incidents",
+    })}</div></section>
   </div>`;
 }

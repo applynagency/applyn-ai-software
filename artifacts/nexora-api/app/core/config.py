@@ -215,6 +215,8 @@ class Settings(BaseSettings):
     RATE_LIMIT_AUTH_REFRESH: str = "30/60"
     RATE_LIMIT_INTEGRATIONS_CONNECT: str = "20/60"
     RATE_LIMIT_WEBHOOKS: str = "240/60"
+    # Per-organization cap on authenticated /v1 API traffic (multi-tenant abuse guard).
+    RATE_LIMIT_API_ORG: str = "600/60"
 
     # --- Global request body size limits (app.middleware.body_limit) ---
     # Rejects oversized payloads with HTTP 413 before they reach a route. The
@@ -386,6 +388,10 @@ class Settings(BaseSettings):
     # and tests work without network/credentials.
     STRIPE_API_KEY: str | None = None
     STRIPE_WEBHOOK_SECRET: str | None = None
+    # Stripe Price ids for seeded paid plans (optional — enables checkout on fresh installs).
+    STRIPE_PRICE_STARTER: str | None = None
+    STRIPE_PRICE_PROFESSIONAL: str | None = None
+    STRIPE_PRICE_BUSINESS: str | None = None
     # Cron cadences (seconds) for the commercial background jobs.
     JOB_CRON_QUOTA_RESET_SECONDS: int = 3600
     JOB_CRON_USAGE_AGGREGATION_SECONDS: int = 3600

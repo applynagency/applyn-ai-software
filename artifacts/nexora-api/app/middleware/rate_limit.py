@@ -104,6 +104,14 @@ def default_rules() -> list[RateLimitRule]:
             suffixes=("/monitoring/ingest",),
             contains=("/webhooks/",),
         ),
+        RateLimitRule(
+            name="api_org",
+            methods=frozenset({"GET", "POST", "PUT", "PATCH", "DELETE"}),
+            scopes=("org",),
+            rate=parse_rate(settings.RATE_LIMIT_API_ORG),
+            suffixes=(),
+            contains=("/v1/",),
+        ),
     ]
 
 

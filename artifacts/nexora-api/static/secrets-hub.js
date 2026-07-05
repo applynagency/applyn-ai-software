@@ -64,6 +64,11 @@ function secretsHubReadinessPct(conns, creds, vars, pe) {
   return Math.round((done / steps.length) * 100);
 }
 
+function hubEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
+
 function secretsHubStatCard(tabId, label, count) {
   const meta = HUB_TAB_META[tabId] || { color: "#2563eb", icon: "•" };
   return `<button type="button" class="secrets-hub-stat-card" data-secrets-hub-tab="${tabId}" style="--stat-accent:${meta.color}">
@@ -250,7 +255,12 @@ function renderSecretsHubVariables() {
       <h2>Organization variables</h2>
       <p class="muted">Non-secret config and encrypted secrets scoped by environment (default, staging, production).</p>
       ${canWrite ? `<button type="button" class="btn btn-primary btn-sm" data-new-org-var style="margin-bottom:12px;">Add variable</button>` : ""}
-      <div class="ops-list">${rows || `<p class="muted">No variables defined.</p>`}</div>
+      <div class="ops-list">${rows || hubEmpty({
+        title: "No variables defined",
+        message: "Add org-scoped config and encrypted secrets for pipelines and deployments.",
+        ctaLabel: "Start onboarding",
+        ctaHref: "/customer-onboarding",
+      })}</div>
     </section>`;
 }
 
@@ -281,7 +291,12 @@ function renderSecretsHubPeSecrets() {
       <h2>Platform secret references</h2>
       <p class="muted">Pointers to external secret stores — values never stored in Nexora.</p>
       ${canWrite ? `<button type="button" class="btn btn-primary btn-sm" data-new-pe-secret style="margin-bottom:12px;">Add reference</button>` : ""}
-      <div class="ops-list">${rows || `<p class="muted">No secret references.</p>`}</div>
+      <div class="ops-list">${rows || hubEmpty({
+        title: "No secret references",
+        message: "Register Vault, AWS Secrets Manager, or Azure Key Vault references.",
+        ctaLabel: "Connect Vault",
+        ctaHref: "/integrations/onboarding?provider=HASHICORP_VAULT",
+      })}</div>
     </section>`;
 }
 

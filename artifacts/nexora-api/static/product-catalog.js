@@ -23,7 +23,7 @@ var PRODUCT_MODULE_REGISTRY = [
   { id: "organizations", label: "Organizations", description: "View and switch between organizations you belong to.", route: "/organizations", icon: "building", category: "organization", requiredRoles: null, capability: null, pageId: "organizations", comingSoon: false },
   { id: "organization", label: "Organization", description: "Manage members, invitations, and organization profile.", route: "/organization", icon: "building", category: "organization", requiredRoles: null, capability: null, pageId: "organization", comingSoon: false },
   { id: "settings", label: "Account settings", description: "Profile, security, sessions, API keys, and service accounts.", route: "/settings", icon: "settings", category: "organization", requiredRoles: null, capability: "identity", pageId: "settings", comingSoon: false },
-  { id: "onboarding", label: "Setup wizard", description: "Guided first-time setup for your organization.", route: "/onboarding", icon: "wand", category: "organization", requiredRoles: null, capability: null, pageId: "onboarding", comingSoon: false },
+  { id: "onboarding", label: "Org setup wizard", description: "First-time organization setup — distinct from pilot integrations and help guides.", route: "/onboarding", icon: "wand", category: "organization", requiredRoles: null, capability: null, pageId: "onboarding", navGroup: "Organization & Admin", comingSoon: false },
   { id: "help-center", label: "Help Center", description: "Documentation, guides, and troubleshooting.", route: "/help", icon: "book", category: "organization", requiredRoles: null, capability: null, pageId: "help-home", comingSoon: false },
 
   { id: "sso", label: "Organization SSO", description: "Configure OIDC identity provider connections.", route: "/organization/settings/sso", icon: "shield", category: "security-identity", requiredRoles: ["OWNER", "ADMIN"], capability: "sso", pageId: "organization-sso", comingSoon: false },
@@ -31,33 +31,33 @@ var PRODUCT_MODULE_REGISTRY = [
   { id: "api-keys", label: "API keys", description: "Organization API keys for automation.", route: "/settings?tab=api-keys", icon: "key", category: "security-identity", requiredRoles: ["OWNER", "ADMIN"], capability: "apiKeys", pageId: "settings", comingSoon: false },
   { id: "service-accounts", label: "Service accounts", description: "Machine principals for secure automation.", route: "/settings?tab=service-accounts", icon: "users", category: "security-identity", requiredRoles: ["OWNER", "ADMIN"], capability: "serviceAccounts", pageId: "settings", comingSoon: false },
   { id: "sessions", label: "Active sessions", description: "Review and revoke signed-in devices.", route: "/settings?tab=sessions", icon: "clock", category: "security-identity", requiredRoles: null, capability: "sessions", pageId: "settings", comingSoon: false },
-  { id: "audit-trail", label: "Audit trail", description: "Organization activity log for administrators.", route: "/organization/settings/audit", icon: "file", category: "security-identity", requiredRoles: ["OWNER", "ADMIN"], capability: "audit", pageId: "organization-audit", comingSoon: false },
+  { id: "audit-trail", label: "Audit trail", description: "Organization activity log for administrators.", route: "/organization/settings/audit", icon: "file", category: "security-identity", requiredRoles: ["OWNER", "ADMIN"], capability: "audit", pageId: "organization-audit", navGroup: "Organization & Admin", comingSoon: false },
 
-  { id: "alerts", label: "Alerts", description: "Firing alerts from connected monitoring tools — one-click investigate.", route: "/alerts", icon: "zap", category: "operations", requiredRoles: null, capability: null, pageId: "alerts", comingSoon: false },
+  { id: "alerts", label: "Alerts", description: "Firing alerts from connected monitoring tools — one-click investigate.", route: "/alerts", icon: "zap", category: "operations", requiredRoles: null, capability: null, pageId: "alerts", navGroup: "Respond", comingSoon: false },
+  { id: "monitoring-dashboard", label: "Monitoring dashboard", description: "Operations center with incident trends and on-call context.", route: "/monitoring", icon: "activity", category: "operations", requiredRoles: null, capability: null, pageId: "monitoring", navGroup: "Observe", comingSoon: false },
   { id: "logs", label: "Logs", description: "Unified log search across connected observability providers.", route: "/logs", icon: "monitor", category: "operations", requiredRoles: null, capability: null, pageId: "obs-platform-logs", comingSoon: false },
   { id: "on-call", label: "On-call", description: "Schedules, rotations, and escalation policies.", route: "/incidents/on-call", icon: "calendar", category: "operations", requiredRoles: null, capability: null, pageId: "incidents-on-call", comingSoon: false },
   { id: "service-health", label: "Service health", description: "Service catalog, SLOs, and health posture.", route: "/services", icon: "activity", category: "operations", requiredRoles: null, capability: null, pageId: "service-health", comingSoon: false },
-  { id: "capacity", label: "Capacity planning", description: "Forecast utilization and scaling needs.", route: "/capacity", icon: "barchart", category: "operations", requiredRoles: null, capability: null, pageId: "capacity", advancedOnly: true, comingSoon: false },
-  { id: "cost-optimization", label: "Cost optimization", description: "Identify waste and right-size resources.", route: "/cost-optimization", icon: "dollar", category: "operations", requiredRoles: null, capability: null, pageId: "cost-optimization", advancedOnly: true, comingSoon: false },
-  { id: "deployment-safety", label: "Deployment safety", description: "Assess deployment risk before changes ship.", route: "/deployment-safety", icon: "shield", category: "operations", requiredRoles: null, capability: null, pageId: "deployment-safety", advancedOnly: true, comingSoon: false },
-  { id: "change-failure", label: "Change failure prediction", description: "Predict change risk from historical signals.", route: "/change-failure", icon: "alert", category: "operations", requiredRoles: null, capability: null, pageId: "change-failure", advancedOnly: true, comingSoon: false },
-  { id: "jobs", label: "Background jobs", description: "Read-only observability for async job queues.", route: "/operations/jobs", icon: "activity", category: "operations", requiredRoles: ["OWNER", "ADMIN"], capability: "jobs", pageId: "operations-jobs", comingSoon: false },
-  { id: "control-plane", label: "Control plane", description: "Multi-cluster inventory and operations.", route: "/control-plane", icon: "cloud", category: "operations", requiredRoles: null, capability: null, pageId: "control-plane", comingSoon: false },
-  { id: "ops-workspace", label: "Ops workspace", description: "Unified queue — now part of Command Center and Incidents.", route: "/incidents", icon: "grid", category: "operations", requiredRoles: null, capability: null, pageId: "incidents", comingSoon: false },
-  { id: "architecture", label: "Architecture map", description: "Discovered services and architecture topology.", route: "/architecture", icon: "map", category: "operations", requiredRoles: null, capability: null, pageId: "architecture", comingSoon: false },
-  { id: "dependencies", label: "Service dependencies", description: "Dependency graph across your estate.", route: "/dependencies", icon: "share", category: "operations", requiredRoles: null, capability: null, pageId: "dependencies", comingSoon: false },
-  { id: "discovery", label: "Discovery", description: "Automated estate discovery scans.", route: "/discovery", icon: "search", category: "operations", requiredRoles: null, capability: null, pageId: "discovery", comingSoon: false },
+  { id: "capacity", label: "Capacity planning", description: "Forecast utilization and scaling needs.", route: "/capacity", icon: "barchart", category: "operations", requiredRoles: null, capability: null, pageId: "capacity", navGroup: "Reliability", comingSoon: false },
+  { id: "cost-optimization", label: "Cost optimization", description: "Identify waste and right-size resources.", route: "/cost-optimization", icon: "dollar", category: "operations", requiredRoles: null, capability: null, pageId: "cost-optimization", navGroup: "Reliability", comingSoon: false },
+  { id: "deployment-safety", label: "Deployment safety", description: "Assess deployment risk before changes ship.", route: "/deployment-safety", icon: "shield", category: "operations", requiredRoles: null, capability: null, pageId: "deployment-safety", navGroup: "Reliability", comingSoon: false },
+  { id: "change-failure", label: "Change failure prediction", description: "Predict change risk from historical signals.", route: "/change-failure", icon: "alert", category: "operations", requiredRoles: null, capability: null, pageId: "change-failure", navGroup: "Reliability", comingSoon: false },
+  { id: "jobs", label: "Background jobs", description: "Read-only observability for async job queues.", route: "/operations/jobs", icon: "activity", category: "operations", requiredRoles: ["OWNER", "ADMIN"], capability: "jobs", pageId: "operations-jobs", navGroup: "Organization & Admin", comingSoon: false },
+  { id: "control-plane", label: "Control plane", description: "Multi-cluster inventory and operations.", route: "/control-plane", icon: "cloud", category: "operations", requiredRoles: null, capability: null, pageId: "control-plane", navGroup: "Platform ops", comingSoon: false },
+  { id: "architecture", label: "Architecture map", description: "Discovered services and architecture topology.", route: "/architecture", icon: "map", category: "operations", requiredRoles: null, capability: null, pageId: "architecture", navGroup: "Know your estate", comingSoon: false },
+  { id: "dependencies", label: "Service dependencies", description: "Dependency graph across your estate.", route: "/dependencies", icon: "share", category: "operations", requiredRoles: null, capability: null, pageId: "dependencies", navGroup: "Know your estate", comingSoon: false },
+  { id: "discovery", label: "Discovery", description: "Automated estate discovery scans.", route: "/discovery", icon: "search", category: "operations", requiredRoles: null, capability: null, pageId: "discovery", navGroup: "Know your estate", comingSoon: false },
 
   { id: "delivery", label: "Delivery hub", description: "Deployments, pipelines, changes, and approvals.", route: "/delivery", icon: "package", category: "delivery", requiredRoles: null, capability: null, pageId: "delivery", comingSoon: false },
-  { id: "delivery-dora", label: "DORA metrics", description: "Deployment frequency, lead time, and change failure rate.", route: "/delivery/dora", icon: "bar-chart", category: "delivery", requiredRoles: null, capability: null, pageId: "delivery-dora", advancedOnly: true, comingSoon: false },
+  { id: "delivery-dora", label: "DORA metrics", description: "Deployment frequency, lead time, and change failure rate.", route: "/delivery/dora", icon: "bar-chart", category: "delivery", requiredRoles: null, capability: null, pageId: "delivery-dora", navGroup: "Platform ops", comingSoon: false },
 
-  { id: "reliability-dashboard", label: "Reliability dashboard", description: "Organization reliability score and trends.", route: "/reliability-dashboard", icon: "barchart", category: "reliability", requiredRoles: null, capability: null, pageId: "reliability-dashboard", comingSoon: false },
-  { id: "reliability-maturity", label: "Reliability maturity", description: "Maturity model assessment and gaps.", route: "/reliability-maturity", icon: "target", category: "reliability", requiredRoles: null, capability: null, pageId: "reliability-maturity", comingSoon: false },
+  { id: "reliability-dashboard", label: "Reliability dashboard", description: "Organization reliability score and trends.", route: "/reliability-dashboard", icon: "barchart", category: "reliability", requiredRoles: null, capability: null, pageId: "reliability-dashboard", navGroup: "Reliability", comingSoon: false },
+  { id: "reliability-maturity", label: "Reliability maturity", description: "Maturity model assessment and gaps.", route: "/reliability-maturity", icon: "target", category: "reliability", requiredRoles: null, capability: null, pageId: "reliability-maturity", navGroup: "Reliability", comingSoon: false },
   { id: "runbooks", label: "Runbooks", description: "Operational runbooks and procedures.", route: "/runbooks", icon: "book", category: "reliability", requiredRoles: null, capability: null, pageId: "runbooks", comingSoon: false },
-  { id: "executive-reports", label: "Executive reports", description: "Reliability summaries for leadership.", route: "/executive-reports", icon: "file", category: "reliability", requiredRoles: null, capability: null, pageId: "executive-reports", comingSoon: false },
+  { id: "executive-reports", label: "Executive reports", description: "Reliability summaries for leadership.", route: "/executive-reports", icon: "file", category: "reliability", requiredRoles: null, capability: null, pageId: "executive-reports", navGroup: "Reliability", comingSoon: false },
   { id: "incidents", label: "Incidents", description: "AI investigates alerts, finds root cause, suggests fixes.", route: "/incidents", icon: "incident", category: "reliability", requiredRoles: null, capability: null, pageId: "incidents", comingSoon: false },
   { id: "postmortems", label: "Postmortems", description: "After resolution — capture lessons and prevent repeat incidents.", route: "/incident-response/postmortems", icon: "file", category: "reliability", requiredRoles: null, capability: null, pageId: "ir-postmortems", comingSoon: false },
-  { id: "war-rooms", label: "War rooms", description: "Collaborative incident response spaces.", route: "/war-rooms", icon: "users", category: "reliability", requiredRoles: null, capability: null, pageId: "war-rooms", advancedOnly: true, comingSoon: false },
+  { id: "war-rooms", label: "War rooms", description: "Collaborative incident response spaces.", route: "/war-rooms", icon: "users", category: "reliability", requiredRoles: null, capability: null, pageId: "war-rooms", navGroup: "Respond", comingSoon: false },
 
   { id: "integrations", label: "Integrations", description: "Connect cloud providers, GitHub, Prometheus, and more.", route: "/integrations", icon: "plug", category: "integrations", requiredRoles: null, capability: null, pageId: "integrations", integrationHint: "Connect at least one provider to unlock full value.", comingSoon: false },
 
@@ -68,9 +68,9 @@ var PRODUCT_MODULE_REGISTRY = [
   { id: "ai-teams", label: "AI teams", description: "Orchestrate AI agents and workflows.", route: "/ai-teams", icon: "teams", category: "ai-automation", requiredRoles: null, capability: null, pageId: "ai-teams", devModule: true, comingSoon: false },
   { id: "applications", label: "Applications", description: "AI software factory application lifecycle.", route: "/applications", icon: "apps", category: "ai-automation", requiredRoles: null, capability: null, pageId: "applications", devModule: true, comingSoon: false },
 
-  { id: "customer-onboarding", label: "Customer onboarding", description: "Connect integrations for pilot environments.", route: "/customer-onboarding", icon: "wand", category: "customer-pilot", requiredRoles: null, capability: null, pageId: "customer-onboarding", pilotOnly: true, comingSoon: false },
-  { id: "customer-pilot", label: "Customer pilot", description: "Guided pilot journey, approvals, and evidence.", route: "/customer-pilot", icon: "shield", category: "customer-pilot", requiredRoles: null, capability: null, pageId: "customer-pilot", pilotOnly: true, customerPilotOnly: true, comingSoon: false },
-  { id: "pilot-center", label: "Pilot center", description: "Internal pilot operations overview and readiness.", route: "/pilot", icon: "target", category: "customer-pilot", requiredRoles: null, capability: null, pageId: "pilot", pilotOnly: true, comingSoon: false },
+  { id: "customer-onboarding", label: "Pilot integrations", description: "Connect integrations for pilot environments — not the org setup wizard.", route: "/customer-onboarding", icon: "wand", category: "customer-pilot", requiredRoles: null, capability: null, pageId: "customer-onboarding", pilotOnly: true, navGroup: "Customer Pilot", comingSoon: false },
+  { id: "customer-pilot", label: "Customer pilot", description: "Guided pilot journey, approvals, and evidence.", route: "/customer-pilot", icon: "shield", category: "customer-pilot", requiredRoles: null, capability: null, pageId: "customer-pilot", pilotOnly: true, customerPilotOnly: true, navGroup: "Customer Pilot", comingSoon: false },
+  { id: "pilot-center", label: "Pilot center", description: "Internal pilot operations overview and readiness.", route: "/pilot", icon: "target", category: "customer-pilot", requiredRoles: null, capability: null, pageId: "pilot", pilotOnly: true, navGroup: "Operator Console", comingSoon: false },
 ];
 
 const INTERNAL_MODULE_ID_PREFIXES = [
@@ -159,6 +159,12 @@ function resolveCatalogModules(categoryFilter) {
     .filter((m) => m.availability.state !== "hidden");
 }
 
+function catalogNavHint(mod) {
+  if (mod.navGroup) return `Sidebar: ${mod.navGroup}`;
+  if (mod.advancedOnly) return "Sidebar: Advanced";
+  return null;
+}
+
 function availabilityBadge(av) {
   const map = {
     available: ["status-success", "Available"],
@@ -181,13 +187,14 @@ function renderCatalogModuleCard(mod) {
   const cta = av.state === "available"
     ? `<a class="btn btn-primary" href="${escapeHtml(mod.route)}" data-nav="${escapeHtml(mod.route)}">Open</a>`
     : `<a class="btn btn-secondary" href="${moduleDetailHref(mod)}" data-nav="${moduleDetailHref(mod)}">Details</a>`;
+  const navHint = catalogNavHint(mod);
   return `
     <section class="card" style="margin-bottom:12px;">
       <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;">
         <div>
           <h3 style="margin:0 0 4px;">${escapeHtml(mod.label)}</h3>
           <p class="muted" style="margin:0;font-size:13px;">${escapeHtml(mod.description)}</p>
-          <p class="muted" style="font-size:11px;margin-top:6px;">${escapeHtml(catalogCategoryLabel(mod.category))}${mod.advancedOnly ? " · Advanced" : ""}</p>
+          <p class="muted" style="font-size:11px;margin-top:6px;">${escapeHtml(catalogCategoryLabel(mod.category))}${mod.advancedOnly ? " · Advanced" : ""}${navHint ? ` · ${escapeHtml(navHint)}` : ""}</p>
         </div>
         <div style="text-align:right;">${availabilityBadge(av)}</div>
       </div>
@@ -206,6 +213,7 @@ function renderProductCatalogHome() {
       ${renderHeader("Product catalog", "All customer-facing modules and availability")}
       ${renderAlerts()}
       <p class="muted">Discover what is available for your organization. Unavailable modules show why access is blocked.</p>
+      <p class="muted" style="font-size:12px;">Retired URLs such as <code>/operations</code> and <code>/ops-workspace</code> redirect automatically — use Command Center and Incidents instead.</p>
       <div class="tabs" style="margin:16px 0;">
         <a class="btn tab active" href="/catalog" data-nav="/catalog">All</a>
         ${PRODUCT_CATALOG_CATEGORIES.map((c) => `
@@ -248,6 +256,8 @@ function renderProductCatalogModuleDetail() {
   if (mod.capability) setup.push(`Capability: ${mod.capability}`);
   if (mod.integrationHint) setup.push(mod.integrationHint);
   if (mod.pilotOnly) setup.push("Requires pilot mode");
+  const navHint = catalogNavHint(mod);
+  if (navHint) setup.push(navHint);
   const cta = av.state === "available"
     ? `<a class="btn btn-primary" href="${escapeHtml(mod.route)}" data-nav="${escapeHtml(mod.route)}">Open module</a>`
     : `<a class="btn btn-secondary" href="/feature-unavailable?reason=${encodeURIComponent(av.state)}&module=${encodeURIComponent(mod.label)}" data-nav="/feature-unavailable?reason=${encodeURIComponent(av.state)}&module=${encodeURIComponent(mod.label)}">Why unavailable?</a>`;

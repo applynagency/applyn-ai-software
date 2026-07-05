@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials
 
 from app.auth.dependencies import DBSession, bearer_scheme, get_current_user
@@ -28,12 +28,14 @@ class OrgContext:
 
 
 async def get_org_context(
+    request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
     current_user: Annotated[User, Depends(get_current_user)],
     session: DBSession,
 ) -> OrgContext:
     organization_id: str | None = None
     role: OrganizationRole | None = None
+    header_org = (request.headers.get("x-organization-id") or "").strip() or None
 
     if credentials:
         payload = decode_token(credentials.credentials)
@@ -41,6 +43,11 @@ async def get_org_context(
             org_id = payload.get("organization_id")
             if org_id:
                 organization_id = str(org_id)
+                if header_org and header_org != organization_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="X-Organization-Id does not match the organization in your access token.",
+                    )
                 if current_user.is_superuser:
                     role_value = payload.get("role")
                     if role_value:

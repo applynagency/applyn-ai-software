@@ -23,6 +23,7 @@ os.environ["ENVIRONMENT"] = "test"
 # Generous limits so auth-heavy tests (MFA login flows) do not trip 429 mid-test.
 os.environ["RATE_LIMIT_AUTH_LOGIN"] = "100/60"
 os.environ["RATE_LIMIT_AUTH_REGISTER"] = "100/300"
+os.environ["RATE_LIMIT_API_ORG"] = "10000/60"
 os.environ["ANTHROPIC_API_KEY"] = ""
 os.environ["MASTER_ENCRYPTION_KEY"] = "test-master-encryption-key-for-pytest-only"
 # Opt-in surfaces ship OFF in production but are exercised by the test suite, so

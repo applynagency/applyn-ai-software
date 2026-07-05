@@ -66,6 +66,9 @@ async function main() {
     const dr = federation.json?.dr_orchestration || "";
     record("p4_dr_orchestration", dr && dr !== "roadmap" ? "PASS" : "WARN", `dr=${dr}`);
     record("p4_dr_readiness", federation.json?.dr_readiness ? "PASS" : "WARN", federation.json?.dr_readiness?.multi_cluster != null ? "present" : "missing");
+    const drEx = await api("/v1/control-plane/federation/dr-exercise", { token, method: "POST", body: {} });
+    record("p4_dr_exercise", drEx.status === 200 && drEx.json?.automated_failover === false ? "PASS" : "FAIL",
+      drEx.status === 200 ? `mode=${drEx.json?.mode}` : `status=${drEx.status}`);
   }
 
   const pe = await api("/v1/platform-engineering/providers", { token });

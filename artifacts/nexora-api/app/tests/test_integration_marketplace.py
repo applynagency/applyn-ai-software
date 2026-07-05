@@ -312,3 +312,15 @@ async def test_audit_logging(client, monkeypatch):
     assert {"integration_marketplace_viewed", "integration_connected",
             "integration_verified", "integration_disconnected",
             "integration_verification_started", "integration_verification_finished"} <= actions
+
+
+async def test_checkmarx_ci_stub_host_skips_network():
+    from app.services.integration_verification import VStatus, verify_provider
+
+    result = await verify_provider(
+        "CHECKMARX",
+        {"base_url": "https://checkmarx.example.com", "api_key": "ci-stub-token"},
+    )
+    assert result.connection_status == VStatus.PARTIAL
+    assert result.provider_identity.get("ci_stub") is True
+    assert any("stub" in w.lower() for w in result.warnings)

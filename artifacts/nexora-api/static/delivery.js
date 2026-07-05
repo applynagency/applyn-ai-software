@@ -132,6 +132,31 @@ function dlvCardMessage(kind, detail, emptyOpts) {
   return `<p class="muted" style="margin:0;">${escapeHtml(map[kind] || detail || "")}</p>`;
 }
 
+var DELIVERY_MODULE_TABS = [
+  { label: "Overview", path: "/delivery", match: ["delivery"] },
+  { label: "Deployments", path: "/delivery/deployments", match: ["delivery-deployments", "delivery-deployment-detail"] },
+  { label: "Changes", path: "/delivery/changes", match: ["delivery-changes", "delivery-change-detail"] },
+  { label: "Approvals", path: "/delivery/approvals", match: ["delivery-approvals"] },
+  { label: "Pipelines", path: "/delivery/pipelines", match: ["delivery-pipelines"] },
+  { label: "GitOps", path: "/delivery/gitops", match: ["delivery-gitops"] },
+  { label: "Repos", path: "/delivery/repositories", match: ["delivery-repositories", "delivery-repository-detail"] },
+  { label: "Releases", path: "/delivery/releases", match: ["delivery-releases"] },
+  { label: "Security", path: "/delivery/security", match: ["delivery-security"] },
+  { label: "Reliability", path: "/delivery/release-reliability", match: ["delivery-rr", "delivery-rr-detail", "delivery-rr-analytics", "delivery-promotion", "delivery-freeze"] },
+  { label: "DORA", path: "/delivery/dora", match: ["delivery-dora"] },
+];
+
+function renderDeliveryNav() {
+  if (typeof renderModuleTabs !== "function") return "";
+  return renderModuleTabs(DELIVERY_MODULE_TABS);
+}
+
+function renderDeliveryChrome(title, subtitle, breadcrumbs) {
+  const bc = typeof renderPageBreadcrumbs === "function" && breadcrumbs
+    ? renderPageBreadcrumbs(breadcrumbs) : "";
+  return `${renderHeader(title, subtitle)}${bc}${renderDeliveryNav()}${renderAlerts()}`;
+}
+
 function renderDeliveryOverviewBanners() {
   const fidelity = typeof computeOpsDataFidelity === "function" ? computeOpsDataFidelity(state) : null;
   const fidelityBadge = fidelity && typeof renderOpsDataFidelityBadge === "function"
@@ -189,7 +214,88 @@ const DLV_EMPTY_OPTS = {
     secondaryLabel: "View incidents",
     secondaryHref: "/incidents",
   },
+  changeRequests: {
+    title: "No change requests",
+    message: "Create a draft from a requirement or import changes from your delivery pipeline.",
+    ctaLabel: "View requirements",
+    ctaHref: "/requirements",
+  },
+  releaseEvidenceList: {
+    title: "No release evidence",
+    message: "Release verification and health gates appear after CI/CD sync.",
+    ctaLabel: "Connect CI/CD",
+    ctaHref: "/integrations/onboarding?provider=JENKINS",
+  },
+  deliveryApprovals: {
+    title: "Approval queue clear",
+    message: "Pending delivery operations awaiting approval will show here.",
+  },
+  repositories: {
+    title: "No repositories",
+    message: "Connect GitHub, GitLab, or Bitbucket and sync to list source repositories.",
+    ctaLabel: "Connect GitHub",
+    ctaHref: "/integrations/onboarding?provider=GITHUB",
+  },
+  connections: {
+    title: "No source connections",
+    message: "Link a Git provider under Integrations to discover repositories.",
+    ctaLabel: "Connect GitHub",
+    ctaHref: "/integrations/onboarding?provider=GITHUB",
+  },
+  pipelines: {
+    title: "No pipelines synced",
+    message: "Connect Jenkins, GitHub Actions, Buildkite, or Harness, then Sync.",
+    ctaLabel: "Connect Jenkins",
+    ctaHref: "/integrations/onboarding?provider=JENKINS",
+    secondaryLabel: "Integrations",
+    secondaryHref: "/integrations",
+  },
+  pipelineRuns: {
+    title: "No pipeline runs",
+    message: "Trigger a build in your CI tool, then click Sync to pull runs into Nexora.",
+    ctaLabel: "View pipelines",
+    ctaHref: "/delivery/pipelines",
+  },
+  gitops: {
+    title: "No GitOps apps",
+    message: "Connect Argo CD or Flux CD and refresh GitOps state.",
+    ctaLabel: "Connect Argo CD",
+    ctaHref: "/integrations/onboarding?provider=ARGOCD",
+  },
+  securityScans: {
+    title: "No security scans",
+    message: "Connect SonarQube, Snyk, or Trivy for delivery gate scan results.",
+    ctaLabel: "Connect SonarQube",
+    ctaHref: "/integrations/onboarding?provider=SONARQUBE",
+  },
+  operations: {
+    title: "No delivery operations",
+    message: "Approved operations ready to execute appear here.",
+    ctaLabel: "Delivery approvals",
+    ctaHref: "/delivery/approvals",
+  },
+  releaseReliability: {
+    title: "No release records",
+    message: "Progressive delivery verification records populate after releases run.",
+  },
+  healthGates: {
+    title: "No health gates",
+    message: "Health gate evaluations appear after release verification runs.",
+  },
+  promotions: {
+    title: "No pending promotions",
+    message: "Promotion queue items appear when progressive delivery is active.",
+  },
+  freezeWindows: {
+    title: "No freeze windows",
+    message: "Deployment freeze windows configured in your org appear here.",
+  },
 };
+
+function dlvEmpty(keyOrOpts) {
+  const opts = typeof keyOrOpts === "string" ? DLV_EMPTY_OPTS[keyOrOpts] : keyOrOpts;
+  return dlvCardMessage("empty", null, opts);
+}
 
 function dlvCardShell(title, body, footer) {
   return `
@@ -748,8 +854,7 @@ function renderDeliveryOperationMeta(o) {
 function renderDeliveryOverview() {
   if (state.dlvOverviewLoading && !state.dlvOverviewLoaded) {
     return `<div class="container">
-      ${renderHeader("Delivery", "Organization delivery overview")}
-      ${renderAlerts()}
+      ${renderDeliveryChrome("Delivery", "Organization delivery overview", [{ label: "Delivery" }])}
       ${renderDeliveryOverviewSkeleton()}
     </div>`;
   }
@@ -761,12 +866,11 @@ function renderDeliveryOverview() {
        <div class="actions delivery-card-footer"><a class="btn btn-primary" href="${escapeHtml(rec.href)}">${escapeHtml(rec.label)}</a></div></section>`
     : "";
   if (state.dlvOverviewError) {
-    return `<div class="container">${renderHeader("Delivery", "Organization delivery overview")}
-      ${renderAlerts()}<p class="muted">${escapeHtml(state.dlvOverviewError)}</p></div>`;
+    return `<div class="container">${renderDeliveryChrome("Delivery", "Organization delivery overview", [{ label: "Delivery" }])}
+      <p class="muted">${escapeHtml(state.dlvOverviewError)}</p></div>`;
   }
   return `<div class="container">
-    ${renderHeader("Delivery", "Organization delivery overview")}
-    ${renderAlerts()}
+    ${renderDeliveryChrome("Delivery", "Organization delivery overview", [{ label: "Delivery" }])}
     ${renderDeliveryOverviewBanners()}
     ${recBlock}
     <div class="delivery-overview-grid">
@@ -815,7 +919,7 @@ function renderDeliveryDeploymentsList() {
     </div>`;
   const tableRows = state.dlvDeploymentsLoading
     ? `<div class="delivery-table-row"><span class="muted">Loading deployments…</span></div>`
-    : (state.dlvDeploymentsList || []).map((d) => `
+    : ((state.dlvDeploymentsList || []).map((d) => `
       <div class="delivery-table-row" data-nav="/delivery/deployments/${escapeHtml(d.id)}">
         <span><strong>${escapeHtml(d.image_ref || d.strategy || d.id)}</strong></span>
         <span>${escapeHtml(dlvEnvName(d.environment_id))}</span>
@@ -823,14 +927,12 @@ function renderDeliveryDeploymentsList() {
         <span>${cpHealthBadge(d.status)}</span>
         <span class="muted">${formatDate(d.created_at)}</span>
         <span class="muted">${d.release_id ? escapeHtml(d.release_id.slice(0, 8)) : "—"}</span>
-      </div>`).join("") || (typeof renderStructuredEmptyState === "function"
-      ? `<div class="delivery-table-row">${renderStructuredEmptyState({
+      </div>`).join("") || `<div class="delivery-table-row">${renderStructuredEmptyState({
         title: "No deployments match",
         message: "Adjust filters or connect CI/CD to sync deployment history.",
         ctaLabel: "Connect CI/CD",
         ctaHref: "/integrations/onboarding?provider=JENKINS",
-      })}</div>`
-      : `<div class="delivery-table-row"><span class="muted">No deployments match filters.</span></div>`);
+      })}</div>`);
   const pager = `
     <div class="actions delivery-card-footer">
       <button class="btn btn-secondary" type="button" data-dlv-page-prev ${offset <= 0 ? "disabled" : ""}>Previous</button>
@@ -839,7 +941,8 @@ function renderDeliveryDeploymentsList() {
     </div>`;
   return `<div class="container">
     ${renderHeader("Deployments", "Deployment history")}
-    ${renderAlerts()}
+      ${renderDeliveryNav()}
+      ${renderAlerts()}
     ${state.dlvDeploymentsError ? `<p class="muted">${escapeHtml(state.dlvDeploymentsError)}</p>` : ""}
     ${filterForm}
     <section class="card delivery-card">
@@ -893,11 +996,13 @@ function renderDeliveryDeploymentDetail() {
     ).join("")}</div></section>`
     : "";
   return `<div class="container">
-    ${renderHeader("Deployment", d.image_ref || d.strategy || d.id)}
-    ${renderAlerts()}
+    ${renderDeliveryChrome("Deployment", d.image_ref || d.strategy || d.id, [
+      { label: "Delivery", path: "/delivery" },
+      { label: "Deployments", path: "/delivery/deployments" },
+      { label: String(d.image_ref || d.strategy || d.id).slice(0, 32) },
+    ])}
     ${d.error ? `<section class="card delivery-card"><p class="muted">${escapeHtml(d.error)}</p></section>` : ""}
     ${meta}${timeline}${validation}${rollback}${incBlock}
-    <a class="btn btn-secondary" href="/delivery/deployments">Back</a>
   </div>`;
 }
 
@@ -933,7 +1038,7 @@ function renderDeliveryChangesList() {
       <div class="ops-list-row" style="cursor:pointer;" data-nav="/delivery/changes/${escapeHtml(c.id)}">
         <span><strong>${escapeHtml(c.change_request_title || c.id)}</strong> <span class="muted">${escapeHtml(c.scope || "")}</span></span>
         <span>${cpHealthBadge(c.approval_status || c.status)} ${c.risk_score != null ? `<span class="muted">risk ${c.risk_score}</span>` : ""}</span>
-      </div>`).join("") || `<p class="muted">No change requests.</p>`;
+      </div>`).join("") || dlvEmpty("changeRequests");
   const offset = state.dlvChangesOffset || 0;
   const limit = state.dlvChangesLimit || 25;
   const total = state.dlvChangesTotal || 0;
@@ -945,7 +1050,8 @@ function renderDeliveryChangesList() {
     </div>`;
   return `<div class="container">
     ${renderHeader("Change requests", "Lifecycle change management")}
-    ${renderAlerts()}${reqBar}${draftForm}
+      ${renderDeliveryNav()}
+      ${renderAlerts()}${reqBar}${draftForm}
     <section class="card delivery-card"><div class="ops-list">${rows}</div>${pager}</section>
   </div>`;
 }
@@ -976,8 +1082,11 @@ function renderDeliveryChangeDetail() {
     return "";
   })() : "";
   return `<div class="container">
-    ${renderHeader(c.change_request_title || "Change request", approval)}
-    ${renderAlerts()}${readOnlyNote}
+    ${renderDeliveryChrome(c.change_request_title || "Change request", approval, [
+      { label: "Delivery", path: "/delivery" },
+      { label: "Changes", path: "/delivery/changes" },
+      { label: String(c.change_request_title || c.id || "Detail").slice(0, 32) },
+    ])}${readOnlyNote}
     <section class="card delivery-card"><div class="ops-stats">
       ${rdMetric("Run status", c.status)}${rdMetric("Approval", approval)}
       ${c.risk_score != null ? rdMetric("Risk", c.risk_score) : ""}
@@ -1009,10 +1118,11 @@ function renderDeliveryReleasesEvidence() {
         <span><strong>v${escapeHtml(r.version)}</strong> ${r.rollback_plan ? `<span class="muted">rollback plan</span>` : ""}</span>
         <span class="delivery-release-actions">${cpHealthBadge(r.status)} <span class="muted">${checks}</span> ${rrLink} ${evidenceLink}</span>
       </div>`;
-    }).join("") || `<p class="muted">No release evidence.</p>`;
+    }).join("") || dlvEmpty("releaseEvidenceList");
   return `<div class="container">
     ${renderHeader("Release evidence", "Read-only release history and verification")}
-    ${renderAlerts()}
+      ${renderDeliveryNav()}
+      ${renderAlerts()}
     <p class="muted">Provider payloads and repository tokens are not shown.</p>
     <section class="card delivery-card"><div class="ops-list">${rows}</div></section>
   </div>`;
@@ -1035,7 +1145,7 @@ function renderDeliveryApprovals() {
         </div>
         <div class="delivery-approval-meta">${renderDeliveryOperationMeta(o)}</div>
         <div class="actions" style="margin-top:12px;">${renderDeliveryOperationActions(o, canWrite)}</div>
-      </div>`).join("") || `<p class="muted">No pending delivery approvals.</p>`;
+      </div>`).join("") || dlvEmpty("deliveryApprovals");
   const executeCards = (state.dlvExecuteQueue || []).map((o) => `
     <div class="delivery-approval-card">
       <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
@@ -1050,7 +1160,8 @@ function renderDeliveryApprovals() {
     </div>`).join("");
   return `<div class="container">
     ${renderHeader("Delivery approvals", "Pending delivery operation approvals")}
-    ${renderAlerts()}
+      ${renderDeliveryNav()}
+      ${renderAlerts()}
     <section class="card delivery-card">
       <h2>Pending approval</h2>
       <p class="muted" style="font-size:12px;">Approving records a decision only — use Execute after approval to run the operation.</p>
@@ -1072,11 +1183,11 @@ function renderDeliveryRepositories() {
       <span><strong>${escapeHtml(r.full_name)}</strong> <span class="muted">${escapeHtml(r.language || "")}</span></span>
       <span>${cpHealthBadge(r.health)}</span>
     </div>`).join("");
-  return `<div class="container">${renderHeader("Repositories", "Source control (read-only)")}${renderAlerts()}
+  return `<div class="container">${renderHeader("Repositories", "Source control (read-only)")}${renderDeliveryNav()}${renderAlerts()}
     <section class="card"><h2>Connections (${conns.length})</h2><div class="ops-list">
-      ${conns.map((c) => `<div class="ops-list-row"><span>${escapeHtml(c.display_name)}</span></div>`).join("") || `<p class="muted">No connections.</p>`}
+      ${conns.map((c) => `<div class="ops-list-row"><span>${escapeHtml(c.display_name)}</span></div>`).join("") || dlvEmpty("connections")}
     </div></section>
-    <section class="card"><h2>Repositories</h2><div class="ops-list">${rows || `<p class="muted">No repositories.</p>`}</div></section>
+    <section class="card"><h2>Repositories</h2><div class="ops-list">${rows || dlvEmpty("repositories")}</div></section>
   </div>`;
 }
 
@@ -1085,7 +1196,14 @@ function renderDeliveryRepositoryDetail() {
   if (!detail) return `<div class="container">${renderHeader("Repository", "")}<p class="muted">Not found.</p></div>`;
   const r = detail.repository;
   const prs = detail.pull_requests || [];
-  return `<div class="container">${renderHeader(r.full_name, r.default_branch)}${renderAlerts()}
+  return `<div class="container">${renderHeader(r.full_name, r.default_branch)}
+    ${renderDeliveryNav()}
+    ${typeof renderPageBreadcrumbs === "function" ? renderPageBreadcrumbs([
+      { label: "Deliver", path: "/delivery" },
+      { label: "Repositories", path: "/delivery/repositories" },
+      { label: String(r.full_name || r.id).slice(0, 48) },
+    ]) : ""}
+    ${renderAlerts()}
     <section class="card"><h2>Pull Requests</h2><div class="ops-list">
       ${prs.map((p) => `<div class="ops-list-row"><span>#${p.number} ${escapeHtml(p.title)}</span><span class="muted">${escapeHtml(p.state)}</span></div>`).join("") || `<p class="muted">None</p>`}
     </div></section>
@@ -1181,8 +1299,8 @@ function renderDeliveryPipelines() {
     </section>`;
   })() : "";
   const emptyRuns = !runRows && pipes.length
-    ? `<p class="muted">Runs appear after sync. Trigger a build in Jenkins, then click <strong>Sync JENKINS</strong>.</p>`
-    : `<p class="muted">No runs.</p>`;
+    ? dlvEmpty({ title: "No runs synced", message: "Trigger a build in Jenkins, then click Sync JENKINS.", ctaLabel: "Sync pipelines", ctaHref: "/delivery/pipelines" })
+    : dlvEmpty("pipelineRuns");
   const ciKeys = DELIVERY_CI_KEYS;
   const needsCi = !ciKeys.some((k) => deliveryHasVerifiedProvider(k));
   const connectBanner = needsCi && typeof renderOpsConnectBanner === "function"
@@ -1191,7 +1309,7 @@ function renderDeliveryPipelines() {
   const fidelityBadge = needsCi && typeof computeOpsDataFidelity === "function" && typeof renderOpsDataFidelityBadge === "function"
     ? renderOpsDataFidelityBadge(computeOpsDataFidelity(state))
     : "";
-  return `<div class="container">${renderHeader("Pipelines", "Unified CI/CD view — sync jobs and read build logs in Nexora")}${renderAlerts()}
+  return `<div class="container">${renderHeader("Pipelines", "Unified CI/CD view — sync jobs and read build logs in Nexora")}${renderDeliveryNav()}${renderAlerts()}
     ${fidelityBadge}
     ${connectBanner}
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
@@ -1199,7 +1317,7 @@ function renderDeliveryPipelines() {
       <div class="actions">${syncBtns}</div>
     </div>
     <section class="card"><h2>Pipelines (${pipes.length})</h2><div class="ops-list">
-      ${pipeRows || `<p class="muted">No pipelines. Connect Jenkins, GitHub Actions, Buildkite, or Harness under <a href="/integrations" data-nav="/integrations">Integrations</a>, then Sync.</p>`}
+      ${pipeRows || dlvEmpty("pipelines")}
     </div></section>
     <section class="card"><h2>Recent Runs</h2><div class="ops-list">
       ${runRows || emptyRuns}
@@ -1242,14 +1360,14 @@ function renderDeliveryGitops() {
     <div class="ops-list-row"><span><strong>${escapeHtml(a.engine)}</strong> ${escapeHtml(a.name)}</span>
       <span style="display:flex;gap:8px;align-items:center;">${cpHealthBadge(a.health)} ${a.sync_status ? escapeHtml(a.sync_status) : ""} ${a.drift ? "· drift" : ""} ${syncBtn}</span></div>`;
   }).join("");
-  return `<div class="container">${renderHeader("GitOps", "Argo CD and Flux CD applications from connected integrations")}${renderAlerts()}
+  return `<div class="container">${renderHeader("GitOps", "Argo CD and Flux CD applications from connected integrations")}${renderDeliveryNav()}${renderAlerts()}
     ${fidelityBadge}
     ${needsConnect ? renderDeliveryConnectBanner("Argo CD or Flux CD", "ARGOCD") : ""}
     <p class="muted" style="font-size:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
       ${canWrite ? `<button type="button" class="btn btn-primary btn-sm" data-delivery-gitops-sync>Refresh GitOps state</button>` : ""}
       <span>When <code>INTEGRATION_GITOPS_SYNC_ENABLED</code> is on, inventory refreshes automatically every ~5 minutes.</span>
     </p>
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">No GitOps apps yet. Connect Argo CD or Flux CD and run sync.</p>`}</div></section>
+    <section class="card"><div class="ops-list">${rows || dlvEmpty("gitops")}</div></section>
   </div>`;
 }
 
@@ -1263,9 +1381,9 @@ function renderDeliverySecurity() {
   const rows = scans.map((s) => `
     <div class="ops-list-row"><span><strong>${escapeHtml(s.tool)}</strong> ${escapeHtml(s.target)}</span>
       <span class="muted">${escapeHtml(truncateDeliveryText(JSON.stringify(s.summary || {}), 120))}</span></div>`).join("");
-  return `<div class="container">${renderHeader("Security Gates", "Vulnerability scans (read-only)")}${renderAlerts()}
+  return `<div class="container">${renderHeader("Security Gates", "Vulnerability scans (read-only)")}${renderDeliveryNav()}${renderAlerts()}
     ${banner}
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">No scans.</p>`}</div></section>
+    <section class="card"><div class="ops-list">${rows || dlvEmpty("securityScans")}</div></section>
   </div>`;
 }
 
@@ -1286,7 +1404,7 @@ function renderDeliveryDora() {
       <p class="muted" style="font-size:12px;margin:6px 0 0;">DORA metrics require synced pipeline runs or deployments in the last ${d.window_days || 30} days. Connect CI/CD tools, verify, then <strong>Sync pipelines</strong>.</p>
     </section>` : "";
   const fmt = (val, suffix = "") => (val == null || val === "" ? "—" : `${val}${suffix}`);
-  return `<div class="container">${renderHeader("DORA Dashboard", "Engineering effectiveness")}${renderAlerts()}
+  return `<div class="container">${renderHeader("DORA Dashboard", "Engineering effectiveness")}${renderDeliveryNav()}${renderAlerts()}
     ${banner}
     ${insufficientCard}
     <p class="muted" style="font-size:12px;margin-bottom:12px;">Metrics are computed from synced CI/CD pipelines. No fabricated defaults are shown when data is missing.</p>
@@ -1314,9 +1432,9 @@ function renderDeliveryOperations() {
       <div class="delivery-approval-meta">${renderDeliveryOperationMeta(o)}</div>
       <div class="actions" style="margin-top:12px;">${renderDeliveryOperationActions(o, canWrite)}</div>
     </div>`).join("");
-  return `<div class="container">${renderHeader("Operations", "Delivery operations")}${renderAlerts()}
+  return `<div class="container">${renderHeader("Operations", "Delivery operations")}${renderDeliveryNav()}${renderAlerts()}
     <p class="muted" style="font-size:12px;">Approve pending items on <a href="/delivery/approvals" data-nav="/delivery/approvals">Delivery approvals</a>, then execute approved operations here.</p>
-    <section class="card delivery-card"><div class="ops-list">${rows || `<p class="muted">No operations.</p>`}</div></section>
+    <section class="card delivery-card"><div class="ops-list">${rows || dlvEmpty("operations")}</div></section>
   </div>`;
 }
 
@@ -1325,8 +1443,8 @@ function renderDeliveryReleaseReliability() {
     `<div class="ops-list-row"><a href="/delivery/release-reliability/${escapeHtml(r.id)}">${escapeHtml(r.candidate_version || r.id)}</a>
      <span class="muted">${escapeHtml(r.strategy)} · ${escapeHtml(r.verification_status)}</span></div>`,
   ).join("");
-  return `<div class="container">${renderHeader("Release Reliability", "Progressive delivery (read-only)")}${renderAlerts()}
-    <section class="card"><div class="ops-list">${items || `<p class="muted">No records.</p>`}</div></section>
+  return `<div class="container">${renderHeader("Release Reliability", "Progressive delivery (read-only)")}${renderDeliveryNav()}${renderAlerts()}
+    <section class="card"><div class="ops-list">${items || dlvEmpty("releaseReliability")}</div></section>
   </div>`;
 }
 
@@ -1336,12 +1454,12 @@ function renderDeliveryRrDetail() {
   const gateRows = gates.map((g) =>
     `<div class="ops-list-row"><span>${escapeHtml(g.decision || g.status || "—")}</span><span class="muted">${escapeHtml(g.evaluated_at || "")}</span></div>`,
   ).join("");
-  return `<div class="container">${renderHeader("Release Detail", r.candidate_version || "Release")}${renderAlerts()}
+  return `<div class="container">${renderHeader("Release Detail", r.candidate_version || "Release")}${renderDeliveryNav()}${renderAlerts()}
     <section class="card"><div class="ops-stats">
       ${rdMetric("Strategy", r.strategy || "—")}${rdMetric("Verification", r.verification_status || "—")}
       ${rdMetric("Health Gate", r.health_gate_status || "—")}
     </div></section>
-    <section class="card"><h2>Health Gate Timeline</h2><div class="ops-list">${gateRows || `<p class="muted">No gates.</p>`}</div></section>
+    <section class="card"><h2>Health Gate Timeline</h2><div class="ops-list">${gateRows || dlvEmpty("healthGates")}</div></section>
     <a class="btn btn-secondary" href="/delivery/release-reliability">Back</a>
   </div>`;
 }
@@ -1350,8 +1468,8 @@ function renderDeliveryPromotionQueue() {
   const rows = (state.dlvPromotionQueue || []).map((p) =>
     `<div class="ops-list-row"><span>${escapeHtml(p.status)}</span><span class="muted">${escapeHtml(p.block_reason || "")}</span></div>`,
   ).join("");
-  return `<div class="container">${renderHeader("Promotion Queue", "Read-only promotion queue")}${renderAlerts()}
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">No pending promotions.</p>`}</div></section>
+  return `<div class="container">${renderHeader("Promotion Queue", "Read-only promotion queue")}${renderDeliveryNav()}${renderAlerts()}
+    <section class="card"><div class="ops-list">${rows || dlvEmpty("promotions")}</div></section>
   </div>`;
 }
 
@@ -1359,8 +1477,8 @@ function renderDeliveryFreezeWindows() {
   const rows = (state.dlvFreezeWindows || []).map((f) =>
     `<div class="ops-list-row"><span>${escapeHtml(f.name)}</span><span class="muted">${escapeHtml(f.environment_tier || "all")}</span></div>`,
   ).join("");
-  return `<div class="container">${renderHeader("Freeze Windows", "Read-only freeze windows")}${renderAlerts()}
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">No freeze windows.</p>`}</div></section>
+  return `<div class="container">${renderHeader("Freeze Windows", "Read-only freeze windows")}${renderDeliveryNav()}${renderAlerts()}
+    <section class="card"><div class="ops-list">${rows || dlvEmpty("freezeWindows")}</div></section>
   </div>`;
 }
 
@@ -1372,7 +1490,7 @@ function renderDeliveryRrAnalytics() {
   const banner = (needsCi || empty) && typeof renderOpsConnectBanner === "function"
     ? renderOpsConnectBanner("Jenkins, GitHub Actions, or Drone", "JENKINS", "Sync CI/CD pipelines to populate release analytics from real deployment history.")
     : (needsCi ? renderDeliveryConnectBanner("Jenkins, GitHub Actions, or Drone", "JENKINS") : "");
-  return `<div class="container">${renderHeader("Release Analytics", "Read-only analytics")}${renderAlerts()}
+  return `<div class="container">${renderHeader("Release Analytics", "Read-only analytics")}${renderDeliveryNav()}${renderAlerts()}
     ${banner}
     <section class="card"><div class="ops-stats">
       ${rdMetric("Total Releases", a.total_releases || 0)}${rdMetric("Verification Passed", a.verification_passed || 0)}

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.tests.conftest import auth_headers, create_authenticated_user
+from app.tests.conftest import auth_headers, create_authenticated_user, create_organization, switch_organization
 
 
 async def _create_credential(client, token: str, provider: str, name: str) -> str:
@@ -142,6 +142,25 @@ async def test_cluster_register_discover_and_operation_flow(client):
     assert body["federation_mode"] == "inventory_aggregate"
     assert body["cluster_count"] >= 1
     assert body["inventory_count"] >= 1
+
+    dr_ex = await client.post("/v1/control-plane/federation/dr-exercise", headers=auth_headers(token))
+    assert dr_ex.status_code == 200
+    dr_body = dr_ex.json()
+    assert dr_body["automated_failover"] is False
+    assert dr_body["human_approval_required"] is True
+    assert len(dr_body["checklist"]) >= 2
+
+
+@pytest.mark.asyncio
+async def test_org_header_mismatch_rejected(client):
+    user, tokens = await create_authenticated_user(client, email="cp-hdr@e.com", username="cphdr")
+    org_a = await create_organization(client, tokens["access_token"], name="Hdr A", slug="hdr-a")
+    org_b = await create_organization(client, tokens["access_token"], name="Hdr B", slug="hdr-b")
+    token_a = (await switch_organization(client, tokens["access_token"], org_a["id"]))["access_token"]
+    headers = auth_headers(token_a)
+    headers["X-Organization-Id"] = org_b["id"]
+    resp = await client.get("/v1/control-plane/federation", headers=headers)
+    assert resp.status_code == 403
 
 
 @pytest.mark.asyncio

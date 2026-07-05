@@ -75,6 +75,11 @@ function integrationPageActionLabel(path) {
   return path.replace(/^\//, "").replace(/-/g, " ").replace(/\//g, " → ");
 }
 
+function integEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
+
 function renderBuildLogPanel(log, closeAttr) {
   if (!log) return "";
   const body = log.console_excerpt || log.logs_preview || log.reason || "No log output available.";
@@ -266,7 +271,12 @@ function renderIntegrationPipelineActivity(c) {
     </div>`;
   }).join("");
   const empty = !runRows
-    ? `<p class="muted">No builds synced yet. Use <strong>Sync pipelines & builds</strong> above, then jobs and logs appear here.</p>`
+    ? integEmpty({
+      title: "No builds synced",
+      message: "Use Sync pipelines & builds above, then jobs and logs appear here.",
+      ctaLabel: "View pipelines",
+      ctaHref: "/delivery/pipelines",
+    })
     : "";
   return `<section class="card" style="margin-top:12px;">
     <h2>Jobs & build logs</h2>
@@ -599,7 +609,12 @@ function renderIntegrations() {
       ${healthBoardSection}
       <section class="card">
         <h2>All connections (${conns.length})</h2>
-        <div class="ops-list">${connRows || `<p class="muted">No integrations connected. <a href="/integrations/onboarding" data-nav="/integrations/onboarding">Start guided setup</a></p>`}</div>
+        <div class="ops-list">${connRows || integEmpty({
+          title: "No integrations connected",
+          message: "Connect cloud, CI/CD, observability, and incident tools to power Nexora.",
+          ctaLabel: "Start guided setup",
+          ctaHref: "/integrations/onboarding",
+        })}</div>
       </section>
       ${!canWrite ? `<p class="muted">Read-only — contact an organization admin to connect integrations.</p>` : ""}
     </div>`;
@@ -691,7 +706,10 @@ function renderIntegrationOnboarding() {
       <p class="muted"><a href="/integrations" data-nav="/integrations">All integrations</a> · <a href="/" data-nav="/">Command center</a></p>
       ${readinessSection}
       ${connectForm}
-      ${categorySections || `<p class="muted">No supported integration types available.</p>`}
+      ${categorySections || integEmpty({
+        title: "No integration types",
+        message: "Supported integration types load from the marketplace catalog.",
+      })}
       ${!canWrite ? `<section class="card"><p class="muted">Read-only access. Organization OWNER or ADMIN is required to connect integrations.</p></section>` : ""}
     </div>`;
 }
@@ -775,8 +793,12 @@ function renderIntegrationDetail() {
   return `
     <div class="container">
       ${renderHeader(c.name, c.integration_key)}
+      ${typeof renderPageBreadcrumbs === "function" ? renderPageBreadcrumbs([
+        { label: "Integrations", path: "/integrations" },
+        { label: c.name },
+      ]) : ""}
       ${renderAlerts()}
-      <p class="muted"><a href="/integrations" data-nav="/integrations">← Integrations</a> · <a href="/integrations/${encodeURIComponent(c.id)}/health" data-nav="/integrations/${encodeURIComponent(c.id)}/health">Health evidence</a></p>
+      <p class="muted" style="font-size:12px;"><a href="/integrations/${encodeURIComponent(c.id)}/health" data-nav="/integrations/${encodeURIComponent(c.id)}/health">Health evidence</a></p>
       <section class="card">
         <div class="ops-stats">
           ${integrationRdMetric("Status", c.status)}
@@ -846,7 +868,10 @@ function renderIntegrationHealth() {
       <section class="card"><h2>Configured capabilities</h2>${capBody}</section>
       <section class="card">
         <h2>Recent checks</h2>
-        ${histRows ? `<table class="data-table"><thead><tr><th>Time</th><th>State</th><th>Latency</th></tr></thead><tbody>${histRows}</tbody></table>` : `<p class="muted">No history recorded.</p>`}
+        ${histRows ? `<table class="data-table"><thead><tr><th>Time</th><th>State</th><th>Latency</th></tr></thead><tbody>${histRows}</tbody></table>` : integEmpty({
+          title: "No health history",
+          message: "Verification history appears after the first connection test.",
+        })}
       </section>
     </div>`;
 }

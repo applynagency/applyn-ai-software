@@ -4,6 +4,36 @@
  * canWriteResources, formatDate, actionStatusBadge, apiUrl, getToken.
  */
 
+function relEmpty(opts) {
+  if (typeof renderStructuredEmptyState === "function") return renderStructuredEmptyState(opts);
+  return `<p class="muted">${escapeHtml(opts?.message || "Nothing here yet.")}</p>`;
+}
+
+var RELIABILITY_REPORT_TABS = [
+  { label: "Dashboard", path: "/reliability-dashboard", match: ["reliability-dashboard"] },
+  { label: "Maturity", path: "/reliability-maturity", match: ["reliability-maturity"] },
+  { label: "Executive reports", path: "/executive-reports", match: ["executive-reports"] },
+];
+
+var SAFETY_CAPACITY_TABS = [
+  { label: "Deployment safety", path: "/deployment-safety", match: ["deployment-safety"] },
+  { label: "Change failure", path: "/change-failure", match: ["change-failure"] },
+  { label: "Capacity", path: "/capacity", match: ["capacity"] },
+  { label: "Cost optimization", path: "/cost-optimization", match: ["cost-optimization"] },
+];
+
+function renderReliabilityReportNav() {
+  if (typeof renderReliabilityModuleNav === "function") return renderReliabilityModuleNav();
+  if (typeof renderModuleTabs !== "function") return "";
+  return renderModuleTabs(RELIABILITY_REPORT_TABS);
+}
+
+function renderSafetyCapacityNav() {
+  if (typeof renderReliabilityModuleNav === "function") return renderReliabilityModuleNav();
+  if (typeof renderModuleTabs !== "function") return "";
+  return renderModuleTabs(SAFETY_CAPACITY_TABS);
+}
+
 async function loadMonitoringPage() {
   try {
     const [dashboard, alerts] = await Promise.all([
@@ -223,6 +253,7 @@ function renderCapacity() {
   return `
     <div class="container">
       ${renderHeader("Capacity Planning", "Forecasting, saturation prediction & advisory scaling — read-only")}
+      ${renderSafetyCapacityNav()}
       ${renderAlerts()}
       ${canWrite ? `
       <section class="card">
@@ -268,7 +299,12 @@ function renderCapacity() {
 
       <section class="card">
         <h2>Forecasts</h2>
-        ${forecasts.length === 0 ? `<p class="muted">No forecasts yet. Ingest capacity metrics, then generate a forecast.</p>` : ""}
+        ${forecasts.length === 0 ? relEmpty({
+          title: "No forecasts yet",
+          message: "Ingest capacity metrics, then generate a forecast.",
+          ctaLabel: "Capacity planning",
+          ctaHref: "/capacity",
+        }) : ""}
       </section>
       ${forecasts.map(renderCapacityForecastCard).join("")}
     </div>`;
@@ -309,9 +345,13 @@ function renderReliabilityMaturity() {
     return `
       <div class="container">
         ${renderHeader("Reliability Maturity Score", "Organization-wide maturity across 7 reliability dimensions — read-only")}
+        ${renderReliabilityReportNav()}
         ${renderAlerts()}
         <section class="card">
-          <p class="muted">No assessments yet. Run your first reliability maturity assessment.</p>
+          ${relEmpty({
+            title: "No assessments yet",
+            message: "Run your first reliability maturity assessment to score your estate.",
+          })}
           ${runBtn}
         </section>
       </div>`;
@@ -335,6 +375,7 @@ function renderReliabilityMaturity() {
   return `
     <div class="container">
       ${renderHeader("Reliability Maturity Score", "Organization-wide maturity across 7 reliability dimensions — read-only")}
+      ${renderReliabilityReportNav()}
       ${renderAlerts()}
       <section class="card" style="display:flex;gap:28px;align-items:center;flex-wrap:wrap;">
         <div style="text-align:center;">
@@ -409,10 +450,16 @@ function renderArchitecture() {
     return `
       <div class="container">
         ${renderHeader("Architecture Map", "Auto-discovered topology, dependency graph & risk areas — read-only")}
+        ${typeof renderKnowEstateNav === "function" ? renderKnowEstateNav() : ""}
         ${renderAlerts()}
         ${banner}
         <section class="card">
-          <p class="muted">No discovery snapshots yet. Run discovery to build a service map from your connected signals (services, dependencies, monitoring, deployments, capacity & SLOs).</p>
+          ${relEmpty({
+            title: "No discovery snapshots",
+            message: "Run discovery to build a service map from connected signals (services, dependencies, monitoring, deployments, capacity & SLOs).",
+            ctaLabel: "Run discovery",
+            ctaHref: "/discovery",
+          })}
           ${runBtn}
         </section>
       </div>`;
@@ -453,6 +500,7 @@ function renderArchitecture() {
   return `
     <div class="container">
       ${renderHeader("Architecture Map", "Auto-discovered topology, dependency graph & risk areas — read-only")}
+      ${typeof renderKnowEstateNav === "function" ? renderKnowEstateNav() : ""}
       ${renderAlerts()}
       <section class="card" style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
         <div style="flex:1;min-width:280px;"><p>${escapeHtml(m.summary || "")}</p></div>
@@ -493,12 +541,12 @@ function renderArchitecture() {
 
       <section class="card">
         <h2>Nodes (${m.node_count})</h2>
-        <div class="ops-list">${nodeRows || `<p class="muted">No nodes discovered.</p>`}</div>
+        <div class="ops-list">${nodeRows || relEmpty({ title: "No nodes discovered", message: "Nodes appear after architecture discovery completes." })}</div>
       </section>
 
       <section class="card">
         <h2>Dependency Graph (${m.edge_count})</h2>
-        <div class="ops-list">${edgeRows || `<p class="muted">No relationships discovered.</p>`}</div>
+        <div class="ops-list">${edgeRows || relEmpty({ title: "No relationships discovered", message: "Dependency edges populate after discovery maps your estate." })}</div>
       </section>
 
       <section class="card">
@@ -601,6 +649,7 @@ function renderExecutiveReports() {
   return `
     <div class="container">
       ${renderHeader("Executive Reports", "Auto-generated weekly / monthly / quarterly reliability reports — read-only")}
+      ${renderReliabilityReportNav()}
       ${renderAlerts()}
       <section class="card">${genForm || `<p class="muted">Read-only access.</p>`}</section>
       <div style="display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;">
@@ -649,7 +698,12 @@ function renderReliabilityDashboard() {
     </section>`;
 
   if (!d) {
-    return `<div class="container">${renderHeader("Executive Reliability Dashboard", "Unified reliability posture for engineering leaders")}${renderAlerts()}${controls}<section class="card"><p class="muted">No data available.</p></section></div>`;
+    return `<div class="container">${renderHeader("Executive Reliability Dashboard", "Unified reliability posture for engineering leaders")}${renderReliabilityReportNav()}${renderAlerts()}${controls}<section class="card">${relEmpty({
+      title: "No reliability data",
+      message: "Connect observability and incident tools, then refresh the dashboard.",
+      ctaLabel: "Integrations",
+      ctaHref: "/integrations",
+    })}</section></div>`;
   }
 
   const m = d.metrics;
@@ -684,6 +738,7 @@ function renderReliabilityDashboard() {
   return `
     <div class="container">
       ${renderHeader("Executive Reliability Dashboard", "Unified reliability posture for engineering leaders — read-only")}
+      ${renderReliabilityReportNav()}
       ${renderAlerts()}
       ${controls}
       ${scoreCard}
@@ -763,6 +818,7 @@ function renderChangeFailure() {
   return `
     <div class="container">
       ${renderHeader("Change Failure Prediction", "Deterministic pre-deployment failure-probability — read-only")}
+      ${renderSafetyCapacityNav()}
       ${renderAlerts()}
       <section class="card">
         <div class="card-header"><div><h2>Predict a Change</h2><p class="muted">Score the failure probability of a candidate deployment before it ships.</p></div></div>
@@ -809,7 +865,10 @@ function renderChangeFailure() {
 
       <section class="card">
         <h2>Recent Predictions (${list.length})</h2>
-        ${list.length === 0 ? `<p class="muted">No predictions yet.</p>` : `
+        ${list.length === 0 ? relEmpty({
+          title: "No predictions yet",
+          message: "Failure predictions appear after enough incident and health signal history.",
+        }) : `
         <div class="ops-list">
           ${list.map((p) => `
             <div class="ops-list-row">
@@ -830,8 +889,14 @@ function renderDependencies() {
   return `
     <div class="container">
       ${renderHeader("Service Dependencies", "Dependency graph & blast-radius intelligence — read-only")}
+      ${typeof renderKnowEstateNav === "function" ? renderKnowEstateNav() : ""}
       ${renderAlerts()}
-      ${services.length === 0 ? `<section class="card"><p class="muted">No services found. Add services in Service Health first, then map dependencies here.</p></section>` : ""}
+      ${services.length === 0 ? `<section class="card">${relEmpty({
+        title: "No services found",
+        message: "Add services in Service Health first, then map dependencies here.",
+        ctaLabel: "Service health",
+        ctaHref: "/services",
+      })}</section>` : ""}
       ${canWrite && services.length >= 2 ? `
       <section class="card">
         <div class="card-header"><div><h2>Add Dependency</h2><p class="muted">Source depends on Target (source → target).</p></div></div>
@@ -877,7 +942,10 @@ function renderDependencies() {
 
       <section class="card">
         <h2>Dependencies (${edges.length})</h2>
-        ${edges.length === 0 ? `<p class="muted">No dependencies mapped yet.</p>` : `
+        ${edges.length === 0 ? relEmpty({
+          title: "No dependencies mapped",
+          message: "Map service dependencies to analyze blast radius and failure propagation.",
+        }) : `
         <div class="ops-list">
           ${edges.map((e) => `
             <div class="ops-list-row">
@@ -913,6 +981,7 @@ function renderCostOptimization() {
   return `
     <div class="container">
       ${renderHeader("Cost Optimization", "Find waste, rightsize, and forecast cloud spend — advisory only")}
+      ${renderSafetyCapacityNav()}
       ${renderAlerts()}
       ${canWrite ? `
       <section class="card">
@@ -929,7 +998,12 @@ function renderCostOptimization() {
       </section>` : ""}
 
       ${!dash || !dash.has_data ? `
-        <section class="card"><p class="muted">No cost analysis yet. Ingest capacity metrics (Capacity Planning), then run an analysis.</p></section>
+        <section class="card">${relEmpty({
+          title: "No cost analysis",
+          message: "Ingest capacity metrics from Capacity Planning, then run an analysis.",
+          ctaLabel: "Capacity planning",
+          ctaHref: "/capacity",
+        })}</section>
       ` : `
       <section class="card">
         <h2>Executive Summary</h2>
@@ -1063,6 +1137,7 @@ function renderDeploymentSafety() {
   return `
     <div class="container">
       ${renderHeader("Deployment Safety", "Advisory pre-deployment risk guard — canary & blast-radius intelligence")}
+      ${renderSafetyCapacityNav()}
       ${renderAlerts()}
       <section class="card">
         <div class="card-header"><div><h2>Analyze a Deployment</h2><p class="muted">Read-only safety verdict. Never blocks or executes a deployment.</p></div></div>
@@ -1110,7 +1185,10 @@ function renderDeploymentSafety() {
 
       <section class="card">
         <h2>Recent Analyses</h2>
-        ${analyses.length === 0 ? `<p class="muted">No analyses yet. Run one above.</p>` : `
+        ${analyses.length === 0 ? relEmpty({
+          title: "No analyses yet",
+          message: "Run a cost optimization analysis using the form above.",
+        }) : `
           <div class="table-grid table-grid-safety">
             <div class="table-row table-head"><div>Service</div><div>Env</div><div>Safety</div><div>Readiness</div><div>Blast</div><div>Strategy</div></div>
             ${analyses.map((a) => `
@@ -1150,6 +1228,7 @@ function renderServiceHealth() {
   return `
     <div class="container">
       ${renderHeader("Service Health", "Continuous SLO intelligence — availability, error budgets, burn rates")}
+      ${typeof renderObserveNav === "function" ? renderObserveNav() : ""}
       ${renderAlerts()}
       ${banner}
       ${canWrite ? `
@@ -1176,16 +1255,14 @@ function renderServiceHealth() {
       </section>` : ""}
       <section class="card">
         <h2>Services</h2>
-        ${services.length === 0 ? (typeof renderStructuredEmptyState === "function"
-          ? renderStructuredEmptyState({
-            title: "No services catalogued",
-            message: "Run universal discovery or create services to track SLO health.",
-            ctaLabel: "Run discovery",
-            ctaHref: "/discovery",
-            secondaryLabel: "Connect Prometheus",
-            secondaryHref: "/integrations/onboarding?provider=PROMETHEUS",
-          })
-          : `<p class="muted">No services catalogued yet.</p>`) : `
+        ${services.length === 0 ? relEmpty({
+          title: "No services catalogued",
+          message: "Run universal discovery or create services to track SLO health.",
+          ctaLabel: "Run discovery",
+          ctaHref: "/discovery",
+          secondaryLabel: "Connect Prometheus",
+          secondaryHref: "/integrations/onboarding?provider=PROMETHEUS",
+        }) : `
           <div class="responsive-table-wrap">
           <div class="table-grid table-grid-services">
             <div class="table-row table-head"><div>Service</div><div>Tier</div><div>Health</div><div>Avail 30d</div><div>Budget Left</div><div>Burn</div><div>Open</div></div>
@@ -1219,6 +1296,11 @@ function renderServiceDetail() {
   return `
     <div class="container">
       ${renderHeader(escapeHtml(r.name), "Service health & SLO report")}
+      ${typeof renderObserveNav === "function" ? renderObserveNav() : ""}
+      ${typeof renderPageBreadcrumbs === "function" ? renderPageBreadcrumbs([
+        { label: "Services", path: "/services" },
+        { label: String(r.name).slice(0, 48) },
+      ]) : ""}
       ${renderAlerts()}
       <div style="margin-bottom:12px;"><a class="btn btn-secondary" href="/services" data-nav="/services">← Back to Service Health</a></div>
 
@@ -1332,8 +1414,14 @@ function renderMonitoring() {
   return `
     <div class="container">
       ${renderHeader("Operations Center", "Continuous monitoring & auto incident creation")}
+      ${typeof renderObserveNav === "function" ? renderObserveNav() : ""}
       ${renderAlerts()}
-      ${!d ? `<section class="card"><p class="muted">No monitoring data yet. Connect a monitoring provider (Prometheus, Grafana, Datadog, AWS CloudWatch, Azure Monitor) and alerts will appear here automatically.</p></section>` : `
+      ${!d ? `<section class="card">${relEmpty({
+        title: "No monitoring data",
+        message: "Connect Prometheus, Grafana, Datadog, AWS CloudWatch, or Azure Monitor — alerts appear automatically.",
+        ctaLabel: "Connect Prometheus",
+        ctaHref: "/integrations/onboarding?provider=PROMETHEUS",
+      })}</section>` : `
         <section class="card">
           <div class="ops-stat-grid">
             ${stat("Active Alerts", d.active_alerts, d.active_alerts ? "ops-warn" : "")}
@@ -1388,7 +1476,12 @@ function renderMonitoring() {
               ctaLabel: "Connect Prometheus",
               ctaHref: "/integrations/onboarding?provider=PROMETHEUS",
             })
-            : `<p class="muted">No alerts ingested yet.</p>`) : `
+            : relEmpty({
+              title: "No alerts ingested",
+              message: "Connect monitoring tools and poll, or enable background monitoring.",
+              ctaLabel: "Alerts",
+              ctaHref: "/alerts",
+            })) : `
             <div class="responsive-table-wrap">
             <div class="table-grid table-grid-alerts">
               <div class="table-row table-head"><div>Severity</div><div>Alert</div><div>Provider</div><div>Service</div><div>Count</div><div>Incident</div></div>
