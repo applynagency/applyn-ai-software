@@ -633,12 +633,10 @@ function renderHelpGettingStarted() {
   const roadmapHtml = `
     <section class="help-section card" style="margin-top:16px;">
       <h3>Integration roadmap</h3>
-      <p class="muted">35 integrations ship today with live pipeline sync (Harness, Buildkite), Flux GitOps (Kustomizations + HelmReleases), trace waterfall explorer, and enterprise CMDB/issue enrichment.</p>
+      <p class="muted">39 integrations ship today with live pipeline sync (Harness, Buildkite, Drone, Argo Workflows), Flux GitOps, Snyk/Trivy security scans, trace waterfall explorer, Terraform Cloud apply/destroy, and enterprise write-back.</p>
       <ul class="muted" style="margin:8px 0 0;padding-left:20px;">
-        <li>Security scanner connectors — SonarQube (live), Snyk and Trivy (live when connected); Checkmarx planned</li>
-        <li>Drone CI and Argo Workflows pipeline sync (backend registry — marketplace onboarding planned)</li>
-        <li>Multi-cluster federation inventory aggregate (DR orchestration remains roadmap)</li>
-        <li>Live Terraform Cloud apply/destroy when connected and preflight passes</li>
+        <li>Checkmarx and additional SAST/DAST vendors (roadmap)</li>
+        <li>Multi-cluster DR orchestration beyond inventory aggregate (roadmap)</li>
       </ul>
       <p class="muted" style="font-size:12px;margin-top:8px;">Production hardening: set <code>RATE_LIMIT_FAIL_OPEN=false</code> when Redis is HA so abuse protection fails closed.</p>
     </section>`;

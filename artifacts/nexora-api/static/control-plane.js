@@ -145,6 +145,9 @@ function renderControlPlaneCloud() {
     <div class="container">
       ${renderHeader("Cloud Accounts", "Multi-cloud inventory and cost visibility")}
       ${renderAlerts()}
+      ${cpNeedsConnect() && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner("AWS, Azure, or GCP", "AWS", "Register cloud credentials to sync inventory and cost visibility.")
+    : ""}
       ${registerForm}
       <section class="card"><h2>Accounts (${accounts.length})</h2><div class="ops-list">${rows || `<p class="muted">No cloud accounts yet.</p>`}</div></section>
     </div>`;

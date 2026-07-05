@@ -19,6 +19,11 @@ var DLV_CARD = {
   ready: "ready",
 };
 
+var DELIVERY_CI_KEYS = [
+  "JENKINS", "GITHUB", "GITLAB", "CIRCLECI", "AZURE_DEVOPS", "BITBUCKET",
+  "BUILDKITE", "HARNESS", "DRONE", "ARGO_WORKFLOWS",
+];
+
 function sanitizeDeliveryError(message) {
   if (!message) return "An error occurred";
   const text = String(message);
@@ -1102,11 +1107,11 @@ function renderDeliveryPipelines() {
   const emptyRuns = !runRows && pipes.length
     ? `<p class="muted">Runs appear after sync. Trigger a build in Jenkins, then click <strong>Sync JENKINS</strong>.</p>`
     : `<p class="muted">No runs.</p>`;
-  const ciKeys = ["JENKINS", "GITHUB", "GITLAB", "CIRCLECI", "AZURE_DEVOPS", "BITBUCKET", "BUILDKITE", "HARNESS"];
+  const ciKeys = DELIVERY_CI_KEYS;
   const needsCi = !ciKeys.some((k) => deliveryHasVerifiedProvider(k));
   const connectBanner = needsCi && typeof renderOpsConnectBanner === "function"
-    ? renderOpsConnectBanner("Jenkins, GitHub Actions, or Buildkite", "JENKINS", "Sync CI/CD pipelines to populate the unified pipeline view.")
-    : (needsCi ? renderDeliveryConnectBanner("Jenkins, GitHub Actions, or Buildkite", "JENKINS") : "");
+    ? renderOpsConnectBanner("Jenkins, GitHub Actions, Drone, or Argo Workflows", "JENKINS", "Sync CI/CD pipelines to populate the unified pipeline view.")
+    : (needsCi ? renderDeliveryConnectBanner("Jenkins, GitHub Actions, Drone, or Argo Workflows", "JENKINS") : "");
   const fidelityBadge = needsCi && typeof computeOpsDataFidelity === "function" && typeof renderOpsDataFidelityBadge === "function"
     ? renderOpsDataFidelityBadge(computeOpsDataFidelity(state))
     : "";
@@ -1193,12 +1198,12 @@ function renderDeliveryDora() {
   if (!d.deployment_frequency_per_day && d.deployment_frequency_per_day !== 0 && !state.dlvDora && !state.dlvDashboard) {
     return renderFeatureUnavailablePage("DORA", "DORA metrics are not available.");
   }
-  const ciKeys = ["JENKINS", "GITHUB", "GITLAB", "CIRCLECI", "AZURE_DEVOPS", "BITBUCKET", "BUILDKITE", "HARNESS"];
+  const ciKeys = DELIVERY_CI_KEYS;
   const needsCi = !ciKeys.some((k) => deliveryHasVerifiedProvider(k));
   const insufficient = d.data_sufficient === false;
   const banner = (needsCi || insufficient) && typeof renderOpsConnectBanner === "function"
-    ? renderOpsConnectBanner("Jenkins, GitHub Actions, or Buildkite", "JENKINS", "Sync CI/CD pipelines to populate DORA metrics from real build history.")
-    : (needsCi ? renderDeliveryConnectBanner("Jenkins, GitHub Actions, or Buildkite", "JENKINS") : "");
+    ? renderOpsConnectBanner("Jenkins, GitHub Actions, Drone, or Argo Workflows", "JENKINS", "Sync CI/CD pipelines to populate DORA metrics from real build history.")
+    : (needsCi ? renderDeliveryConnectBanner("Jenkins, GitHub Actions, Drone, or Argo Workflows", "JENKINS") : "");
   const insufficientCard = insufficient ? `
     <section class="card ops-data-insufficient" style="margin-bottom:12px;border-left:4px solid #d97706;">
       <strong style="color:#92400e;">Insufficient data</strong>
@@ -1285,7 +1290,7 @@ function renderDeliveryFreezeWindows() {
 
 function renderDeliveryRrAnalytics() {
   const a = state.dlvReleaseAnalytics || {};
-  const ciKeys = ["JENKINS", "GITHUB", "GITLAB", "CIRCLECI", "AZURE_DEVOPS", "BITBUCKET", "BUILDKITE", "HARNESS", "DRONE", "ARGO_WORKFLOWS"];
+  const ciKeys = DELIVERY_CI_KEYS;
   const needsCi = !ciKeys.some((k) => deliveryHasVerifiedProvider(k));
   const empty = !(a.total_releases || a.verification_passed || a.rollbacks);
   const banner = (needsCi || empty) && typeof renderOpsConnectBanner === "function"

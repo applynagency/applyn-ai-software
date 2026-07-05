@@ -164,6 +164,9 @@ run_smoke_tests() {
 
   log "Running P3 operational evidence smoke"
   node scripts/smoke-p3-pass.mjs
+
+  log "Running P4 catalog and federation smoke"
+  node scripts/smoke-p4-pass.mjs
 }
 
 enforce_coverage() {

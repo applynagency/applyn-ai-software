@@ -330,6 +330,13 @@ function renderRecommendedActionCard() {
     </section>`;
 }
 
+function opsOverviewConnectBanner() {
+  const integ = state.opsOverviewIntegrations;
+  const needs = integ && !integ.unavailable && Number(integ.connected || 0) === 0;
+  if (!needs || typeof renderOpsConnectBanner !== "function") return "";
+  return renderOpsConnectBanner("Integrations", null, "Connect cloud, CI/CD, and observability tools to populate this operations overview.");
+}
+
 function renderOperationsOverview() {
   if (!state.user) return renderAccessDeniedPage("Sign in required");
   const org = opsOverviewOrgLabel();
@@ -339,6 +346,7 @@ function renderOperationsOverview() {
       ${renderHeader("Operations overview", org)}
       ${renderAlerts()}
       <p class="muted">Read-only summary for <strong>${escapeHtml(org)}</strong>. No changes are made from this page.</p>
+      ${opsOverviewConnectBanner()}
       ${state.opsOverviewError ? `<section class="card" style="border-left:4px solid #dc2626;"><p class="muted">${escapeHtml(state.opsOverviewError)}</p></section>` : ""}
       ${rec}
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">

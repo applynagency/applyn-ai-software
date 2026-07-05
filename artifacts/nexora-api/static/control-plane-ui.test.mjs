@@ -19,3 +19,14 @@ test("platform engineering exposes live apply and destroy actions", () => {
   assert.match(source, /plan\/apply\/destroy/);
   assert.match(source, /peSubmitRun/);
 });
+
+test("incident response chunk shows connect banner when unconnected", () => {
+  const source = readFileSync(`${staticDir}/incident-response-ui.js`, "utf8");
+  assert.match(source, /irConnectBanner/);
+  assert.match(source, /PagerDuty or Slack/);
+});
+
+test("operations overview shows connect banner when no integrations", () => {
+  const source = readFileSync(`${staticDir}/operations-overview.js`, "utf8");
+  assert.match(source, /opsOverviewConnectBanner/);
+});

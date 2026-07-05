@@ -116,6 +116,7 @@ jobs:
           node scripts/smoke-lazy-routes.mjs
           node scripts/smoke-p0-p2-pass.mjs
           node scripts/smoke-p3-pass.mjs
+          node scripts/smoke-p4-pass.mjs
           npm install
           npx playwright install chromium --with-deps
           node scripts/smoke-phase1-ui.mjs

@@ -260,3 +260,10 @@ test("approval never calls execute endpoint", () => {
     assert.doesNotMatch(block, /\/execute/);
   }
 });
+
+test("delivery CI keys include Drone and Argo Workflows", () => {
+  const source = readSource("delivery.js");
+  assert.match(source, /DELIVERY_CI_KEYS/);
+  assert.match(source, /DRONE/);
+  assert.match(source, /ARGO_WORKFLOWS/);
+});

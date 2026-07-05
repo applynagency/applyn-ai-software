@@ -11,6 +11,17 @@ async function loadIncidentResponse() {
   try { state.irStatusPages = await api("/v1/incidents/status-pages"); } catch { state.irStatusPages = []; }
   try { state.irComms = await api("/v1/incidents/communications"); } catch { state.irComms = []; }
   try { state.irPostmortems = await api("/v1/postmortems?limit=50"); } catch { state.irPostmortems = null; }
+  try {
+    state.integrationConnections = await api("/v1/integrations/connections");
+  } catch { state.integrationConnections = state.integrationConnections || []; }
+}
+function irNeedsConnect() {
+  return typeof hasVerifiedIntegration === "function"
+    && !["PAGERDUTY", "SERVICENOW", "OPSGENIE", "SLACK", "MICROSOFT_TEAMS"].some((k) => hasVerifiedIntegration(k));
+}
+function irConnectBanner() {
+  if (!irNeedsConnect() || typeof renderOpsConnectBanner !== "function") return "";
+  return renderOpsConnectBanner("PagerDuty or Slack", "PAGERDUTY", "Connect incident and notification tools for on-call, escalation, and analytics.");
 }
 function renderIncidentResponse() {
   const page = state.route.page;
@@ -28,6 +39,7 @@ function renderIrDashboard() {
   return `<div class="container">
     ${renderHeader("Incident Response Platform", "On-call, escalation, status pages, and major incident management")}
     ${renderAlerts()}
+    ${irConnectBanner()}
     <section class="card"><div class="ops-stats">
       ${rdMetric("Open Incidents", a.open_incidents || 0)}
       ${rdMetric("MTTA (min)", a.mtta_minutes != null ? Math.round(a.mtta_minutes) : "—")}
@@ -48,6 +60,7 @@ function renderIrOncall() {
     `<div class="ops-list-row"><span>${escapeHtml(c.schedule_name || c.schedule_id)}</span><span class="muted">${escapeHtml(c.user_id || "unassigned")}</span></div>`
   ).join("");
   return `<div class="container">${renderHeader("On-call Dashboard", "Schedules, rotations, and overrides")}${renderAlerts()}
+    ${irConnectBanner()}
     <section class="card"><h2>Current On-call</h2><div class="ops-list">${current || `<p class="muted">No schedules configured.</p>`}</div></section>
   </div>`;
 }
@@ -107,6 +120,7 @@ function renderIrAnalytics() {
     `<div class="ops-list-row"><span>${escapeHtml(k)}</span><span>${v}</span></div>`
   ).join("");
   return `<div class="container">${renderHeader("Incident Analytics", "MTTR, MTTA, trends, and workload")}${renderAlerts()}
+    ${irConnectBanner()}
     <section class="card"><div class="ops-stats">
       ${rdMetric("MTTA", a.mtta_minutes != null ? `${Math.round(a.mtta_minutes)}m` : "—")}
       ${rdMetric("MTTR", a.mttr_minutes != null ? `${Math.round(a.mttr_minutes)}m` : "—")}
