@@ -143,6 +143,37 @@ async def _run_live(ptype: str, kind: str, target: str, *, config: dict) -> dict
             "sbom": parsed, "summary": {"components": parsed["component_count"]},
         }
 
+    if ptype == "CHECKMARX":
+        base = (config.get("base_url") or "").rstrip("/")
+        token = config.get("api_key") or config.get("api_token")
+        if base and token:
+            from app.delivery.pipelines.ci_http import get_json
+            try:
+                data = get_json(
+                    f"{base}/cxrestapi/projects",
+                    headers={"Authorization": f"Bearer {token}"},
+                    timeout=30.0,
+                )
+                projects = data if isinstance(data, list) else (data.get("projects") or [])
+                findings = [{
+                    "severity": "INFO",
+                    "title": f"Project: {p.get('name', p.get('id', 'project'))}",
+                    "recommendation": "Run full Checkmarx scan for SAST issue details",
+                    "source": "SAST",
+                } for p in projects[:10] if isinstance(p, dict)]
+                return {
+                    "kind": kind.upper(), "tool": "CHECKMARX", "target": target,
+                    "status": "COMPLETED",
+                    "findings": findings,
+                    "summary": {"total": len(findings), "projects": len(projects)},
+                }
+            except RuntimeError as exc:
+                return {
+                    "kind": kind.upper(), "tool": "CHECKMARX", "target": target,
+                    "status": "FAILED", "findings": [],
+                    "summary": {"total": 0}, "error": str(exc)[:200],
+                }
+
     if ptype == "SNYK":
         token = config.get("api_token") or config.get("token")
         org_id = config.get("org_id")

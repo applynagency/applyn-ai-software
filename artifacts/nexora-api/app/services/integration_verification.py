@@ -1165,6 +1165,22 @@ async def _verify_trivy(secret: dict) -> ProviderProbe:
     )
 
 
+async def _verify_checkmarx(secret: dict) -> ProviderProbe:
+    base = secret["base_url"].rstrip("/")
+    await _http_request(
+        "GET",
+        f"{base}/cxrestapi/auth/teams",
+        headers={"Authorization": f"Bearer {secret['api_key']}"},
+    )
+    return ProviderProbe(
+        identity={"base_url": base},
+        version=None,
+        permissions=["projects:read", "scans:read"],
+        warnings=[],
+        partial=False,
+    )
+
+
 _VERIFIERS = {
     "AWS": _verify_aws,
     "AZURE": _verify_azure,
@@ -1205,6 +1221,7 @@ _VERIFIERS = {
     "ARGO_WORKFLOWS": _verify_argo_workflows,
     "SNYK": _verify_snyk,
     "TRIVY": _verify_trivy,
+    "CHECKMARX": _verify_checkmarx,
 }
 
 

@@ -27,12 +27,17 @@ from app.schemas.billing import (
     LicenseIssueRequest,
     LicenseResponse,
     LicenseValidateRequest,
+    PaymentMethodListResponse,
     PlanCloneRequest,
     PlanCreate,
     PlanListResponse,
     PlanResponse,
     PlanUpdate,
     QuotaOverrideRequest,
+    StripeCheckoutRequest,
+    StripePortalRequest,
+    StripeSessionResponse,
+    StripeStatusResponse,
     SubscriptionResponse,
     SuspendRequest,
     UsageDashboardResponse,
@@ -159,6 +164,64 @@ async def list_invoices(
         offset=offset,
         limit=limit,
     )
+
+
+@router.get("/payment-methods", response_model=PaymentMethodListResponse)
+async def list_payment_methods(session: DBSession, ctx: OrgContextDep):
+    """Read-only payment methods — never returns full card numbers or tokens."""
+    org_id = _require_org_admin(ctx)
+    stripe = StripeProvider(session)
+    configured = stripe.configured
+    return PaymentMethodListResponse(
+        items=[],
+        stripe_configured=configured,
+        self_serve_enabled=configured,
+    )
+
+
+@router.get("/stripe/status", response_model=StripeStatusResponse)
+async def stripe_status(session: DBSession, ctx: OrgContextDep):
+    _require_org_admin(ctx)
+    stripe = StripeProvider(session)
+    return StripeStatusResponse(
+        configured=stripe.configured,
+        self_serve_enabled=stripe.configured,
+    )
+
+
+@router.post("/stripe/checkout", response_model=StripeSessionResponse)
+async def stripe_checkout(body: StripeCheckoutRequest, session: DBSession, ctx: OrgContextDep):
+    org_id = _require_org_admin(ctx)
+    stripe = StripeProvider(session)
+    sub_svc = SubscriptionService(session)
+    sub = await sub_svc.get_or_create(org_id)
+    plan_id = body.plan_id or sub.plan_id
+    plan = await PlanService(session).get(plan_id) if plan_id else None
+    result = await stripe.create_checkout_session(
+        organization_id=org_id,
+        email=ctx.user.email,
+        price_id=getattr(plan, "external_price_id", None) if plan else None,
+        success_url=body.success_url,
+        cancel_url=body.cancel_url,
+        subscription=sub,
+    )
+    await session.commit()
+    return StripeSessionResponse(**result)
+
+
+@router.post("/stripe/portal", response_model=StripeSessionResponse)
+async def stripe_portal(body: StripePortalRequest, session: DBSession, ctx: OrgContextDep):
+    org_id = _require_org_admin(ctx)
+    stripe = StripeProvider(session)
+    sub = await SubscriptionService(session).get_or_create(org_id)
+    result = await stripe.create_portal_session(
+        organization_id=org_id,
+        customer_id=sub.external_customer_id,
+        return_url=body.return_url,
+        subscription=sub,
+    )
+    await session.commit()
+    return StripeSessionResponse(**result)
 
 
 # --- Org-scoped webhook endpoint management ----------------------------------

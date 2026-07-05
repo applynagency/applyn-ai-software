@@ -4775,6 +4775,21 @@ function renderOpsConnectBanner(label, providerKey, message) {
   </div>`;
 }
 
+function renderStructuredEmptyState(opts) {
+  const o = opts || {};
+  const cta = o.ctaLabel && o.ctaHref
+    ? `<a class="btn btn-primary" href="${escapeHtml(o.ctaHref)}" data-nav="${escapeHtml(o.ctaHref)}">${escapeHtml(o.ctaLabel)}</a>`
+    : "";
+  const secondary = o.secondaryLabel && o.secondaryHref
+    ? `<a class="btn btn-secondary" href="${escapeHtml(o.secondaryHref)}" data-nav="${escapeHtml(o.secondaryHref)}">${escapeHtml(o.secondaryLabel)}</a>`
+    : "";
+  return `<div class="empty-state" role="status">
+    <h3>${escapeHtml(o.title || "Nothing here yet")}</h3>
+    <p class="muted">${escapeHtml(o.message || "Connect integrations or adjust filters to see data.")}</p>
+    ${cta || secondary ? `<div class="actions" style="justify-content:center;margin-top:12px;gap:8px;flex-wrap:wrap;">${cta}${secondary}</div>` : ""}
+  </div>`;
+}
+
 const OPS_FIDELITY_DOMAIN_KEYS = {
   observe: ["PROMETHEUS", "ALERTMANAGER", "DATADOG", "GRAFANA", "LOKI"],
   deliver: ["JENKINS", "GITHUB", "GITLAB", "CIRCLECI", "AZURE_DEVOPS", "BITBUCKET", "BUILDKITE", "HARNESS", "ARGOCD", "FLUX"],

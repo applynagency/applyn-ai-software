@@ -12,6 +12,10 @@ WRITE_CAPABILITIES = frozenset({
 K8S_WRITE_CAPS = frozenset({"rollout", "scale", "apply", "patch", "create", "update", "delete"})
 K8S_READ_ONLY_INDICATORS = frozenset({"read_only", "readonly", "get", "list", "watch"})
 
+ENTERPRISE_MUTATION_PROVIDERS = frozenset({
+    "SERVICENOW", "SPLUNK", "SENTRY", "PAGERDUTY", "JIRA", "OPSGENIE",
+})
+
 
 def build_capability_matrix(provider_type: str, permissions: list[str]) -> dict[str, bool]:
     perms = {p.lower() for p in permissions}
@@ -53,6 +57,8 @@ def build_capability_matrix(provider_type: str, permissions: list[str]) -> dict[
         # Namespace-scoped scale RBAC does not grant delivery/deploy semantics.
         if matrix["write"] and not any(p.startswith("deploy:") for p in perms):
             matrix["deploy"] = False
+    if provider_type.upper() in ENTERPRISE_MUTATION_PROVIDERS and perms:
+        matrix["write"] = True
     return matrix
 
 

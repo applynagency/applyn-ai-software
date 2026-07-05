@@ -74,26 +74,58 @@ async def test_enterprise_mutate_unsupported_action(client):
         json={"integration_key": "SPLUNK", "credentials": {"endpoint": "https://spl.example", "token": "tok"}},
     )).json()
 
-    async def _fake_resolve(*_args, **_kwargs):
-        return None, {"endpoint": "https://spl.example", "token": "tok"}
-
-    with patch(
-        "app.api.v1.integration.SecretManagerService.resolve_secret",
-        new_callable=AsyncMock,
-        side_effect=_fake_resolve,
-    ):
-        with patch(
-            "app.api.v1.integration.mutate_provider",
-            return_value={"status": "failed", "reason": "unsupported_action:bad"},
-        ):
-            r = await client.post(
-                f"/v1/integrations/connections/{conn['id']}/mutate",
-                headers=H(token),
-                json={"action": "bad", "resource_id": "x"},
-            )
+    r = await client.post(
+        f"/v1/integrations/connections/{conn['id']}/mutate",
+        headers=H(token),
+        json={"action": "bad", "resource_id": "x"},
+    )
 
     assert r.status_code == 200
     assert r.json()["status"] == "failed"
+    assert "unsupported_action" in r.json()["reason"]
+
+
+@pytest.mark.asyncio
+async def test_enterprise_mutate_blocked_without_simulation(client):
+    _, t = await create_authenticated_user(client, email="ent3b@e.com", username="ent3b")
+    token = t["access_token"]
+    conn = (await client.post(
+        "/v1/integrations/connect",
+        headers=H(token),
+        json={"integration_key": "SPLUNK", "credentials": {"endpoint": "https://spl.example", "token": "tok"}},
+    )).json()
+
+    r = await client.post(
+        f"/v1/integrations/connections/{conn['id']}/mutate",
+        headers=H(token),
+        json={"action": "trigger_search", "resource_id": "my-search"},
+    )
+
+    assert r.status_code == 400
+    body = r.json()
+    assert "integration_readiness" in (body.get("details") or body.get("detail") or str(body))
+
+
+@pytest.mark.asyncio
+async def test_enterprise_mutate_explicit_simulation(client):
+    _, t = await create_authenticated_user(client, email="ent3c@e.com", username="ent3c")
+    token = t["access_token"]
+    conn = (await client.post(
+        "/v1/integrations/connect",
+        headers=H(token),
+        json={"integration_key": "SPLUNK", "credentials": {"endpoint": "https://spl.example", "token": "tok"}},
+    )).json()
+
+    r = await client.post(
+        f"/v1/integrations/connections/{conn['id']}/mutate",
+        headers=H(token),
+        json={"action": "trigger_search", "resource_id": "my-search", "explicit_simulation": True},
+    )
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "simulated"
+    assert body.get("simulated") is True
 
 
 @pytest.mark.asyncio

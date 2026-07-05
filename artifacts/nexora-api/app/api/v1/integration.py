@@ -30,7 +30,8 @@ from app.services.integration_marketplace import IntegrationMarketplaceService
 from app.services.integration_sync import IntegrationSyncService
 from app.repositories.integration import IntegrationConnectionRepository
 from app.security.secrets import SecretManagerService
-from app.services.enterprise_enrichment import mutate_provider, summarize_provider
+from app.services.enterprise_enrichment import summarize_provider
+from app.services.enterprise_mutation import EnterpriseMutationService
 from app.core.exceptions import ForbiddenError, NotFoundError
 from app.tenancy.permissions import can_write_resources
 
@@ -297,22 +298,13 @@ async def mutate_integration_connection(
     """Scoped write actions for enterprise connectors (acknowledge, resolve)."""
     if not can_write_resources(org_context.role) and not current_user.is_superuser:
         raise ForbiddenError("Insufficient permissions")
-    organization_id = org_context.requires_organization
-    repos = IntegrationConnectionRepository(session)
-    secrets = SecretManagerService(session)
-    conn = await repos.get_for_org(connection_id, organization_id)
-    if not conn:
-        raise NotFoundError("IntegrationConnection", connection_id)
-    if not conn.credential_id:
-        return {"status": "failed", "reason": "no_credential"}
-    _, secret = await secrets.resolve_secret(
-        conn.credential_id, user=current_user, org_context=org_context,
-        reason=f"integration mutate:{payload.action}",
-    )
-    return mutate_provider(
-        conn.integration_key or "",
-        secret,
-        payload.action,
-        payload.resource_id,
+    return await EnterpriseMutationService(session).mutate(
+        user=current_user,
+        org_context=org_context,
+        connection_id=connection_id,
+        action=payload.action,
+        resource_id=payload.resource_id,
         note=payload.note,
+        explicit_simulation=payload.explicit_simulation,
+        idempotency_key=payload.idempotency_key,
     )

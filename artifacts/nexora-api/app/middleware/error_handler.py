@@ -36,9 +36,12 @@ async def nexora_exception_handler(request: Request, exc: NexoraException) -> JS
         status_code=exc.status_code,
         message=exc.message,
     )
+    content: dict = {"detail": message, "error_type": type(exc).__name__}
+    if exc.details:
+        content["details"] = exc.details
     return JSONResponse(
         status_code=exc.status_code,
-        content={"detail": message, "error_type": type(exc).__name__},
+        content=content,
     )
 
 

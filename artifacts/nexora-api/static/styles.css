@@ -4616,3 +4616,41 @@ h3 {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
 }
+
+/* P1+ responsive data tables (incidents, billing, alerts) */
+.responsive-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .responsive-table-wrap .incidents-table-grid,
+  .responsive-table-wrap .billing-invoice-grid,
+  .responsive-table-wrap .billing-payment-grid {
+    min-width: 640px;
+  }
+
+  .responsive-table-wrap .table-row.table-head {
+    position: sticky;
+    top: 0;
+    background: var(--card, #fff);
+    z-index: 1;
+  }
+
+  .alerts-mobile-list .ops-list-row {
+    padding: 12px 10px;
+  }
+
+  .delivery-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .empty-state {
+    padding: 20px 16px;
+    text-align: center;
+  }
+
+  .empty-state h3 {
+    font-size: 1.05rem;
+  }
+}

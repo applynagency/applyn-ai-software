@@ -10,6 +10,26 @@ test("control plane loads federation summary API", () => {
   assert.match(source, /\/v1\/control-plane\/federation/);
   assert.match(source, /renderCpFederationCard/);
   assert.match(source, /Cross-cluster federation/);
+  assert.match(source, /dr_readiness/);
+  assert.match(source, /recommended_actions/);
+});
+
+test("delivery overview shows connect and fidelity banners", () => {
+  const source = readFileSync(`${staticDir}/delivery.js`, "utf8");
+  assert.match(source, /renderDeliveryOverviewBanners/);
+  assert.match(source, /renderOpsDataFidelityBadge/);
+  assert.match(source, /DLV_EMPTY_OPTS/);
+});
+
+test("app exposes structured empty state helper", () => {
+  const source = readFileSync(`${staticDir}/app.js`, "utf8");
+  assert.match(source, /function renderStructuredEmptyState/);
+});
+
+test("billing supports Stripe self-serve when configured", () => {
+  const source = readFileSync(`${staticDir}/billing.js`, "utf8");
+  assert.match(source, /\/v1\/billing\/stripe\/status/);
+  assert.match(source, /data-billing-stripe-portal/);
 });
 
 test("platform engineering exposes live apply and destroy actions", () => {

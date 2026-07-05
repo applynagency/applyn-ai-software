@@ -135,6 +135,90 @@ class StripeProvider(BillingProvider):
             resp.raise_for_status()
             return resp.json()["id"]
 
+    async def create_checkout_session(
+        self,
+        *,
+        organization_id: str,
+        email: str | None,
+        price_id: str | None,
+        success_url: str | None,
+        cancel_url: str | None,
+        subscription,
+    ) -> dict:
+        if not self.configured:
+            return {
+                "url": None,
+                "stub": True,
+                "message": "Stripe is not configured on this deployment.",
+            }
+        customer_id = getattr(subscription, "external_customer_id", None)
+        if not customer_id:
+            customer_id = await self.create_customer(organization_id, email)
+            subscription.external_customer_id = customer_id
+            subscription.provider = BillingProviderType.STRIPE.value
+            self.session.add(subscription)
+            await self.session.flush()
+        if not price_id:
+            return {
+                "url": None,
+                "stub": True,
+                "message": "Selected plan has no Stripe price id — assign external_price_id on the plan.",
+            }
+        import httpx
+
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            resp = await client.post(
+                "https://api.stripe.com/v1/checkout/sessions",
+                headers={"Authorization": f"Bearer {settings.STRIPE_API_KEY}"},
+                data={
+                    "mode": "subscription",
+                    "customer": customer_id,
+                    "success_url": success_url or "https://example.com/billing/success",
+                    "cancel_url": cancel_url or "https://example.com/billing",
+                    "line_items[0][price]": price_id,
+                    "line_items[0][quantity]": "1",
+                    "metadata[organization_id]": organization_id,
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return {"url": data.get("url"), "stub": False, "message": None}
+
+    async def create_portal_session(
+        self,
+        *,
+        organization_id: str,
+        customer_id: str | None,
+        return_url: str | None,
+        subscription,
+    ) -> dict:
+        if not self.configured:
+            return {
+                "url": None,
+                "stub": True,
+                "message": "Stripe is not configured on this deployment.",
+            }
+        if not customer_id:
+            customer_id = await self.create_customer(organization_id, None)
+            subscription.external_customer_id = customer_id
+            subscription.provider = BillingProviderType.STRIPE.value
+            self.session.add(subscription)
+            await self.session.flush()
+        import httpx
+
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            resp = await client.post(
+                "https://api.stripe.com/v1/billing_portal/sessions",
+                headers={"Authorization": f"Bearer {settings.STRIPE_API_KEY}"},
+                data={
+                    "customer": customer_id,
+                    "return_url": return_url or "https://example.com/billing",
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return {"url": data.get("url"), "stub": False, "message": None}
+
     @staticmethod
     def verify_webhook_signature(payload: bytes, signature: str) -> bool:
         """Verify a Stripe webhook signature (HMAC-SHA256 of the payload).

@@ -96,6 +96,7 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     "ARGO_WORKFLOWS": ["endpoint", "token"],
     "SNYK": ["api_token", "org_id"],
     "TRIVY": ["endpoint"],
+    "CHECKMARX": ["base_url", "api_key"],
 }
 
 # Field names that must NEVER be logged or surfaced anywhere.

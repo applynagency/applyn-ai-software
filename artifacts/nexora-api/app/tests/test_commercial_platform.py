@@ -317,6 +317,39 @@ def test_stripe_stub_signature_accepts_without_secret():
     assert StripeProvider.verify_webhook_signature(b"{}", "") is True
 
 
+@pytest.mark.asyncio
+async def test_stripe_status_and_self_serve_stub(client):
+    from app.tests.conftest import auth_headers, create_authenticated_user, create_organization
+
+    _, tokens = await create_authenticated_user(client, email="stripe-st@e.com", username="stripe_st")
+    await create_organization(client, tokens["access_token"], name="Stripe ST Org", slug="stripe-st-org")
+    r = await client.get("/v1/billing/stripe/status", headers=auth_headers(tokens["access_token"]))
+    assert r.status_code == 200
+    body = r.json()
+    assert body["configured"] is False
+    assert body["self_serve_enabled"] is False
+
+    checkout = await client.post(
+        "/v1/billing/stripe/checkout",
+        headers=auth_headers(tokens["access_token"]),
+        json={"success_url": "http://localhost/billing", "cancel_url": "http://localhost/billing"},
+    )
+    assert checkout.status_code == 200
+    assert checkout.json().get("stub") is True
+
+    portal = await client.post(
+        "/v1/billing/stripe/portal",
+        headers=auth_headers(tokens["access_token"]),
+        json={"return_url": "http://localhost/billing"},
+    )
+    assert portal.status_code == 200
+    assert portal.json().get("stub") is True
+
+    pm = await client.get("/v1/billing/payment-methods", headers=auth_headers(tokens["access_token"]))
+    assert pm.status_code == 200
+    assert pm.json()["stripe_configured"] is False
+
+
 # --- Webhooks ----------------------------------------------------------------
 async def test_webhook_outbox_records_event(setup_db):
     async with AsyncSessionLocal() as session:

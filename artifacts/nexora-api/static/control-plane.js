@@ -52,15 +52,19 @@ function renderCpFederationCard() {
       <span><strong>${escapeHtml(c.name)}</strong> <span class="muted">${escapeHtml(c.distribution)}</span></span>
       <span class="muted" style="font-size:11px;">${c.node_count} nodes · ${c.namespace_count} ns · ${escapeHtml(c.health || "—")}</span>
     </div>`).join("");
+  const dr = f.dr_readiness || {};
+  const actions = (f.recommended_actions || []).map((a) => `<li class="muted" style="font-size:12px;">${escapeHtml(a)}</li>`).join("");
   return `<section class="card" style="margin-bottom:12px;border-left:3px solid #2563eb;">
     <h2>Cross-cluster federation</h2>
-    <p class="muted" style="font-size:12px;margin:0 0 8px;">Mode: <strong>${escapeHtml(f.federation_mode || "inventory_aggregate")}</strong> · DR orchestration: ${escapeHtml(f.dr_orchestration || "roadmap")}</p>
+    <p class="muted" style="font-size:12px;margin:0 0 8px;">Mode: <strong>${escapeHtml(f.federation_mode || "inventory_aggregate")}</strong> · DR: <strong>${escapeHtml(f.dr_orchestration || "inventory_aggregate")}</strong></p>
     <div class="ops-stats" style="margin-bottom:10px;">
       ${rdMetric("Clusters", f.cluster_count || 0)}
       ${rdMetric("Cloud Accounts", f.cloud_account_count || 0)}
       ${rdMetric("Inventory", f.inventory_count || 0)}
-      ${rdMetric("Providers", (f.providers || []).length)}
+      ${rdMetric("Healthy", dr.healthy_clusters ?? "—")}
     </div>
+    ${dr.multi_cluster ? `<p class="muted" style="font-size:11px;">Multi-cluster: yes · Multi-region: ${dr.multi_region ? "yes" : "no"} · Failover candidates: ${dr.failover_candidates ?? 0}</p>` : ""}
+    ${actions ? `<ul style="margin:8px 0 0;padding-left:18px;">${actions}</ul>` : ""}
     <div class="ops-list">${clusterRows || `<p class="muted">Register clusters to build a cross-cluster inventory view.</p>`}</div>
   </section>`;
 }
@@ -109,7 +113,7 @@ function renderControlPlaneOverview() {
           <a class="btn btn-secondary" href="/control-plane/inventory">Inventory</a>
           <a class="btn btn-secondary" href="/control-plane/operations">Operations</a>
         </div>
-        <p class="muted" style="font-size:12px;margin-top:12px;">Per-org cluster inventory is supported today. Cross-cluster federation and disaster-recovery orchestration are on the roadmap — register each cluster separately for now.</p>
+        <p class="muted" style="font-size:12px;margin-top:12px;">Per-org cluster inventory is supported today. With two or more clusters, Nexora surfaces advisory DR readiness (multi-region, healthy failover candidates). Automated failover orchestration is not executed from this UI.</p>
       </section>
       ${renderCpFederationCard()}
     </div>`;

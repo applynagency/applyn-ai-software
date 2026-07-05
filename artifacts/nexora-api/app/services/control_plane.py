@@ -445,7 +445,7 @@ class ControlPlaneService:
         return items
 
     async def federation_summary(self, user: User, org_context: OrgContext) -> dict:
-        """Cross-cluster inventory aggregate — federation orchestration remains roadmap."""
+        """Cross-cluster inventory aggregate with advisory DR readiness signals."""
         organization_id = org_context.requires_organization
         self._ensure_read(user, org_context)
         clusters = await self.clusters.list_for_org(organization_id)
@@ -455,13 +455,36 @@ class ControlPlaneService:
             *(a.provider for a in accounts if a.provider),
             *(c.distribution for c in clusters if c.distribution),
         })
+        regions = {
+            *(getattr(a, "region", None) for a in accounts if getattr(a, "region", None)),
+            *(getattr(c, "region", None) for c in clusters if getattr(c, "region", None)),
+        }
+        healthy = sum(1 for c in clusters if str(c.health or "").upper() in {"HEALTHY", "OK", "CONNECTED"})
+        dr_readiness = {
+            "multi_cluster": len(clusters) >= 2,
+            "multi_region": len(regions) >= 2,
+            "healthy_clusters": healthy,
+            "cloud_accounts": len(accounts),
+            "inventory_items": len(inventory),
+            "failover_candidates": healthy if len(clusters) >= 2 else 0,
+        }
+        dr_mode = "advisory_inventory" if len(clusters) >= 2 else "inventory_aggregate"
+        recommended: list[str] = []
+        if len(clusters) < 2:
+            recommended.append("Register a secondary cluster to enable cross-cluster DR inventory.")
+        if len(regions) < 2:
+            recommended.append("Add cloud accounts or clusters in a second region for geographic redundancy.")
+        if healthy < len(clusters) and clusters:
+            recommended.append("Resolve unhealthy cluster connectivity before relying on failover inventory.")
         return {
             "cluster_count": len(clusters),
             "cloud_account_count": len(accounts),
             "inventory_count": len(inventory),
             "providers": providers,
             "federation_mode": "inventory_aggregate",
-            "dr_orchestration": "roadmap",
+            "dr_orchestration": dr_mode,
+            "dr_readiness": dr_readiness,
+            "recommended_actions": recommended,
             "clusters": [
                 {
                     "id": c.id,

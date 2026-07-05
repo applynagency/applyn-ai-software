@@ -190,14 +190,16 @@ async function loadBillingRouteData() {
   const page = state.route.page;
   try {
     if (page === "billing" || page === "billing-subscription") {
-      const [subscription, usage, plans] = await Promise.all([
+      const [subscription, usage, plans, stripeStatus] = await Promise.all([
         api("/v1/billing/subscription"),
         api("/v1/billing/usage"),
         api("/v1/billing/plans").catch(() => ({ items: [] })),
+        api("/v1/billing/stripe/status").catch(() => ({ configured: false, self_serve_enabled: false })),
       ]);
       state.billingSubscription = subscription;
       state.billingUsage = usage;
       state.billingPlans = plans.items || [];
+      state.billingStripeSelfServe = Boolean(stripeStatus.self_serve_enabled);
       state.billingError = null;
     }
     if (page === "billing-invoices") {
@@ -213,6 +215,12 @@ async function loadBillingRouteData() {
     }
     if (page === "billing-payment-methods") {
       state.billingPaymentMethodsCapability = await probeBillingPaymentMethodsApi();
+      try {
+        const stripeStatus = await api("/v1/billing/stripe/status");
+        state.billingStripeSelfServe = Boolean(stripeStatus.self_serve_enabled);
+      } catch {
+        state.billingStripeSelfServe = false;
+      }
       if (state.billingPaymentMethodsCapability) {
         const data = await api("/v1/billing/payment-methods");
         const items = data.items || data.payment_methods || [];
@@ -280,7 +288,11 @@ function renderBillingSubscriptionCard() {
           ${renewal ? `<div><dt>Renewal date</dt><dd>${formatDate(renewal)}</dd></div>` : ""}
           ${seatsMetric ? `<div><dt>Seats (users)</dt><dd>${escapeHtml(String(seatsMetric.used ?? 0))} / ${seatsMetric.limit === -1 ? "∞" : escapeHtml(String(seatsMetric.limit ?? "—"))}</dd></div>` : ""}
         </dl>
-        <p class="muted" style="font-size:12px;margin-top:12px;">Plan changes and cancellation are not available in this release.</p>
+        <p class="muted" style="font-size:12px;margin-top:12px;">${state.billingStripeSelfServe ? "Manage your subscription and payment methods via Stripe." : "Plan changes and cancellation are not available in this release."}</p>
+        ${state.billingStripeSelfServe ? `<div class="actions" style="margin-top:12px;flex-wrap:wrap;gap:8px;">
+          <button type="button" class="btn btn-primary" data-billing-stripe-portal>Manage billing</button>
+          ${plan?.external_price_id || (plan && plan.price_cents > 0) ? `<button type="button" class="btn btn-secondary" data-billing-stripe-checkout>Upgrade / change plan</button>` : ""}
+        </div>` : ""}
         ${renderBillingUsageLimits(usage)}
       `}
     </section>`;
@@ -359,8 +371,16 @@ function renderBillingInvoices() {
     `<section class="card">
       <p class="muted">Read-only invoice list. Provider identifiers and payment payloads are never shown.</p>
       ${renderBillingInvoiceFilters()}
-      ${state.billingLoading ? `<p class="muted">Loading invoices…</p>` : invoices.length === 0 ? `<p class="muted">No invoices found.</p>` : `
-        <div class="table-grid" style="grid-template-columns:repeat(6,minmax(0,1fr));">
+      ${state.billingLoading ? `<p class="muted">Loading invoices…</p>` : invoices.length === 0 ? (typeof renderStructuredEmptyState === "function"
+        ? renderStructuredEmptyState({
+          title: "No invoices yet",
+          message: "Invoices appear here after your first billing cycle.",
+          ctaLabel: "View subscription",
+          ctaHref: "/billing/subscription",
+        })
+        : `<p class="muted">No invoices found.</p>`) : `
+        <div class="responsive-table-wrap">
+        <div class="table-grid billing-invoice-grid" style="grid-template-columns:repeat(6,minmax(0,1fr));">
           <div class="table-row table-head">
             <div>Date</div><div>Invoice #</div><div>Amount</div><div>Status</div><div>Due</div><div>Paid</div>
           </div>
@@ -374,6 +394,7 @@ function renderBillingInvoices() {
               <div>${formatDate(inv.paid_at)}</div>
             </div>
           `).join("")}
+        </div>
         </div>
         ${renderBillingInvoicePagination()}
       `}
@@ -397,8 +418,18 @@ function renderBillingPaymentMethods() {
     "Read-only payment methods",
     `<section class="card">
       <p class="muted">Read-only list. Full card numbers, CVV, and provider tokens are never shown.</p>
-      ${state.billingLoading ? `<p class="muted">Loading…</p>` : methods.length === 0 ? `<p class="muted">No payment methods on file.</p>` : `
-        <div class="table-grid">
+      ${state.billingLoading ? `<p class="muted">Loading…</p>` : methods.length === 0 ? (typeof renderStructuredEmptyState === "function"
+        ? renderStructuredEmptyState({
+          title: "No payment methods",
+          message: state.billingStripeSelfServe
+            ? "Add a payment method via Stripe customer portal."
+            : "Payment method management is not enabled on this deployment.",
+          ctaLabel: state.billingStripeSelfServe ? "Manage billing" : null,
+          ctaHref: state.billingStripeSelfServe ? "/billing/subscription" : null,
+        })
+        : `<p class="muted">No payment methods on file.</p>`) : `
+        <div class="responsive-table-wrap">
+        <div class="table-grid billing-payment-grid">
           <div class="table-row table-head"><div>Brand</div><div>Last 4</div><div>Expires</div><div>Default</div></div>
           ${methods.map((pm) => `
             <div class="table-row">
@@ -409,13 +440,62 @@ function renderBillingPaymentMethods() {
             </div>
           `).join("")}
         </div>
+        </div>
       `}
-      <p class="muted" style="font-size:12px;margin-top:12px;">Adding or updating payment methods is not available in this release.</p>
+      <p class="muted" style="font-size:12px;margin-top:12px;">${state.billingStripeSelfServe ? "Update payment methods via Stripe customer portal." : "Adding or updating payment methods is not available in this release."}</p>
+      ${state.billingStripeSelfServe ? `<div class="actions" style="margin-top:8px;"><button type="button" class="btn btn-primary" data-billing-stripe-portal>Manage payment methods</button></div>` : ""}
     </section>`,
   );
 }
 
 function bindBillingEvents() {
+  document.querySelectorAll("[data-billing-stripe-portal]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      state.error = null;
+      try {
+        const res = await api("/v1/billing/stripe/portal", {
+          method: "POST",
+          body: { return_url: `${window.location.origin}/billing/subscription` },
+        });
+        if (res.url) window.location.href = res.url;
+        else state.message = res.message || "Stripe portal unavailable in stub mode.";
+        render();
+      } catch (error) {
+        state.error = sanitizeBillingError(error.message);
+        render();
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+  document.querySelectorAll("[data-billing-stripe-checkout]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const plan = state.billingUsage?.plan || planForSubscription(state.billingSubscription, state.billingPlans);
+      if (!plan?.id && !window.confirm("Start Stripe checkout for the current plan?")) return;
+      btn.disabled = true;
+      state.error = null;
+      try {
+        const res = await api("/v1/billing/stripe/checkout", {
+          method: "POST",
+          body: {
+            plan_id: plan?.id,
+            success_url: `${window.location.origin}/billing/subscription`,
+            cancel_url: `${window.location.origin}/billing`,
+          },
+        });
+        if (res.url) window.location.href = res.url;
+        else state.message = res.message || "Stripe checkout unavailable in stub mode.";
+        render();
+      } catch (error) {
+        state.error = sanitizeBillingError(error.message);
+        render();
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+
   document.getElementById("billing-invoice-filters")?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(event.target);

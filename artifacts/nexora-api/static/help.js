@@ -633,7 +633,7 @@ function renderHelpGettingStarted() {
   const roadmapHtml = `
     <section class="help-section card" style="margin-top:16px;">
       <h3>Integration roadmap</h3>
-      <p class="muted">39 integrations ship today with live pipeline sync (Harness, Buildkite, Drone, Argo Workflows), Flux GitOps, Snyk/Trivy security scans, trace waterfall explorer, Terraform Cloud apply/destroy, and enterprise write-back.</p>
+      <p class="muted">40 integrations ship today with live pipeline sync (Harness, Buildkite, Drone, Argo Workflows), Flux GitOps, Snyk/Trivy/Checkmarx security scans, trace waterfall explorer, Terraform Cloud apply/destroy, and enterprise write-back.</p>
       <ul class="muted" style="margin:8px 0 0;padding-left:20px;">
         <li>Checkmarx and additional SAST/DAST vendors (roadmap)</li>
         <li>Multi-cluster DR orchestration beyond inventory aggregate (roadmap)</li>

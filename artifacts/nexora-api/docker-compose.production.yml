@@ -1,0 +1,14 @@
+# Production deployment overlay — enables operational background loops.
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.production.yml up -d
+
+services:
+  api:
+    environment:
+      - ENVIRONMENT=production
+      - MONITORING_ENABLED=true
+      - MONITORING_INTERVAL_SECONDS=60
+      - WORKFLOW_SCHEDULER_ENABLED=true
+      - WORKFLOW_SCHEDULER_INTERVAL_SECONDS=60
+      - INTEGRATION_READINESS_ENABLED=true
+      - ESCALATION_ENABLED=true

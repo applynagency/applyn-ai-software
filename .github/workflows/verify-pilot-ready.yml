@@ -1,0 +1,62 @@
+name: Verify Pilot Ready
+
+on:
+  workflow_dispatch:
+    inputs:
+      smoke_base_url:
+        description: Staging API base URL (e.g. https://staging.example.com/nexora-api)
+        required: true
+        type: string
+      ui_base_url:
+        description: Staging UI base URL (e.g. https://staging.example.com)
+        required: true
+        type: string
+
+defaults:
+  run:
+    working-directory: artifacts/nexora-api
+
+jobs:
+  pilot-ready-smoke:
+    runs-on: ubuntu-latest
+    env:
+      SMOKE_BASE_URL: ${{ inputs.smoke_base_url }}
+      NEXORA_UI_BASE: ${{ inputs.ui_base_url }}
+      PILOT_READY_SMOKE: "1"
+      SMOKE_ALLOW_AGENT_FAILURE: "0"
+      NEXORA_EMAIL: ${{ secrets.PILOT_SMOKE_EMAIL }}
+      NEXORA_PASSWORD: ${{ secrets.PILOT_SMOKE_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run pilot-ready API smoke (strict)
+        run: |
+          node scripts/smoke-p0-p2-pass.mjs
+          node scripts/smoke-p3-pass.mjs
+          node scripts/smoke-p4-pass.mjs
+
+      - name: Run Playwright UI smoke
+        run: |
+          npx playwright install chromium --with-deps
+          node scripts/smoke-phase1-ui.mjs
+
+      - name: Upload smoke results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot-ready-smoke-results
+          path: |
+            artifacts/nexora-api/scripts/smoke-p0-p2-results.json
+            artifacts/nexora-api/scripts/smoke-p3-results.json
+            artifacts/nexora-api/scripts/smoke-p4-results.json
+            artifacts/nexora-api/scripts/smoke-phase1-ui-results.json

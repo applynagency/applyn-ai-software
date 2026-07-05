@@ -384,10 +384,21 @@ function renderIncidentsList() {
       <p class="muted" style="font-size:12px;"><a href="/alerts" data-nav="/alerts">Alerts</a> · <a href="/copilot" data-nav="/copilot">AI Copilot</a> · <a href="/incidents/on-call" data-nav="/incidents/on-call">On-call</a></p>
       ${renderIncidentListFilters()}
       <section class="card">
-        ${items.length === 0 ? `<p class="muted">No incidents match your filters.</p>` : `
-        <div class="table-grid" style="margin-top:8px;">
+        ${items.length === 0 ? (typeof renderStructuredEmptyState === "function"
+          ? renderStructuredEmptyState({
+            title: "No incidents match",
+            message: "Adjust filters or connect incident management tools to ingest alerts.",
+            ctaLabel: "Connect PagerDuty",
+            ctaHref: "/integrations/onboarding?provider=PAGERDUTY",
+            secondaryLabel: "View alerts",
+            secondaryHref: "/alerts",
+          })
+          : `<p class="muted">No incidents match your filters.</p>`) : `
+        <div class="responsive-table-wrap">
+        <div class="table-grid incidents-table-grid" style="margin-top:8px;">
           <div class="table-row table-head"><div>Title</div><div>Status</div><div>Service</div><div>Assignee</div><div>Created</div><div>Alerts</div><div></div></div>
           ${rows}
+        </div>
         </div>`}
         <div class="actions" style="margin-top:12px;">
           ${offset > 0 ? `<button class="btn btn-secondary btn-sm" type="button" data-incident-page="${offset - limit}">Previous</button>` : ""}
@@ -750,7 +761,15 @@ function renderAlertsList() {
         <span class="muted" style="font-size:12px;">Background monitoring runs every ~60s when MONITORING_ENABLED=true.</span>
       </p>
       <section class="card">
-        ${items.length === 0 ? `<p class="muted">No alerts ingested yet. Connect tools and poll, or enable background monitoring.</p>` : `
+        ${items.length === 0 ? (typeof renderStructuredEmptyState === "function"
+          ? renderStructuredEmptyState({
+            title: "No alerts ingested",
+            message: "Connect Prometheus or Alertmanager, then poll providers or enable background monitoring.",
+            ctaLabel: "Connect Prometheus",
+            ctaHref: "/integrations/onboarding?provider=PROMETHEUS",
+          })
+          : `<p class="muted">No alerts ingested yet. Connect tools and poll, or enable background monitoring.</p>`) : `
+        <div class="responsive-table-wrap alerts-mobile-list">
         <div class="ops-list">${items.map((a) => {
           const open = selectedId === a.id;
           const labels = a.labels && typeof a.labels === "object" ? Object.entries(a.labels).slice(0, 6) : [];
@@ -770,7 +789,8 @@ function renderAlertsList() {
             </div>` : `<div style="margin-top:4px;">${a.incident_id ? `<a href="/incidents/${encodeURIComponent(a.incident_id)}" data-nav="/incidents/${encodeURIComponent(a.incident_id)}" style="font-size:12px;">View incident →</a>` : (canWriteResources() ? `<button type="button" class="btn btn-secondary btn-sm" data-alert-investigate="${escapeHtml(a.id)}" style="font-size:12px;">Investigate</button>` : `<span class="muted" style="font-size:12px;">No incident</span>`)}
             <button type="button" class="btn btn-secondary btn-sm" data-alert-select="${escapeHtml(a.id)}" style="font-size:11px;margin-left:6px;">Details</button></div>`}
           </div>`;
-        }).join("")}</div>`}
+        }).join("")}</div>
+        </div>`}
       </section>
       ${selected && !selectedId ? "" : ""}
     </div>`;

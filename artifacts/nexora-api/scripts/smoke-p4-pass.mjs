@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * P4 smoke — post-ship polish: 39-integrations catalog, federation, delivery CI keys.
+ * P4 smoke — post-ship polish: 40-integrations catalog, federation, delivery CI keys.
  */
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -53,10 +53,10 @@ async function main() {
 
   const catalog = await api("/v1/integrations/catalog", { token });
   const count = catalog.json?.integrations?.length;
-  record("p4_integration_catalog_39", count === 39 ? "PASS" : "FAIL", `count=${count ?? "?"}`);
+  record("p4_integration_catalog_40", count === 40 ? "PASS" : "FAIL", `count=${count ?? "?"}`);
 
   const keys = new Set((catalog.json?.integrations || []).map((i) => i.integration_key));
-  for (const key of ["DRONE", "ARGO_WORKFLOWS", "SNYK", "TRIVY"]) {
+  for (const key of ["DRONE", "ARGO_WORKFLOWS", "SNYK", "TRIVY", "CHECKMARX"]) {
     record(`p4_catalog_${key}`, keys.has(key) ? "PASS" : "FAIL", keys.has(key) ? "present" : "missing");
   }
 

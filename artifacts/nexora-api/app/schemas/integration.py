@@ -150,3 +150,5 @@ class EnterpriseMutateRequest(BaseModel):
     action: str
     resource_id: str
     note: str = ""
+    explicit_simulation: bool = False
+    idempotency_key: str | None = None

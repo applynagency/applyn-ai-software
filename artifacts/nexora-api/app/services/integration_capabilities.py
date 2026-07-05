@@ -12,7 +12,7 @@ PIPELINE_INTEGRATION_KEYS = frozenset({
     "BUILDKITE", "HARNESS", "DRONE", "ARGO_WORKFLOWS",
 })
 
-SECURITY_SCAN_INTEGRATION_KEYS = frozenset({"SONARQUBE", "SNYK", "TRIVY"})
+SECURITY_SCAN_INTEGRATION_KEYS = frozenset({"SONARQUBE", "SNYK", "TRIVY", "CHECKMARX"})
 
 GITOPS_INTEGRATION_KEYS = frozenset({"ARGOCD", "FLUX"})
 
@@ -211,6 +211,11 @@ INTEGRATION_VALUE: dict[str, dict] = {
         "unlocks_now": ["Live verify", "Scanner endpoint check"],
         "unlocks_live": ["Container & filesystem scans", "SBOM inventory"],
         "pages": ["/security", "/security/sbom"],
+    },
+    "CHECKMARX": {
+        "unlocks_now": ["Live verify", "Project discovery"],
+        "unlocks_live": ["SAST scans", "Vulnerability summaries"],
+        "pages": ["/security", "/security/scans"],
     },
 }
 

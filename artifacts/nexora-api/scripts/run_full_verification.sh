@@ -167,6 +167,13 @@ run_smoke_tests() {
 
   log "Running P4 catalog and federation smoke"
   node scripts/smoke-p4-pass.mjs
+
+  if [[ "${SKIP_DOCKER_VERIFY:-0}" == "1" ]]; then
+    log "Running Playwright Phase 1 UI smoke (CI verify job)"
+    export NEXORA_UI_BASE="${NEXORA_UI_BASE:-http://127.0.0.1:8000}"
+    npx playwright install chromium --with-deps
+    node scripts/smoke-phase1-ui.mjs
+  fi
 }
 
 enforce_coverage() {

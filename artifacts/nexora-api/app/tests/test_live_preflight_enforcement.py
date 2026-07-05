@@ -11,6 +11,7 @@ from app.integration_readiness.capabilities import build_capability_matrix, enfo
 from app.integration_readiness.live_gate import (
     CONTROL_PLANE_CAPABILITIES,
     DELIVERY_CAPABILITIES,
+    ENTERPRISE_MUTATION_CAPABILITIES,
     IAC_CAPABILITIES,
     LiveMutationGate,
     missing_capabilities,
@@ -78,6 +79,16 @@ def test_delivery_gitops_requires_sync():
 
 def test_iac_destroy_requires_destroy_cap():
     assert "iac.destroy" in IAC_CAPABILITIES["DESTROY"]
+
+
+def test_enterprise_mutation_capability_map():
+    assert "acknowledge_incident" in ENTERPRISE_MUTATION_CAPABILITIES
+    assert "enterprise.incidents.write" in ENTERPRISE_MUTATION_CAPABILITIES["acknowledge_incident"]
+
+
+def test_enterprise_providers_grant_write_capability():
+    caps = build_capability_matrix("PAGERDUTY", ["read"])
+    assert caps["write"] is True
 
 
 @pytest.mark.asyncio

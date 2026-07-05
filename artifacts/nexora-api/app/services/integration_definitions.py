@@ -312,6 +312,14 @@ INTEGRATION_DEFINITIONS: dict[str, dict] = {
         "docs_url": "https://aquasecurity.github.io/trivy/",
         "description": "Scan container images and filesystems via Trivy server or CLI.",
     },
+    "CHECKMARX": {
+        "name": "Checkmarx", "category": IntegrationCategory.PROJECT.value,
+        "auth_type": "API_TOKEN",
+        "required_fields": ["base_url", "api_key"],
+        "capabilities": ["SAST scan", "Project discovery", "Issue summary"],
+        "docs_url": "https://checkmarx.com/resource/documents/",
+        "description": "Connect Checkmarx SAST for project and vulnerability summaries.",
+    },
 }
 
 # Secret field names that must never be surfaced/logged (extends 35A set).

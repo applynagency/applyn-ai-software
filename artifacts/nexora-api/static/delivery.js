@@ -118,7 +118,10 @@ function dlvEnvName(envId) {
   return hit ? hit.name || hit.tier || envId : envId || "—";
 }
 
-function dlvCardMessage(kind, detail) {
+function dlvCardMessage(kind, detail, emptyOpts) {
+  if (kind === "empty" && typeof renderStructuredEmptyState === "function" && emptyOpts) {
+    return renderStructuredEmptyState(emptyOpts);
+  }
   const map = {
     loading: "Loading…",
     empty: detail || "No data yet.",
@@ -128,6 +131,65 @@ function dlvCardMessage(kind, detail) {
   };
   return `<p class="muted" style="margin:0;">${escapeHtml(map[kind] || detail || "")}</p>`;
 }
+
+function renderDeliveryOverviewBanners() {
+  const fidelity = typeof computeOpsDataFidelity === "function" ? computeOpsDataFidelity(state) : null;
+  const fidelityBadge = fidelity && typeof renderOpsDataFidelityBadge === "function"
+    ? renderOpsDataFidelityBadge(fidelity)
+    : "";
+  const needsCi = !DELIVERY_CI_KEYS.some((k) => deliveryHasVerifiedProvider(k));
+  const connectBanner = needsCi && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner(
+      "Jenkins, GitHub Actions, Drone, or Argo Workflows",
+      "JENKINS",
+      "Connect and sync CI/CD to populate delivery overview with real deployment activity.",
+    )
+    : "";
+  return `${fidelityBadge}${connectBanner}`;
+}
+
+const DLV_EMPTY_OPTS = {
+  recentDeployments: {
+    title: "No deployments yet",
+    message: "Sync CI/CD pipelines or connect GitHub Actions to see recent deployment activity.",
+    ctaLabel: "Connect CI/CD",
+    ctaHref: "/integrations/onboarding?provider=JENKINS",
+    secondaryLabel: "View pipelines",
+    secondaryHref: "/delivery/pipelines",
+  },
+  failedDeployments: {
+    title: "No failed deployments",
+    message: "Failed deployment history appears here after CI/CD sync.",
+    ctaLabel: "Connect CI/CD",
+    ctaHref: "/integrations/onboarding?provider=JENKINS",
+  },
+  pendingChanges: {
+    title: "No pending changes",
+    message: "Change requests awaiting approval will appear here.",
+    ctaLabel: "View changes",
+    ctaHref: "/delivery/changes",
+  },
+  approvalBacklog: {
+    title: "Approval queue clear",
+    message: "Pending delivery approvals will show here when submitted.",
+    ctaLabel: "Review approvals",
+    ctaHref: "/delivery/approvals",
+  },
+  releaseHealth: {
+    title: "No release evidence",
+    message: "Connect CI/CD and security scanners to track release verification.",
+    ctaLabel: "Release evidence",
+    ctaHref: "/delivery/releases",
+  },
+  linkedIncidents: {
+    title: "No linked incidents",
+    message: "Incidents correlated with deployments appear here after monitoring is connected.",
+    ctaLabel: "Connect PagerDuty",
+    ctaHref: "/integrations/onboarding?provider=PAGERDUTY",
+    secondaryLabel: "View incidents",
+    secondaryHref: "/incidents",
+  },
+};
 
 function dlvCardShell(title, body, footer) {
   return `
@@ -297,6 +359,12 @@ async function loadDeliveryOverviewData() {
   try {
     const cards = state.dlvOverviewCards;
     const tasks = [];
+
+    tasks.push(
+      api("/v1/integrations/connections").then((rows) => {
+        state.integrationConnections = rows || [];
+      }).catch(() => { state.integrationConnections = state.integrationConnections || []; }),
+    );
 
     tasks.push(
       api("/v1/delivery/deployments").then((rows) => {
@@ -561,7 +629,7 @@ function renderDeliveryOverviewCard(key, title, card) {
   if (card.state === DLV_CARD.denied) return dlvCardShell(title, dlvCardMessage("denied"));
   if (card.state === DLV_CARD.unavailable) return dlvCardShell(title, dlvCardMessage("unavailable"));
   if (card.state === DLV_CARD.error) return dlvCardShell(title, dlvCardMessage("error", card.detail));
-  if (card.state === DLV_CARD.empty) return dlvCardShell(title, dlvCardMessage("empty"));
+  if (card.state === DLV_CARD.empty) return dlvCardShell(title, dlvCardMessage("empty", null, DLV_EMPTY_OPTS[key]));
 
   if (key === "recentDeployments") {
     const rows = (card.items || []).map((d) =>
@@ -699,6 +767,7 @@ function renderDeliveryOverview() {
   return `<div class="container">
     ${renderHeader("Delivery", "Organization delivery overview")}
     ${renderAlerts()}
+    ${renderDeliveryOverviewBanners()}
     ${recBlock}
     <div class="delivery-overview-grid">
       ${renderDeliveryOverviewCard("recentDeployments", "Recent deployments", cards.recentDeployments)}

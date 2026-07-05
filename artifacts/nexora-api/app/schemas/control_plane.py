@@ -168,4 +168,6 @@ class FederationSummaryView(BaseModel):
     providers: list[str] = Field(default_factory=list)
     federation_mode: str
     dr_orchestration: str
+    dr_readiness: dict = Field(default_factory=dict)
+    recommended_actions: list[str] = Field(default_factory=list)
     clusters: list[FederationClusterView] = Field(default_factory=list)

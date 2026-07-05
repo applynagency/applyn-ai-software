@@ -1,4 +1,4 @@
-"""Coverage tests — all 39 marketplace integrations have live-data paths."""
+"""Coverage tests — all 40 marketplace integrations have live-data paths."""
 
 import pytest
 
@@ -14,8 +14,8 @@ from app.services.universal_discovery_adapters import supports_universal_discove
 ALL_KEYS = set(INTEGRATION_DEFINITIONS.keys())
 
 
-def test_all_39_integrations_defined():
-    assert len(ALL_KEYS) == 39
+def test_all_40_integrations_defined():
+    assert len(ALL_KEYS) == 40
 
 
 @pytest.mark.parametrize("key", sorted(ALL_KEYS))
@@ -79,7 +79,7 @@ def test_bitbucket_enrichment():
 
 def test_security_scan_keys():
     from app.services.integration_capabilities import SECURITY_SCAN_INTEGRATION_KEYS
-    for key in ("SONARQUBE", "SNYK", "TRIVY"):
+    for key in ("SONARQUBE", "SNYK", "TRIVY", "CHECKMARX"):
         assert key in SECURITY_SCAN_INTEGRATION_KEYS
         assert enrichment_for(key)["live_data"] is True
 

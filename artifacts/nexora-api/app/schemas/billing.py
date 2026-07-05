@@ -167,6 +167,43 @@ class FeatureFlagsResponse(BaseModel):
     flags: dict
 
 
+class StripeStatusResponse(BaseModel):
+    configured: bool
+    self_serve_enabled: bool
+    provider: str = "STRIPE"
+
+
+class StripeCheckoutRequest(BaseModel):
+    plan_id: str | None = None
+    success_url: str | None = None
+    cancel_url: str | None = None
+
+
+class StripePortalRequest(BaseModel):
+    return_url: str | None = None
+
+
+class StripeSessionResponse(BaseModel):
+    url: str | None = None
+    stub: bool = False
+    message: str | None = None
+
+
+class PaymentMethodView(BaseModel):
+    id: str | None = None
+    brand: str | None = None
+    last4: str | None = None
+    exp_month: int | None = None
+    exp_year: int | None = None
+    is_default: bool = False
+
+
+class PaymentMethodListResponse(BaseModel):
+    items: list[PaymentMethodView] = Field(default_factory=list)
+    stripe_configured: bool = False
+    self_serve_enabled: bool = False
+
+
 # --- Invoices (org admin read-only) ------------------------------------------
 class InvoiceResponse(BaseModel):
     """Org-safe invoice row — no provider IDs, line items, or raw metadata."""

@@ -43,6 +43,10 @@ CAPABILITY_ALIASES: dict[str, str] = {
     "cloud.provision": "write",
     "kubernetes.cluster.create": "write",
     "secrets.reference.read": "read",
+    "enterprise.incidents.write": "write",
+    "enterprise.issues.write": "write",
+    "enterprise.alerts.write": "write",
+    "enterprise.search.write": "write",
 }
 
 CONTROL_PLANE_CAPABILITIES: dict[str, list[str]] = {
@@ -81,6 +85,14 @@ IAC_CAPABILITIES: dict[str, list[str]] = {
     "IMPORT": ["iac.apply"],
     "DESTROY": ["iac.destroy"],
     "PLAN": ["iac.plan"],
+}
+
+ENTERPRISE_MUTATION_CAPABILITIES: dict[str, list[str]] = {
+    "acknowledge_incident": ["enterprise.incidents.write"],
+    "resolve_issue": ["enterprise.issues.write"],
+    "trigger_search": ["enterprise.search.write"],
+    "add_comment": ["enterprise.issues.write"],
+    "acknowledge_alert": ["enterprise.alerts.write"],
 }
 
 REASON_CODES = {
