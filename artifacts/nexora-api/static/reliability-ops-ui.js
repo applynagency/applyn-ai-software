@@ -1176,7 +1176,17 @@ function renderServiceHealth() {
       </section>` : ""}
       <section class="card">
         <h2>Services</h2>
-        ${services.length === 0 ? `<p class="muted">No services catalogued yet.</p>` : `
+        ${services.length === 0 ? (typeof renderStructuredEmptyState === "function"
+          ? renderStructuredEmptyState({
+            title: "No services catalogued",
+            message: "Run universal discovery or create services to track SLO health.",
+            ctaLabel: "Run discovery",
+            ctaHref: "/discovery",
+            secondaryLabel: "Connect Prometheus",
+            secondaryHref: "/integrations/onboarding?provider=PROMETHEUS",
+          })
+          : `<p class="muted">No services catalogued yet.</p>`) : `
+          <div class="responsive-table-wrap">
           <div class="table-grid table-grid-services">
             <div class="table-row table-head"><div>Service</div><div>Tier</div><div>Health</div><div>Avail 30d</div><div>Budget Left</div><div>Burn</div><div>Open</div></div>
             ${services.map((s) => `
@@ -1189,6 +1199,7 @@ function renderServiceHealth() {
                 <div>${burnStatusBadge(s.burn_status)} ${s.burn_rate.toFixed(1)}x</div>
                 <div>${s.open_incidents}</div>
               </div>`).join("")}
+          </div>
           </div>`}
       </section>
     </div>`;
@@ -1370,7 +1381,15 @@ function renderMonitoring() {
         </div>
         <section class="card">
           <h2>Active Alerts (${alerts.length})</h2>
-          ${alerts.length === 0 ? `<p class="muted">No alerts ingested yet.</p>` : `
+          ${alerts.length === 0 ? (typeof renderStructuredEmptyState === "function"
+            ? renderStructuredEmptyState({
+              title: "No active alerts",
+              message: "Connect observability tools and enable monitoring to ingest alerts.",
+              ctaLabel: "Connect Prometheus",
+              ctaHref: "/integrations/onboarding?provider=PROMETHEUS",
+            })
+            : `<p class="muted">No alerts ingested yet.</p>`) : `
+            <div class="responsive-table-wrap">
             <div class="table-grid table-grid-alerts">
               <div class="table-row table-head"><div>Severity</div><div>Alert</div><div>Provider</div><div>Service</div><div>Count</div><div>Incident</div></div>
               ${alerts.map((a) => `
@@ -1382,6 +1401,7 @@ function renderMonitoring() {
                   <div>${a.occurrence_count}</div>
                   <div>${a.incident_id ? `<a class="btn btn-secondary" href="/incidents/${a.incident_id}" data-nav="/incidents/${a.incident_id}">View</a>` : "—"}</div>
                 </div>`).join("")}
+            </div>
             </div>`}
         </section>
       `}

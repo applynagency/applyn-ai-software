@@ -62,6 +62,11 @@ async function main() {
 
   const federation = await api("/v1/control-plane/federation", { token });
   record("p4_federation", federation.status === 200 ? "PASS" : "FAIL", federation.json?.federation_mode || `status=${federation.status}`);
+  if (federation.status === 200) {
+    const dr = federation.json?.dr_orchestration || "";
+    record("p4_dr_orchestration", dr && dr !== "roadmap" ? "PASS" : "WARN", `dr=${dr}`);
+    record("p4_dr_readiness", federation.json?.dr_readiness ? "PASS" : "WARN", federation.json?.dr_readiness?.multi_cluster != null ? "present" : "missing");
+  }
 
   const pe = await api("/v1/platform-engineering/providers", { token });
   const iac = pe.json?.iac || [];

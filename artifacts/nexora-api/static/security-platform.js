@@ -4,6 +4,7 @@
  */
 
 async function loadSecurityPlatform() {
+  try { state.integrationConnections = await api("/v1/integrations/connections"); } catch { state.integrationConnections = state.integrationConnections || []; }
   try { state.secOverview = await api("/v1/security/overview"); } catch { state.secOverview = null; }
   try { state.secFindings = await api("/v1/security/findings?limit=30"); } catch { state.secFindings = null; }
   try { state.secVulns = await api("/v1/security/vulnerabilities"); } catch { state.secVulns = null; }
@@ -67,10 +68,10 @@ const SEC_PAGE_PROVIDERS = {
 };
 function secHasLiveScanner() {
   if (typeof hasVerifiedIntegration !== "function") return false;
-  return ["SONARQUBE", "SNYK", "TRIVY"].some((k) => hasVerifiedIntegration(k));
+  return ["SONARQUBE", "SNYK", "TRIVY", "CHECKMARX"].some((k) => hasVerifiedIntegration(k));
 }
 function secPageBanner(page) {
-  const spec = SEC_PAGE_PROVIDERS[page] || ["SonarQube, Snyk, or Trivy", "SONARQUBE"];
+  const spec = SEC_PAGE_PROVIDERS[page] || ["SonarQube, Snyk, Trivy, or Checkmarx", "SONARQUBE"];
   if (secHasLiveScanner()) return "";
   if (typeof renderOpsConnectBanner === "function") {
     return renderOpsConnectBanner(spec[0], spec[1]);
@@ -90,7 +91,7 @@ function secPostureDisplay(o) {
 function renderSecInsufficientBanner() {
   return `<section class="card ops-data-insufficient" style="margin-bottom:12px;border-left:4px solid #d97706;">
     <strong style="color:#92400e;">Insufficient live scan data</strong>
-    <p class="muted" style="font-size:12px;margin:6px 0 0;">Posture scores require a verified SonarQube, Snyk, Trivy, Kubernetes, or cloud integration — or at least one non-simulated scan run. Offline/demo scans do not produce trustworthy grades.</p>
+    <p class="muted" style="font-size:12px;margin:6px 0 0;">Posture scores require a verified SonarQube, Snyk, Trivy, Checkmarx, Kubernetes, or cloud integration — or at least one non-simulated scan run. Offline/demo scans do not produce trustworthy grades.</p>
   </section>`;
 }
 function renderSecDashboard() {
@@ -121,7 +122,14 @@ function renderSecFindings() {
   ).join("");
   return `<div class="container">${renderHeader("Security Findings", "Canonical findings across all sources")}${renderAlerts()}
     ${secPageBanner("sec-findings")}
-    <section class="card"><div class="ops-list">${items || `<p class="muted">No findings.</p>`}</div></section>
+    <section class="card"><div class="ops-list">${items || (typeof renderStructuredEmptyState === "function"
+      ? renderStructuredEmptyState({
+        title: "No security findings",
+        message: "Connect a scanner and run a scan to populate findings.",
+        ctaLabel: "Connect SonarQube",
+        ctaHref: "/integrations/onboarding?provider=SONARQUBE",
+      })
+      : `<p class="muted">No findings.</p>`)}</div></section>
   </div>`;
 }
 function renderSecVulns() {
@@ -132,7 +140,14 @@ function renderSecVulns() {
   return `<div class="container">${renderHeader("Vulnerabilities", "CVE and dependency risks")}${renderAlerts()}
     ${secPageBanner("sec-vulns")}
     <section class="card"><div class="ops-stats">${rdMetric("Total", d.total || 0)}</div></section>
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">No vulnerabilities.</p>`}</div></section>
+    <section class="card"><div class="ops-list">${rows || (typeof renderStructuredEmptyState === "function"
+      ? renderStructuredEmptyState({
+        title: "No vulnerabilities",
+        message: "Dependency and container scans populate this view after a scanner is connected.",
+        ctaLabel: "Connect Snyk",
+        ctaHref: "/integrations/onboarding?provider=SNYK",
+      })
+      : `<p class="muted">No vulnerabilities.</p>`)}</div></section>
   </div>`;
 }
 function renderSecK8s() {

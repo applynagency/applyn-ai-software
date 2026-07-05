@@ -4792,9 +4792,9 @@ function renderStructuredEmptyState(opts) {
 
 const OPS_FIDELITY_DOMAIN_KEYS = {
   observe: ["PROMETHEUS", "ALERTMANAGER", "DATADOG", "GRAFANA", "LOKI"],
-  deliver: ["JENKINS", "GITHUB", "GITLAB", "CIRCLECI", "AZURE_DEVOPS", "BITBUCKET", "BUILDKITE", "HARNESS", "ARGOCD", "FLUX"],
+  deliver: ["JENKINS", "GITHUB", "GITLAB", "CIRCLECI", "AZURE_DEVOPS", "BITBUCKET", "BUILDKITE", "HARNESS", "DRONE", "ARGO_WORKFLOWS"],
   incident: ["PAGERDUTY", "SERVICENOW", "OPSGENIE"],
-  security: ["SONARQUBE", "KUBERNETES", "AWS", "AZURE"],
+  security: ["SONARQUBE", "SNYK", "TRIVY", "CHECKMARX", "KUBERNETES", "AWS", "AZURE"],
 };
 
 function computeOpsDataFidelity(stateObj) {

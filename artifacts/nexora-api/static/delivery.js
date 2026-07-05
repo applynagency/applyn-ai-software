@@ -823,7 +823,14 @@ function renderDeliveryDeploymentsList() {
         <span>${cpHealthBadge(d.status)}</span>
         <span class="muted">${formatDate(d.created_at)}</span>
         <span class="muted">${d.release_id ? escapeHtml(d.release_id.slice(0, 8)) : "—"}</span>
-      </div>`).join("") || `<div class="delivery-table-row"><span class="muted">No deployments match filters.</span></div>`;
+      </div>`).join("") || (typeof renderStructuredEmptyState === "function"
+      ? `<div class="delivery-table-row">${renderStructuredEmptyState({
+        title: "No deployments match",
+        message: "Adjust filters or connect CI/CD to sync deployment history.",
+        ctaLabel: "Connect CI/CD",
+        ctaHref: "/integrations/onboarding?provider=JENKINS",
+      })}</div>`
+      : `<div class="delivery-table-row"><span class="muted">No deployments match filters.</span></div>`);
   const pager = `
     <div class="actions delivery-card-footer">
       <button class="btn btn-secondary" type="button" data-dlv-page-prev ${offset <= 0 ? "disabled" : ""}>Previous</button>
@@ -836,7 +843,7 @@ function renderDeliveryDeploymentsList() {
     ${state.dlvDeploymentsError ? `<p class="muted">${escapeHtml(state.dlvDeploymentsError)}</p>` : ""}
     ${filterForm}
     <section class="card delivery-card">
-      <div class="delivery-table">${tableHead}${tableRows}</div>
+      <div class="responsive-table-wrap"><div class="delivery-table">${tableHead}${tableRows}</div></div>
       ${pager}
     </section>
   </div>`;

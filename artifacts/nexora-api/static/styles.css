@@ -4626,7 +4626,10 @@ h3 {
 @media (max-width: 768px) {
   .responsive-table-wrap .incidents-table-grid,
   .responsive-table-wrap .billing-invoice-grid,
-  .responsive-table-wrap .billing-payment-grid {
+  .responsive-table-wrap .billing-payment-grid,
+  .responsive-table-wrap .table-grid-services,
+  .responsive-table-wrap .table-grid-alerts,
+  .responsive-table-wrap .delivery-table {
     min-width: 640px;
   }
 
