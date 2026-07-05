@@ -144,3 +144,9 @@ class HealthBoardRow(BaseModel):
 class MarketplaceResponse(BaseModel):
     summary: MarketplaceSummary
     integrations: list[CatalogItem] = []
+
+
+class EnterpriseMutateRequest(BaseModel):
+    action: str
+    resource_id: str
+    note: str = ""

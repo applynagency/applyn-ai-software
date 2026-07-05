@@ -8207,19 +8207,6 @@ function createCustomerApplicationRecord({ status, workspaceId = null, projectId
   };
 }
 
-function renderRetiredHubPage(title, targetPath, targetLabel) {
-  if (typeof window !== "undefined" && typeof window.renderRetiredHubPage === "function" && window.renderRetiredHubPage !== renderRetiredHubPage) {
-    return window.renderRetiredHubPage(title, targetPath, targetLabel);
-  }
-  return `<div class="container">
-    ${renderHeader(title, "Moved to incident-first surfaces")}
-    ${renderAlerts()}
-    <section class="card">
-      <p class="muted">This hub was retired. Use the link below for the same workflow.</p>
-      <a class="btn btn-primary" href="${escapeHtml(targetPath)}" data-nav="${escapeHtml(targetPath)}">${escapeHtml(targetLabel)}</a>
-    </section>
-  </div>`;
-}
 
 
 /* ---------------------------------------------------------------------- *

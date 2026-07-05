@@ -17,6 +17,7 @@ from app.auth.org_context import OrgContextDep
 from app.schemas.integration import (
     ConnectionView,
     ConnectRequest,
+    EnterpriseMutateRequest,
     HealthBoardRow,
     MarketplaceResponse,
     SyncResponse,
@@ -27,6 +28,11 @@ from app.schemas.integration import (
 from app.services.integration_health_board import IntegrationHealthBoardService
 from app.services.integration_marketplace import IntegrationMarketplaceService
 from app.services.integration_sync import IntegrationSyncService
+from app.repositories.integration import IntegrationConnectionRepository
+from app.security.secrets import SecretManagerService
+from app.services.enterprise_enrichment import mutate_provider, summarize_provider
+from app.core.exceptions import ForbiddenError, NotFoundError
+from app.tenancy.permissions import can_write_resources
 
 router = APIRouter(prefix="/integrations", tags=["Integration Marketplace"])
 
@@ -247,4 +253,66 @@ async def test_integration_notification(
 ):
     return await _readiness(session).test_notification(
         current_user, org_context, channel=payload.channel, dry_run=payload.dry_run,
+    )
+
+
+@router.get("/enterprise/summary")
+async def enterprise_integration_summary(
+    current_user: CurrentUser,
+    session: DBSession,
+    org_context: OrgContextDep,
+):
+    """Live CMDB, index, and issue stats for ServiceNow, Splunk, and Sentry."""
+    organization_id = org_context.requires_organization
+    repos = IntegrationConnectionRepository(session)
+    secrets = SecretManagerService(session)
+    conns = await repos.list_for_org(organization_id)
+    providers: list[dict] = []
+    for conn in conns:
+        key = (conn.integration_key or "").upper()
+        if key not in {"SERVICENOW", "SPLUNK", "SENTRY"}:
+            continue
+        row = {"connection_id": conn.id, "integration_key": key, "available": False}
+        if conn.credential_id:
+            try:
+                _, secret = await secrets.resolve_secret(
+                    conn.credential_id, user=current_user, org_context=org_context,
+                    reason="enterprise enrichment summary",
+                )
+                row = {**summarize_provider(key, secret), "connection_id": conn.id}
+            except Exception as exc:  # noqa: BLE001
+                row["error"] = str(exc)[:200]
+        providers.append(row)
+    return {"providers": providers}
+
+
+@router.post("/connections/{connection_id}/mutate")
+async def mutate_integration_connection(
+    connection_id: str,
+    payload: EnterpriseMutateRequest,
+    current_user: CurrentUser,
+    session: DBSession,
+    org_context: OrgContextDep,
+):
+    """Scoped write actions for enterprise connectors (acknowledge, resolve)."""
+    if not can_write_resources(org_context.role) and not current_user.is_superuser:
+        raise ForbiddenError("Insufficient permissions")
+    organization_id = org_context.requires_organization
+    repos = IntegrationConnectionRepository(session)
+    secrets = SecretManagerService(session)
+    conn = await repos.get_for_org(connection_id, organization_id)
+    if not conn:
+        raise NotFoundError("IntegrationConnection", connection_id)
+    if not conn.credential_id:
+        return {"status": "failed", "reason": "no_credential"}
+    _, secret = await secrets.resolve_secret(
+        conn.credential_id, user=current_user, org_context=org_context,
+        reason=f"integration mutate:{payload.action}",
+    )
+    return mutate_provider(
+        conn.integration_key or "",
+        secret,
+        payload.action,
+        payload.resource_id,
+        note=payload.note,
     )

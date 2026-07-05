@@ -129,10 +129,18 @@ function renderCopilot() {
     (q) => `<button class="btn btn-secondary" style="font-size:12px;" data-copilot-suggest="${escapeHtml(q)}">${escapeHtml(q)}</button>`
   ).join("");
 
+  const hasGrounding = typeof hasVerifiedIntegration === "function"
+    && (hasVerifiedIntegration("PROMETHEUS") || hasVerifiedIntegration("PAGERDUTY")
+      || hasVerifiedIntegration("GITHUB") || hasVerifiedIntegration("DATADOG"));
+  const connectBanner = !hasGrounding && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner("Prometheus, PagerDuty, or GitHub", "PROMETHEUS", "Connect observability and incident tools so Copilot answers are grounded in your live data.")
+    : "";
+
   return `
     <div class="container">
       ${renderHeader("Copilot", "Ask about incidents, alerts, and deployments — grounded in your connected tools")}
       ${renderAlerts()}
+      ${connectBanner}
       <div style="display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start;">
         <section class="card">
           <div class="card-header"><div><h2 style="font-size:15px;">Conversations</h2></div>
@@ -164,10 +172,16 @@ function renderRunbooks() {
   const detail = state.runbookDetail;
   const canWrite = canWriteResources();
   const catOptions = RUNBOOK_CATEGORIES.map((c) => `<option value="${c}">${c.replace(/_/g, " ")}</option>`).join("");
+  const needsGrounding = typeof hasVerifiedIntegration === "function"
+    && !hasVerifiedIntegration("PAGERDUTY") && !hasVerifiedIntegration("GITHUB");
+  const runbookBanner = needsGrounding && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner("PagerDuty or GitHub", "PAGERDUTY", "Connect incident and deployment tools to generate runbooks from real RCA data.")
+    : "";
   return `
     <div class="container">
       ${renderHeader("Intelligent Runbooks", "Auto-generated investigation and remediation playbooks")}
       ${renderAlerts()}
+      ${runbookBanner}
       ${canWrite ? `
       <section class="card">
         <div class="card-header"><div><h2>Generate Runbook</h2><p class="muted">Synthesized from incident RCA, recommendations, remediations & postmortems.</p></div></div>

@@ -49,12 +49,37 @@ function renderSecConnectBanner(label, providerKey) {
     <a href="${escapeHtml(href)}" data-nav="${escapeHtml(href)}">Connect ${escapeHtml(label)}</a>
   </div>`;
 }
+const SEC_PAGE_PROVIDERS = {
+  "sec-dashboard": ["SonarQube", "SONARQUBE"],
+  "sec-findings": ["SonarQube", "SONARQUBE"],
+  "sec-vulns": ["SonarQube", "SONARQUBE"],
+  "sec-k8s": ["Kubernetes", "KUBERNETES"],
+  "sec-cloud": ["AWS or Azure", "AWS"],
+  "sec-compliance": ["SonarQube or AWS", "SONARQUBE"],
+  "sec-remediation": ["SonarQube", "SONARQUBE"],
+  "sec-analytics": ["SonarQube", "SONARQUBE"],
+  "sec-providers": ["SonarQube", "SONARQUBE"],
+  "sec-scan-runs": ["SonarQube", "SONARQUBE"],
+  "sec-sbom": ["SonarQube", "SONARQUBE"],
+  "sec-sla": ["SonarQube", "SONARQUBE"],
+  "sec-backfill": ["SonarQube", "SONARQUBE"],
+  "sec-rem-exec": ["SonarQube", "SONARQUBE"],
+};
+function secPageBanner(page) {
+  const spec = SEC_PAGE_PROVIDERS[page] || ["SonarQube", "SONARQUBE"];
+  const has = typeof hasVerifiedIntegration === "function" && hasVerifiedIntegration(spec[1]);
+  if (has) return "";
+  if (typeof renderOpsConnectBanner === "function") {
+    return renderOpsConnectBanner(spec[0], spec[1]);
+  }
+  return renderSecConnectBanner(spec[0], spec[1]);
+}
 function renderSecDashboard() {
   const o = state.secOverview || {};
   return `<div class="container">
     ${renderHeader("Security Overview", "Unified DevSecOps and cloud security posture")}
     ${renderAlerts()}
-    ${renderSecConnectBanner("SonarQube", "SONARQUBE")}
+    ${secPageBanner("sec-dashboard")}
     <section class="card"><div class="ops-stats">
       ${rdMetric("Posture", o.posture_score != null ? `${o.posture_score} (${o.grade || "—"})` : "—")}
       ${rdMetric("Open Critical", o.open_critical || 0)}
@@ -74,6 +99,7 @@ function renderSecFindings() {
     `<div class="ops-list-row"><span>${escapeHtml(f.title)}</span><span class="muted">${escapeHtml(f.severity)} · ${escapeHtml(f.source)}</span></div>`
   ).join("");
   return `<div class="container">${renderHeader("Security Findings", "Canonical findings across all sources")}${renderAlerts()}
+    ${secPageBanner("sec-findings")}
     <section class="card"><div class="ops-list">${items || `<p class="muted">No findings.</p>`}</div></section>
   </div>`;
 }
@@ -83,6 +109,7 @@ function renderSecVulns() {
     `<div class="ops-list-row"><span>${escapeHtml(f.title)}</span><span class="muted">${escapeHtml(f.cve || "")}</span></div>`
   ).join("");
   return `<div class="container">${renderHeader("Vulnerabilities", "CVE and dependency risks")}${renderAlerts()}
+    ${secPageBanner("sec-vulns")}
     <section class="card"><div class="ops-stats">${rdMetric("Total", d.total || 0)}</div></section>
     <section class="card"><div class="ops-list">${rows || `<p class="muted">No vulnerabilities.</p>`}</div></section>
   </div>`;
@@ -90,18 +117,21 @@ function renderSecVulns() {
 function renderSecK8s() {
   const d = state.secK8s || {};
   return `<div class="container">${renderHeader("Kubernetes Security", "CIS benchmark and workload posture")}${renderAlerts()}
+    ${secPageBanner("sec-k8s")}
     <section class="card"><div class="ops-stats">${rdMetric("Cluster Score", d.cluster_score || "—")}${rdMetric("Findings", d.findings || 0)}</div></section>
   </div>`;
 }
 function renderSecCloud() {
   const d = state.secCloud || {};
   return `<div class="container">${renderHeader("Cloud Posture", "AWS, Azure, GCP security posture")}${renderAlerts()}
+    ${secPageBanner("sec-cloud")}
     <section class="card"><div class="ops-stats">${rdMetric("Account Score", d.account_score || "—")}${rdMetric("Findings", d.findings || 0)}</div></section>
   </div>`;
 }
 function renderSecCompliance() {
   const d = state.secCompliance || {};
   return `<div class="container">${renderHeader("Compliance", "Framework mapping and policy results")}${renderAlerts()}
+    ${secPageBanner("sec-compliance")}
     <section class="card"><div class="ops-stats">${rdMetric("Score", d.score || "—")}${rdMetric("Grade", d.grade || "—")}</div></section>
   </div>`;
 }
@@ -110,12 +140,14 @@ function renderSecRemediation() {
     `<div class="ops-list-row"><span>${escapeHtml(r.title)}</span><span class="muted">${escapeHtml(r.status)} · approval ${r.requires_approval ? "required" : "no"}</span></div>`
   ).join("");
   return `<div class="container">${renderHeader("Remediation Queue", "Approval-gated security remediations")}${renderAlerts()}
+    ${secPageBanner("sec-remediation")}
     <section class="card"><div class="ops-list">${rows || `<p class="muted">No proposals.</p>`}</div></section>
   </div>`;
 }
 function renderSecAnalytics() {
   const a = state.secAnalytics || {};
   return `<div class="container">${renderHeader("Security Analytics", "Posture trends and SLA breaches")}${renderAlerts()}
+    ${secPageBanner("sec-analytics")}
     <section class="card"><div class="ops-stats">
       ${rdMetric("Posture", a.posture_score || "—")}
       ${rdMetric("SLA Breaches", a.sla_breaches || 0)}
@@ -128,6 +160,7 @@ function renderSecProviders() {
      <span class="muted">${escapeHtml(p.mode)} · ${p.enabled ? "enabled" : "disabled"}${p.validated_at ? " · validated" : ""}</span></div>`
   ).join("");
   return `<div class="container">${renderHeader("Provider Integrations", "Live vs offline scanner providers")}${renderAlerts()}
+    ${secPageBanner("sec-providers")}
     <section class="card"><p class="muted">Offline/simulated results are used when binaries are unavailable or providers are disabled.</p>
     <div class="ops-list">${rows || `<p class="muted">No providers configured.</p>`}</div></section>
   </div>`;
@@ -138,7 +171,7 @@ function renderSecScanRuns() {
      <span class="muted">${s.simulated ? "simulated" : "live"} · ${escapeHtml(s.provider_mode || "offline")} · ${escapeHtml(s.status)}</span></div>`
   ).join("");
   return `<div class="container">${renderHeader("Scan Runs", "Security scan execution history")}${renderAlerts()}
-    ${renderSecConnectBanner("SonarQube", "SONARQUBE")}
+    ${secPageBanner("sec-scan-runs")}
     <section class="card"><div class="ops-list">${items || `<p class="muted">No scan runs.</p>`}</div></section>
   </div>`;
 }
@@ -148,6 +181,7 @@ function renderSecSbom() {
      <span class="muted">${escapeHtml(c.ecosystem || "")} · vulns: ${(c.vuln_finding_ids || []).length}</span></div>`
   ).join("");
   return `<div class="container">${renderHeader("SBOM Inventory", "Parsed component inventory")}${renderAlerts()}
+    ${secPageBanner("sec-sbom")}
     <section class="card"><div class="ops-list">${items || `<p class="muted">No SBOM components.</p>`}</div></section>
   </div>`;
 }
@@ -157,6 +191,7 @@ function renderSecSla() {
     `<div class="ops-list-row"><span>${escapeHtml(p.severity)}</span><span class="muted">${p.due_days}d due · warn ${p.warning_hours}h</span></div>`
   ).join("");
   return `<div class="container">${renderHeader("Security SLA", "Remediation deadlines and breaches")}${renderAlerts()}
+    ${secPageBanner("sec-sla")}
     <section class="card"><div class="ops-stats">
       ${rdMetric("Due Soon", d.due_soon || 0)}${rdMetric("Breached", d.breached || 0)}${rdMetric("Accepted Risk", d.accepted_risk || 0)}
     </div></section>
@@ -167,6 +202,7 @@ function renderSecBackfill() {
   const b = state.secBackfill || {};
   const counts = b.counts || {};
   return `<div class="container">${renderHeader("Backfill / Migration", "Historical finding import status")}${renderAlerts()}
+    ${secPageBanner("sec-backfill")}
     <section class="card"><div class="ops-stats">
       ${rdMetric("Status", b.status || "—")}${rdMetric("Imported", counts.imported || 0)}${rdMetric("Skipped", counts.skipped_existing || 0)}
     </div>
@@ -179,6 +215,7 @@ function renderSecRemExecution() {
     `<div class="ops-list-row"><span>${escapeHtml(c.label || "checkpoint")}</span><span class="muted">${escapeHtml(c.at || "")}</span></div>`
   ).join("");
   return `<div class="container">${renderHeader("Remediation Execution", "Timeline, checkpoints, verification")}${renderAlerts()}
+    ${secPageBanner("sec-rem-exec")}
     <section class="card"><div class="ops-stats">${rdMetric("Status", e.status || "—")}${rdMetric("Verified", e.verification?.verified ? "yes" : "no")}</div></section>
     <section class="card"><h2>Checkpoints</h2><div class="ops-list">${cps || `<p class="muted">No checkpoints.</p>`}</div></section>
   </div>`;

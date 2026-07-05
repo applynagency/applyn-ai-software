@@ -204,10 +204,17 @@ function renderWarRooms() {
       })() : ""}`;
   }
 
+  const hasNotify = typeof hasVerifiedIntegration === "function"
+    && (hasVerifiedIntegration("PAGERDUTY") || hasVerifiedIntegration("SLACK") || hasVerifiedIntegration("MICROSOFT_TEAMS"));
+  const connectBanner = !hasNotify && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner("PagerDuty or Slack", "PAGERDUTY", "Connect notification tools for war room routing, on-call context, and live collaboration.")
+    : "";
+
   return `
     <div class="container">
       ${renderHeader("AI Incident War Room", "Collaborative multi-agent incident response — advisory only, human approval mandatory")}
       ${renderAlerts()}
+      ${connectBanner}
       <section class="card">${createForm}</section>
       <div style="display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;">
         <section class="card"><h2>War Rooms</h2><div class="ops-list">${listRows}</div></section>

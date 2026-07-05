@@ -1067,7 +1067,8 @@ function deliveryHasVerifiedProvider(key) {
 function renderDeliveryGitops() {
   const apps = state.dlvGitops || [];
   const canWrite = canWriteResources();
-  const needsConnect = !deliveryHasVerifiedProvider("ARGOCD") || apps.length === 0;
+  const hasGitops = deliveryHasVerifiedProvider("ARGOCD") || deliveryHasVerifiedProvider("FLUX");
+  const needsConnect = !hasGitops || apps.length === 0;
   const rows = apps.map((a) => {
     const syncBtn = (canWrite && a.drift)
       ? `<button type="button" class="btn btn-primary btn-sm" data-delivery-gitops-app-sync="${escapeHtml(a.name)}">Sync</button>`
@@ -1076,12 +1077,12 @@ function renderDeliveryGitops() {
     <div class="ops-list-row"><span><strong>${escapeHtml(a.engine)}</strong> ${escapeHtml(a.name)}</span>
       <span style="display:flex;gap:8px;align-items:center;">${cpHealthBadge(a.health)} ${a.sync_status ? escapeHtml(a.sync_status) : ""} ${a.drift ? "· drift" : ""} ${syncBtn}</span></div>`;
   }).join("");
-  return `<div class="container">${renderHeader("GitOps", "Argo CD applications from connected integrations")}${renderAlerts()}
-    ${needsConnect ? renderDeliveryConnectBanner("Argo CD", "ARGOCD") : ""}
+  return `<div class="container">${renderHeader("GitOps", "Argo CD and Flux CD applications from connected integrations")}${renderAlerts()}
+    ${needsConnect ? renderDeliveryConnectBanner("Argo CD or Flux CD", "ARGOCD") : ""}
     <p class="muted" style="font-size:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
       ${canWrite ? `<button type="button" class="btn btn-primary btn-sm" data-delivery-gitops-sync>Refresh GitOps state</button>` : ""}
     </p>
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">No GitOps apps yet. Connect Argo CD and run sync.</p>`}</div></section>
+    <section class="card"><div class="ops-list">${rows || `<p class="muted">No GitOps apps yet. Connect Argo CD or Flux CD and run sync.</p>`}</div></section>
   </div>`;
 }
 
@@ -1100,16 +1101,14 @@ function renderDeliveryDora() {
   if (!d.deployment_frequency_per_day && !state.dlvDora && !state.dlvDashboard) {
     return renderFeatureUnavailablePage("DORA", "DORA metrics are not available.");
   }
-  const needsCi = !deliveryHasVerifiedProvider("JENKINS")
-    && !deliveryHasVerifiedProvider("GITHUB")
-    && !deliveryHasVerifiedProvider("GITLAB")
-    && !deliveryHasVerifiedProvider("CIRCLECI");
+  const ciKeys = ["JENKINS", "GITHUB", "GITLAB", "CIRCLECI", "AZURE_DEVOPS", "BITBUCKET", "BUILDKITE", "HARNESS"];
+  const needsCi = !ciKeys.some((k) => deliveryHasVerifiedProvider(k));
   const banner = needsCi && typeof renderOpsConnectBanner === "function"
-    ? renderOpsConnectBanner("Jenkins or GitHub Actions", "JENKINS", "Sync CI/CD pipelines to populate DORA metrics.")
-    : (needsCi ? renderDeliveryConnectBanner("Jenkins or GitHub Actions", "JENKINS") : "");
+    ? renderOpsConnectBanner("Jenkins, GitHub Actions, or Buildkite", "JENKINS", "Sync CI/CD pipelines to populate DORA metrics.")
+    : (needsCi ? renderDeliveryConnectBanner("Jenkins, GitHub Actions, or Buildkite", "JENKINS") : "");
   return `<div class="container">${renderHeader("DORA Dashboard", "Engineering effectiveness")}${renderAlerts()}
     ${banner}
-    <p class="muted" style="font-size:12px;margin-bottom:12px;">Metrics are computed from synced CI/CD pipelines (Jenkins, GitHub Actions, GitLab, CircleCI, Azure DevOps, Bitbucket). Connect and verify integrations, then use <strong>Sync pipelines</strong> on each tool or wait for the scheduled sync.</p>
+    <p class="muted" style="font-size:12px;margin-bottom:12px;">Metrics are computed from synced CI/CD pipelines (Jenkins, GitHub Actions, GitLab, CircleCI, Azure DevOps, Bitbucket, Buildkite, Harness). Connect and verify integrations, then use <strong>Sync pipelines</strong> on each tool.</p>
     <section class="card"><div class="ops-stats">
       ${rdMetric("Deployment Frequency", `${d.deployment_frequency_per_day ?? "—"}/day`)}
       ${rdMetric("Lead Time", `${d.lead_time_hours ?? "—"}h`)}

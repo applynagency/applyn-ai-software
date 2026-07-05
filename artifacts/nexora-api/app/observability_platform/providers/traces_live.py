@@ -70,6 +70,11 @@ def _parse_jaeger_traces(data: dict, limit: int) -> list[dict]:
                 "duration_ms": max(int((s.get("duration") or 0) / 1000), 1),
                 "start_offset_ms": max(int((start_us - trace_start_us) / 1000), 0),
                 "status": "error" if any(t.get("key") == "error" for t in (s.get("tags") or [])) else "ok",
+                "tags": {
+                    t.get("key"): t.get("value")
+                    for t in (s.get("tags") or [])
+                    if isinstance(t, dict) and t.get("key")
+                },
             })
         traces.append({
             "trace_id": item.get("traceID") or item.get("traceId") or "unknown",
@@ -81,24 +86,87 @@ def _parse_jaeger_traces(data: dict, limit: int) -> list[dict]:
     return traces
 
 
+def _jaeger_headers(config: dict) -> dict[str, str]:
+    headers: dict[str, str] = {}
+    token = config.get("token")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
+
+
+def fetch_jaeger_trace(config: dict, trace_id: str) -> dict | None:
+    endpoint = (config.get("url") or config.get("endpoint") or "").rstrip("/")
+    if not endpoint or not trace_id:
+        return None
+    url = f"{endpoint}/api/traces/{quote(trace_id)}"
+    try:
+        data = get_json(url, headers=_jaeger_headers(config), timeout=25.0)
+    except RuntimeError:
+        return None
+    traces = _parse_jaeger_traces(data, 1)
+    return traces[0] if traces else None
+
+
+def fetch_tempo_trace(config: dict, trace_id: str) -> dict | None:
+    endpoint = (config.get("url") or config.get("endpoint") or "").rstrip("/")
+    if not endpoint or not trace_id:
+        return None
+    url = f"{endpoint}/api/traces/{quote(trace_id)}"
+    try:
+        data = get_json(url, headers=_jaeger_headers(config), timeout=25.0)
+    except RuntimeError:
+        return None
+    if isinstance(data, dict) and data.get("data"):
+        traces = _parse_jaeger_traces(data, 1)
+        return traces[0] if traces else None
+    return None
+
+
+def _enrich_traces(config: dict, traces: list[dict], *, provider: str) -> list[dict]:
+    fetch = fetch_tempo_trace if provider == "TEMPO" else fetch_jaeger_trace
+    enriched: list[dict] = []
+    for trace in traces[:25]:
+        tid = trace.get("trace_id")
+        if tid and (not trace.get("spans") or len(trace.get("spans") or []) < 2):
+            full = fetch(config, tid)
+            if full:
+                enriched.append(full)
+                continue
+        enriched.append(trace)
+    return enriched
+
+
+def _looks_like_trace_id(query: str) -> bool:
+    q = (query or "").strip()
+    return len(q) >= 16 and all(c in "0123456789abcdefABCDEF" for c in q)
+
+
 def search_jaeger(config: dict, query: str, *, limit: int = 50) -> dict:
     endpoint = (config.get("url") or config.get("endpoint") or "").rstrip("/")
     if not endpoint:
         return _sample_trace(query, provider="JAEGER", endpoint="", simulated=True)
 
+    if _looks_like_trace_id(query):
+        full = fetch_jaeger_trace(config, query.strip())
+        if full:
+            return {
+                "provider": "JAEGER",
+                "query": query,
+                "endpoint": endpoint,
+                "traces": [full],
+                "total": 1,
+                "simulated": False,
+                "marketplace_backed": True,
+            }
+
     service = (query or "").strip() or "api-gateway"
     url = f"{endpoint}/api/traces?service={quote(service)}&limit={min(limit, 50)}"
-    headers = {}
-    token = config.get("token")
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-
     try:
-        data = get_json(url, headers=headers, timeout=25.0)
+        data = get_json(url, headers=_jaeger_headers(config), timeout=25.0)
     except RuntimeError:
         return _sample_trace(query, provider="JAEGER", endpoint=endpoint, simulated=True)
 
-    traces = _parse_jaeger_traces(data, limit)
+    traces = _enrich_traces(config, _parse_jaeger_traces(data, limit), provider="JAEGER")
     if not traces:
         return {
             "provider": "JAEGER",
@@ -125,15 +193,23 @@ def search_tempo(config: dict, query: str, *, limit: int = 50) -> dict:
     if not endpoint:
         return _sample_trace(query, provider="TEMPO", endpoint="", simulated=True)
 
+    if _looks_like_trace_id(query):
+        full = fetch_tempo_trace(config, query.strip())
+        if full:
+            return {
+                "provider": "TEMPO",
+                "query": query,
+                "endpoint": endpoint,
+                "traces": [full],
+                "total": 1,
+                "simulated": False,
+                "marketplace_backed": True,
+            }
+
     q = quote((query or "").strip() or "{}")
     url = f"{endpoint}/api/search?q={q}&limit={min(limit, 50)}"
-    headers = {}
-    token = config.get("token")
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-
     try:
-        data = get_json(url, headers=headers, timeout=25.0)
+        data = get_json(url, headers=_jaeger_headers(config), timeout=25.0)
     except RuntimeError:
         return _sample_trace(query, provider="TEMPO", endpoint=endpoint, simulated=True)
 
@@ -148,6 +224,7 @@ def search_tempo(config: dict, query: str, *, limit: int = 50) -> dict:
             "status": "error" if item.get("status") == "error" else "ok",
             "spans": [],
         })
+    traces = _enrich_traces(config, traces, provider="TEMPO")
     return {
         "provider": "TEMPO",
         "query": query,

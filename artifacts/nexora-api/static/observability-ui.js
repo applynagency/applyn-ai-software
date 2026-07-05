@@ -8,19 +8,17 @@ async function loadObsPlatform() {
   const page = state.route.page || "";
   if (page === "obs-platform-metrics") {
     try { state.obsPlatformTopMetrics = await api("/v1/observability/metrics/top"); } catch { state.obsPlatformTopMetrics = null; }
-    return;
   }
-  if (page === "obs-platform-logs" || page === "obs-platform-traces") {
-    return;
-  }
-  try { state.obsPlatformDash = await api("/v1/observability/dashboard"); } catch { state.obsPlatformDash = null; }
-  try { state.obsPlatformMap = await api("/v1/observability/service-map"); } catch { state.obsPlatformMap = null; }
-  try { state.obsPlatformSlo = await api("/v1/observability/slo"); } catch { state.obsPlatformSlo = null; }
-  try { state.obsPlatformAlerts = await api("/v1/observability/alerts/intelligence"); } catch { state.obsPlatformAlerts = null; }
-  try { state.obsPlatformCorrelations = await api("/v1/observability/correlation"); } catch { state.obsPlatformCorrelations = []; }
-  try { state.obsPlatformProviders = await api("/v1/observability/providers"); } catch { state.obsPlatformProviders = null; }
 }
-function renderTraceWaterfall(spans, traceDurationMs) {
+function renderTraceTimeline(totalMs) {
+  const total = Math.max(totalMs || 1, 1);
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => {
+    const ms = Math.round(total * f);
+    return `<span class="trace-waterfall-tick" style="left:${(f * 100).toFixed(1)}%">${ms}ms</span>`;
+  }).join("");
+  return `<div class="trace-waterfall-timeline" aria-hidden="true">${ticks}</div>`;
+}
+function renderTraceWaterfall(spans, traceDurationMs, traceId) {
   if (!spans || !spans.length) return "";
   const byId = Object.fromEntries(spans.filter((s) => s.span_id).map((s) => [s.span_id, s]));
   const total = Math.max(traceDurationMs || 0, ...spans.map((s) => (s.start_offset_ms || 0) + (s.duration_ms || 0)), 1);
@@ -30,22 +28,31 @@ function renderTraceWaterfall(spans, traceDurationMs) {
     if (!children[pid]) children[pid] = [];
     children[pid].push(s);
   });
+  const selected = state.obsSelectedSpanId;
   const rows = [];
   function walk(parentId, depth) {
     (children[parentId] || []).forEach((span) => {
       const left = ((span.start_offset_ms || 0) / total) * 100;
       const width = Math.max(((span.duration_ms || 1) / total) * 100, 0.8);
       const err = span.status === "error" ? " trace-waterfall-bar--error" : "";
-      rows.push(`<div class="trace-waterfall-row" style="--depth:${depth}">
+      const sel = selected === span.span_id ? " trace-waterfall-row--selected" : "";
+      const tags = span.tags && Object.keys(span.tags).length
+        ? Object.entries(span.tags).slice(0, 4).map(([k, v]) => `${k}=${v}`).join(", ")
+        : "";
+      rows.push(`<div class="trace-waterfall-row${sel}" style="--depth:${depth}" data-trace-span="${escapeHtml(span.span_id || "")}" data-trace-id="${escapeHtml(traceId || "")}">
         <span class="trace-waterfall-label" title="${escapeHtml(span.operation || "")}">${escapeHtml(span.service || "")} · ${escapeHtml(span.operation || "span")}</span>
         <div class="trace-waterfall-track" aria-hidden="true"><div class="trace-waterfall-bar${err}" style="left:${left.toFixed(2)}%;width:${width.toFixed(2)}%"></div></div>
         <span class="trace-waterfall-ms muted">${span.duration_ms || 0}ms</span>
-      </div>`);
+      </div>
+      ${selected === span.span_id ? `<div class="trace-span-detail muted" style="padding-left:calc(var(--depth,0) * 14px + 12px);font-size:11px;margin-bottom:4px;">${tags ? escapeHtml(tags) : "No tags"}</div>` : ""}`);
       if (span.span_id) walk(span.span_id, depth + 1);
     });
   }
   walk("", 0);
-  return `<div class="trace-waterfall">${rows.join("")}</div>`;
+  return `<div class="trace-waterfall-wrap">
+    ${renderTraceTimeline(total)}
+    <div class="trace-waterfall">${rows.join("")}</div>
+  </div>`;
 }
 function renderObsConnectBanner(providerLabel, integrationKey) {
   const href = integrationKey
@@ -66,38 +73,7 @@ function renderObsPlatform() {
   const page = state.route.page;
   if (page === "obs-platform-metrics") return renderObsMetrics();
   if (page === "obs-platform-logs") return renderObsLogs();
-  if (page === "obs-platform-traces") return renderObsTraces();
-  if (page === "obs-platform-map") return renderObsServiceMap();
-  if (page === "obs-platform-slo") return renderObsSlo();
-  if (page === "obs-platform-alerts") return renderObsAlerts();
-  if (page === "obs-platform-correlation") return renderObsCorrelation();
-  return renderObsPlatformDashboard();
-}
-function renderObsPlatformDashboard() {
-  const d = state.obsPlatformDash || {};
-  const golden = d.golden_signals || {};
-  const signals = Object.entries(golden).map(([k, v]) =>
-    `<div class="ops-list-row"><span>${escapeHtml(k)}</span><span class="muted">${escapeHtml(v.status || "—")}</span></div>`
-  ).join("");
-  const alerts = d.alert_summary || {};
-  return `<div class="container">
-    ${renderHeader("Observability Platform", "Unified metrics, logs, traces, SLOs, and correlation")}
-    ${renderAlerts()}
-    <section class="card"><div class="ops-stats">
-      ${rdMetric("Open Alerts", alerts.open || 0)}
-      ${rdMetric("Critical", alerts.critical || 0)}
-      ${rdMetric("SLO Services", (d.applications?.services || []).length)}
-    </div></section>
-    <section class="card"><h2>Golden Signals</h2><div class="ops-list">${signals || `<p class="muted">No signals yet.</p>`}</div></section>
-    <section class="card"><div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <a class="btn btn-secondary" href="/observability-platform/metrics">Metrics</a>
-      <a class="btn btn-secondary" href="/observability-platform/logs">Logs</a>
-      <a class="btn btn-secondary" href="/observability-platform/traces">Traces</a>
-      <a class="btn btn-secondary" href="/observability-platform/service-map">Service Map</a>
-      <a class="btn btn-secondary" href="/observability-platform/slo">SLOs</a>
-      <a class="btn btn-secondary" href="/observability-platform/correlation">Correlation</a>
-    </div></section>
-  </div>`;
+  return renderObsTraces();
 }
 function renderObsMetrics() {
   const result = state.obsMetricQueryResult;
@@ -139,16 +115,6 @@ function renderObsMetrics() {
     </section>
     <section class="card"><h2>Query results</h2><div class="ops-list">${seriesRows || `<p class="muted">${result ? "No series returned." : "Run a query to see time series."}</p>`}</div></section>
     <section class="card"><h2>Discovered metrics</h2><div class="ops-list">${top || `<p class="muted">No metrics discovered — connect a metrics backend.</p>`}</div></section>
-  </div>`;
-}
-function renderRetiredHubPage(title, targetPath, targetLabel) {
-  return `<div class="container">
-    ${renderHeader(title, "Moved to incident-first surfaces")}
-    ${renderAlerts()}
-    <section class="card">
-      <p class="muted">This hub was retired. Use the link below for the same workflow.</p>
-      <a class="btn btn-primary" href="${escapeHtml(targetPath)}" data-nav="${escapeHtml(targetPath)}">${escapeHtml(targetLabel)}</a>
-    </section>
   </div>`;
 }
 function renderObsLogs() {
@@ -212,7 +178,7 @@ function renderObsTraces() {
       </p>`
     : "";
   const traceRows = traces.map((t) => {
-    const waterfall = renderTraceWaterfall(t.spans || [], t.duration_ms);
+    const waterfall = renderTraceWaterfall(t.spans || [], t.duration_ms, t.trace_id);
     return `
       <article class="card" style="margin-bottom:10px;">
         <div class="ops-list-row">
@@ -229,7 +195,7 @@ function renderObsTraces() {
       : renderObsConnectBanner("OpenTelemetry, Jaeger, or Tempo", "OPENTELEMETRY")) : ""}
     <section class="card">
       <form data-obs-trace-search style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
-        <label style="flex:1;min-width:200px;">Service / query<input name="query" placeholder="api-gateway or checkout" value="${escapeHtml(state.obsTraceQuery || "")}" style="width:100%;font-size:12px;" /></label>
+        <label style="flex:1;min-width:200px;">Service / trace ID<input name="query" placeholder="api-gateway or 16-char trace ID" value="${escapeHtml(state.obsTraceQuery || "")}" style="width:100%;font-size:12px;" /></label>
         <button class="btn btn-primary btn-sm" type="submit" ${busy ? "disabled" : ""}>${busy ? "Searching…" : "Search traces"}</button>
       </form>
       ${statusLine}
@@ -237,55 +203,6 @@ function renderObsTraces() {
     <section class="card"><h2>Traces</h2>${traceRows || `<p class="muted">${result ? "No traces matched." : "Search to load trace spans."}</p>`}</section>
   </div>`;
 }
-function renderObsServiceMap() {
-  const m = state.obsPlatformMap || {};
-  const nodes = (m.nodes || []).map((n) =>
-    `<div class="ops-list-row"><span>${escapeHtml(n.name)}</span><span class="muted">${escapeHtml(n.type)} · ${escapeHtml(n.health || "")}</span></div>`
-  ).join("");
-  return `<div class="container">${renderHeader("Service Map", "Live topology from graph, K8s, and traces")}
-    ${renderAlerts()}
-    <section class="card"><div class="ops-stats">${rdMetric("Services", (m.nodes || []).length)}${rdMetric("Dependencies", (m.edges || []).length)}</div></section>
-    <section class="card"><h2>Nodes</h2><div class="ops-list">${nodes || `<p class="muted">No topology discovered.</p>`}</div></section>
-  </div>`;
-}
-function renderObsSlo() {
-  const slo = state.obsPlatformSlo || {};
-  const services = (slo.services || []).map((s) =>
-    `<div class="ops-list-row"><span>${escapeHtml(s.name)}</span><span>${s.health_score != null ? Math.round(s.health_score) : "—"}</span></div>`
-  ).join("");
-  const budgets = (slo.error_budgets || []).map((b) =>
-    `<div class="ops-list-row"><span>${escapeHtml(b.service_name || b.service_id)}</span><span>${b.remaining_percent != null ? `${Math.round(b.remaining_percent)}%` : "—"}</span></div>`
-  ).join("");
-  return `<div class="container">${renderHeader("SLO Dashboard", "SLIs, error budgets, and burn rates")}
-    ${renderAlerts()}
-    <section class="card"><h2>Services</h2><div class="ops-list">${services || `<p class="muted">No services.</p>`}</div></section>
-    <section class="card"><h2>Error Budgets</h2><div class="ops-list">${budgets || `<p class="muted">No budgets.</p>`}</div></section>
-  </div>`;
-}
-function renderObsAlerts() {
-  const a = state.obsPlatformAlerts || {};
-  const storms = (a.storms || []).map((s) =>
-    `<div class="ops-list-row"><span>${escapeHtml(s.service)}</span><span class="muted">${s.count} alerts · ${escapeHtml(s.severity)}</span></div>`
-  ).join("");
-  const recs = (a.recommendations || []).map((r) =>
-    `<div class="ops-list-row"><span>${escapeHtml(r.action)}</span><span class="muted">${escapeHtml(r.reason || r.suggestion || "")}</span></div>`
-  ).join("");
-  return `<div class="container">${renderHeader("Alert Intelligence", "Grouping, storms, and threshold recommendations")}
-    ${renderAlerts()}
-    <section class="card"><h2>Alert Storms</h2><div class="ops-list">${storms || `<p class="muted">No storms detected.</p>`}</div></section>
-    <section class="card"><h2>Recommendations</h2><div class="ops-list">${recs || `<p class="muted">No recommendations.</p>`}</div></section>
-  </div>`;
-}
-function renderObsCorrelation() {
-  const rows = (state.obsPlatformCorrelations || []).map((c) =>
-    `<div class="ops-list-row"><span>${escapeHtml(c.title)}</span><span class="muted">${escapeHtml(c.root_cause || "Investigating")}</span></div>`
-  ).join("");
-  return `<div class="container">${renderHeader("Correlation Engine", "Unified investigation timelines")}
-    ${renderAlerts()}
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">No investigations yet.</p>`}</div></section>
-  </div>`;
-}
-
 function bindObservabilityUiEvents() {
   document.querySelector("[data-obs-log-search]")?.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -359,5 +276,13 @@ function bindObservabilityUiEvents() {
       state.obsTraceSearchBusy = false;
       render();
     }
+  });
+
+  document.querySelectorAll("[data-trace-span]").forEach((row) => {
+    row.addEventListener("click", () => {
+      const spanId = row.getAttribute("data-trace-span");
+      state.obsSelectedSpanId = state.obsSelectedSpanId === spanId ? null : spanId;
+      render();
+    });
   });
 }

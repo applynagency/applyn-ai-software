@@ -192,6 +192,8 @@ INTEGRATION_VALUE: dict[str, dict] = {
     },
 }
 
+ENTERPRISE_MUTATION_KEYS = frozenset({"SERVICENOW", "SENTRY"})
+
 
 def _default_value(key: str, definition: dict) -> dict:
     caps = definition.get("capabilities") or []
@@ -218,6 +220,7 @@ def enrichment_for(integration_key: str) -> dict:
         "gitops_sync": gitops_sync,
         "discovery": discovery,
         "alert_ingest": ingest,
+        "enterprise_mutations": key in ENTERPRISE_MUTATION_KEYS,
         "unlocks_now": value.get("unlocks_now", []),
         "unlocks_live": value.get("unlocks_live", []),
         "pages": value.get("pages", []),
