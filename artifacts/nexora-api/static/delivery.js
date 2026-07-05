@@ -944,7 +944,9 @@ function renderDeliveryRepositoryDetail() {
 }
 
 function pipelineSyncConnections() {
-  const keys = new Set(["JENKINS", "GITHUB", "GITLAB", "CIRCLECI", "AZURE_DEVOPS", "BITBUCKET"]);
+  const keys = new Set([
+    "JENKINS", "GITHUB", "GITLAB", "CIRCLECI", "AZURE_DEVOPS", "BITBUCKET", "BUILDKITE", "HARNESS",
+  ]);
   return (state.integrationConnections || []).filter((c) => keys.has((c.integration_key || "").toUpperCase()));
 }
 
@@ -1031,14 +1033,19 @@ function renderDeliveryPipelines() {
   const emptyRuns = !runRows && pipes.length
     ? `<p class="muted">Runs appear after sync. Trigger a build in Jenkins, then click <strong>Sync JENKINS</strong>.</p>`
     : `<p class="muted">No runs.</p>`;
+  const ciKeys = ["JENKINS", "GITHUB", "GITLAB", "CIRCLECI", "AZURE_DEVOPS", "BITBUCKET", "BUILDKITE", "HARNESS"];
+  const needsCi = !ciKeys.some((k) => deliveryHasVerifiedProvider(k));
+  const connectBanner = needsCi && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner("Jenkins, GitHub Actions, or Buildkite", "JENKINS", "Sync CI/CD pipelines to populate the unified pipeline view.")
+    : (needsCi ? renderDeliveryConnectBanner("Jenkins, GitHub Actions, or Buildkite", "JENKINS") : "");
   return `<div class="container">${renderHeader("Pipelines", "Unified CI/CD view — sync jobs and read build logs in Nexora")}${renderAlerts()}
-    ${pipes.length === 0 ? renderDeliveryConnectBanner("Jenkins or GitHub Actions", "JENKINS") : ""}
+    ${connectBanner}
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
       ${syncMeta}
       <div class="actions">${syncBtns}</div>
     </div>
     <section class="card"><h2>Pipelines (${pipes.length})</h2><div class="ops-list">
-      ${pipeRows || `<p class="muted">No pipelines. Connect Jenkins or GitHub under <a href="/integrations" data-nav="/integrations">Integrations</a>.</p>`}
+      ${pipeRows || `<p class="muted">No pipelines. Connect Jenkins, GitHub Actions, Buildkite, or Harness under <a href="/integrations" data-nav="/integrations">Integrations</a>, then Sync.</p>`}
     </div></section>
     <section class="card"><h2>Recent Runs</h2><div class="ops-list">
       ${runRows || emptyRuns}

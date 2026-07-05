@@ -37,3 +37,9 @@ def test_enterprise_summarize_unavailable():
 def test_enterprise_mutate_unsupported():
     result = mutate_provider("SPLUNK", {}, "acknowledge_incident", "x")
     assert result["status"] == "failed"
+
+
+def test_enterprise_mutate_trigger_search_missing_creds():
+    result = mutate_provider("SPLUNK", {}, "trigger_search", "my-search")
+    assert result["status"] == "failed"
+    assert "missing" in result["reason"]

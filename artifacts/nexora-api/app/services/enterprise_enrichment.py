@@ -8,6 +8,8 @@ import urllib.error
 import urllib.request
 from typing import Any
 
+from urllib.parse import quote
+
 from app.delivery.pipelines.ci_http import bearer_header, get_json
 
 
@@ -78,7 +80,7 @@ def splunk_summary(secret: dict) -> dict:
         "available": True,
         "index_count": len(entries) if isinstance(entries, list) else 0,
         "sample_indexes": [n for n in names if n],
-        "mutations_supported": ["run_saved_search"],
+        "mutations_supported": ["trigger_search"],
     }
 
 
@@ -108,6 +110,24 @@ def sentry_summary(secret: dict) -> dict:
         ],
         "mutations_supported": ["resolve_issue", "assign_issue"],
     }
+
+
+def splunk_trigger_search(secret: dict, search_name: str) -> dict:
+    endpoint = (secret.get("endpoint") or "").rstrip("/")
+    token = secret.get("token")
+    if not endpoint or not token or not search_name:
+        return {"status": "failed", "reason": "missing_credentials_or_search"}
+    headers = {**bearer_header(token), "Accept": "application/json"}
+    url = f"{endpoint}/services/saved/searches/{quote(search_name)}/dispatch"
+    payload = json.dumps({"output_mode": "json"}).encode()
+    req = urllib.request.Request(url, data=payload, method="POST", headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=25.0) as resp:  # noqa: S310
+            data = json.loads(resp.read().decode()) if resp.length else {}
+    except urllib.error.HTTPError as exc:
+        return {"status": "failed", "reason": exc.read().decode(errors="replace")[:200]}
+    sid = (data.get("sid") if isinstance(data, dict) else None) or ""
+    return {"status": "triggered", "search": search_name, "sid": sid}
 
 
 def servicenow_acknowledge_incident(secret: dict, incident_sys_id: str, *, note: str = "") -> dict:
@@ -194,4 +214,6 @@ def mutate_provider(integration_key: str, secret: dict, action: str, resource_id
         return servicenow_acknowledge_incident(secret, resource_id, note=kwargs.get("note", ""))
     if action == "resolve_issue" and key == "SENTRY":
         return sentry_resolve_issue(secret, resource_id)
+    if action == "trigger_search" and key == "SPLUNK":
+        return splunk_trigger_search(secret, resource_id)
     return {"status": "failed", "reason": f"unsupported_action:{action}"}

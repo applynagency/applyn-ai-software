@@ -129,6 +129,74 @@ function integrationDashboardActions(c, enrich, canWrite) {
     : "";
 }
 
+async function loadIntegrationEnterpriseSummary(connectionId, integrationKey) {
+  const key = (integrationKey || "").toUpperCase();
+  state.integrationEnterpriseSummary = null;
+  if (!["SERVICENOW", "SPLUNK", "SENTRY"].includes(key)) return;
+  try {
+    const summary = await api("/v1/integrations/enterprise/summary");
+    const row = (summary?.providers || []).find((p) => p.connection_id === connectionId);
+    state.integrationEnterpriseSummary = row || null;
+  } catch {
+    state.integrationEnterpriseSummary = null;
+  }
+}
+
+function renderIntegrationEnterprisePanel(c) {
+  const key = (c.integration_key || "").toUpperCase();
+  if (!["SERVICENOW", "SPLUNK", "SENTRY"].includes(key)) return "";
+  const row = state.integrationEnterpriseSummary;
+  if (!row) {
+    return `<section class="card" style="margin-top:12px;">
+      <h2>Enterprise live data</h2>
+      <p class="muted" style="font-size:12px;">Validate this connection to load CMDB, index, or issue stats from ${escapeHtml(key)}.</p>
+    </section>`;
+  }
+  if (!row.available) {
+    return `<section class="card" style="margin-top:12px;">
+      <h2>Enterprise live data</h2>
+      <p class="muted" style="font-size:12px;">${row.error ? escapeHtml(row.error) : "Live enrichment unavailable — check credentials and validate."}</p>
+    </section>`;
+  }
+  const canWrite = canWriteResources();
+  let stats = "";
+  let actions = "";
+  if (key === "SERVICENOW") {
+    stats = `<p class="muted" style="font-size:12px;">${row.open_incidents || 0} open incident(s) · ${row.cmdb_services || 0} CMDB service(s)</p>
+      ${(row.sample_services || []).length ? `<p class="muted" style="font-size:11px;">Sample: ${row.sample_services.map((s) => escapeHtml(s)).join(", ")}</p>` : ""}`;
+    if (canWrite && (row.mutations_supported || []).includes("acknowledge_incident")) {
+      actions = `<div class="actions" style="margin-top:8px;gap:8px;flex-wrap:wrap;">
+        <input class="form-input" data-enterprise-resource placeholder="Incident sys_id" style="max-width:220px;font-size:12px;" />
+        <button type="button" class="btn btn-secondary btn-sm" data-enterprise-mutate="acknowledge_incident">Acknowledge incident</button>
+      </div>`;
+    }
+  } else if (key === "SPLUNK") {
+    stats = `<p class="muted" style="font-size:12px;">${row.index_count || 0} index(es)</p>
+      ${(row.sample_indexes || []).length ? `<p class="muted" style="font-size:11px;">Sample: ${row.sample_indexes.map((s) => escapeHtml(s)).join(", ")}</p>` : ""}`;
+    if (canWrite && (row.mutations_supported || []).includes("trigger_search")) {
+      actions = `<div class="actions" style="margin-top:8px;gap:8px;flex-wrap:wrap;">
+        <input class="form-input" data-enterprise-resource placeholder="Saved search name" style="max-width:220px;font-size:12px;" />
+        <button type="button" class="btn btn-secondary btn-sm" data-enterprise-mutate="trigger_search">Trigger saved search</button>
+      </div>`;
+    }
+  } else if (key === "SENTRY") {
+    stats = `<p class="muted" style="font-size:12px;">${row.unresolved_issues || 0} unresolved issue(s)${row.organization ? ` · org ${escapeHtml(row.organization)}` : ""}</p>
+      ${(row.top_issues || []).length ? `<ul class="muted" style="font-size:11px;margin:8px 0 0;padding-left:18px;">${row.top_issues.map((i) => `<li>${escapeHtml(i.title || "Issue")} (${i.count || 0})</li>`).join("")}</ul>` : ""}`;
+    if (canWrite && (row.mutations_supported || []).includes("resolve_issue")) {
+      actions = `<div class="actions" style="margin-top:8px;gap:8px;flex-wrap:wrap;">
+        <input class="form-input" data-enterprise-resource placeholder="Issue id" style="max-width:220px;font-size:12px;" />
+        <button type="button" class="btn btn-secondary btn-sm" data-enterprise-mutate="resolve_issue">Resolve issue</button>
+      </div>`;
+    }
+  }
+  return `<section class="card" style="margin-top:12px;">
+    <h2>Enterprise live data</h2>
+    ${stats}
+    ${actions}
+    <p class="muted" style="font-size:11px;margin-top:8px;"><a href="/logs" data-nav="/logs">Logs</a> · <a href="/incidents" data-nav="/incidents">Incidents</a></p>
+  </section>`;
+}
+
 async function loadIntegrationPipelineActivity(connectionId, integrationKey) {
   const key = (integrationKey || "").toUpperCase();
   state.integrationPipelines = [];
@@ -395,7 +463,10 @@ async function loadIntegrationDetailData(connectionId) {
     const readiness = await api("/v1/integrations/connections/readiness").catch(() => []);
     const ready = (readiness || []).find((r) => r.resource_id === connectionId || r.id === connectionId);
     state.integrationDetailReadiness = ready ? redactSensitiveObject(ready) : null;
-    await loadIntegrationPipelineActivity(connectionId, match.integration_key);
+    await Promise.all([
+      loadIntegrationPipelineActivity(connectionId, match.integration_key),
+      loadIntegrationEnterpriseSummary(connectionId, match.integration_key),
+    ]);
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) {
       state.integrationDetailDenied = true;
@@ -698,6 +769,7 @@ function renderIntegrationDetail() {
         </div>
       </section>
       ${unlocksPanel}
+      ${renderIntegrationEnterprisePanel(c)}
       ${integrationDashboardActions(c, enrich, canWrite)}
       ${renderIntegrationPipelineActivity(c)}
       ${notificationPanel}
@@ -945,6 +1017,39 @@ function bindIntegrationOnboardingEvents() {
   document.querySelector("[data-integration-pipeline-logs-close]")?.addEventListener("click", () => {
     state.integrationPipelineLogPanel = null;
     render();
+  });
+
+  document.querySelectorAll("[data-enterprise-mutate]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      if (!canWriteResources() || !state.integrationDetail) return;
+      const action = btn.getAttribute("data-enterprise-mutate");
+      const card = btn.closest("section");
+      const input = card?.querySelector("[data-enterprise-resource]");
+      const resourceId = (input?.value || "").trim();
+      if (!resourceId) {
+        state.error = "Enter a resource id (incident sys_id, search name, or issue id).";
+        render();
+        return;
+      }
+      if (!window.confirm(`Run ${action} on ${resourceId}?`)) return;
+      btn.disabled = true;
+      state.error = null;
+      state.message = null;
+      try {
+        const r = await api(`/v1/integrations/connections/${state.integrationDetail.id}/mutate`, {
+          method: "POST",
+          body: JSON.stringify({ action, resource_id: resourceId }),
+        });
+        state.message = r.status === "failed" ? (r.reason || "Mutation failed") : `${action} completed`;
+        await loadIntegrationEnterpriseSummary(state.integrationDetail.id, state.integrationDetail.integration_key);
+        render();
+      } catch (error) {
+        state.error = sanitizeIntegrationError(error.message);
+        render();
+      } finally {
+        btn.disabled = false;
+      }
+    });
   });
 
   document.querySelectorAll("[data-integration-notify-test]").forEach((btn) => {

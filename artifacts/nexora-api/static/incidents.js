@@ -358,11 +358,17 @@ function renderIncidentsList() {
 
   const openCount = items.filter((i) => !/RESOLVED|CLOSED/i.test(String(i.lifecycle_status || i.status))).length;
   const criticalCount = items.filter((i) => /CRITICAL/i.test(String(i.severity || ""))).length;
+  const needsIncidentConnect = typeof hasVerifiedIntegration === "function"
+    && !["PAGERDUTY", "SERVICENOW", "OPSGENIE"].some((k) => hasVerifiedIntegration(k));
+  const incidentBanner = needsIncidentConnect && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner("PagerDuty or ServiceNow", "PAGERDUTY", "Connect incident management tools to correlate alerts, CMDB context, and on-call routing.")
+    : "";
 
   return `
     <div class="container">
       ${renderHeader("Incidents", "AI-powered resolution — root cause & fix suggestions")}
       ${renderAlerts()}
+      ${incidentBanner}
       ${criticalCount > 0 ? `<section class="card ops-priority-critical" style="margin-bottom:12px;"><strong>${criticalCount} critical</strong> — open immediately for AI root cause & fix steps.</section>` : ""}
       ${openCount > 0 ? `<p class="muted" style="font-size:12px;margin-bottom:8px;">${openCount} open incident(s).</p>` : ""}
       <p class="muted" style="font-size:12px;"><a href="/alerts" data-nav="/alerts">Alerts</a> · <a href="/copilot" data-nav="/copilot">AI Copilot</a> · <a href="/incidents/on-call" data-nav="/incidents/on-call">On-call</a></p>
@@ -670,10 +676,16 @@ function renderAlertsList() {
   const pollBusy = state.alertsPollLoading;
   const selectedId = state.selectedAlertId;
   const selected = items.find((a) => a.id === selectedId);
+  const needsAlertConnect = typeof hasVerifiedIntegration === "function"
+    && !["PROMETHEUS", "ALERTMANAGER", "PAGERDUTY", "DATADOG", "GRAFANA"].some((k) => hasVerifiedIntegration(k));
+  const alertBanner = needsAlertConnect && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner("Prometheus or Alertmanager", "PROMETHEUS", "Connect observability and paging tools to ingest firing alerts and auto-investigate incidents.")
+    : "";
   return `
     <div class="container">
       ${renderHeader("Alerts", "Firing alerts → auto-investigated incidents")}
       ${renderAlerts()}
+      ${alertBanner}
       <p class="muted" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <a href="/incidents" data-nav="/incidents">Incidents</a>
         <button type="button" class="btn btn-secondary btn-sm" data-monitoring-poll ${pollBusy ? "disabled" : ""}>

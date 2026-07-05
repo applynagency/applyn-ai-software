@@ -72,6 +72,10 @@ def gitops_sync(
 
 
 def gitops_rollback(app_name: str, revision: int, engine: str = "ArgoCD", secret: dict | None = None) -> dict:
+    if engine == "Flux" and secret:
+        from app.delivery.gitops import flux_live
+
+        return flux_live.rollback_application(secret, app_name, revision)
     if engine == "ArgoCD" and secret:
         from app.delivery.gitops import argocd_live
 

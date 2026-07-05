@@ -82,6 +82,16 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     "ELASTIC": ["endpoint", "api_key"],
     "OPSGENIE": ["api_key"],
     "SONARQUBE": ["endpoint", "token"],
+    # P3 enterprise + extended marketplace providers
+    "ALERTMANAGER": ["endpoint"],
+    "SPLUNK": ["endpoint", "token"],
+    "SERVICENOW": ["instance_url", "username", "password"],
+    "OPENTELEMETRY": ["endpoint"],
+    "SENTRY": ["endpoint", "token"],
+    "DYNATRACE": ["environment_id", "api_token"],
+    "BUILDKITE": ["organization", "api_token"],
+    "HARNESS": ["account_id", "api_key"],
+    "FLUX": ["kubeconfig"],
 }
 
 # Field names that must NEVER be logged or surfaced anywhere.

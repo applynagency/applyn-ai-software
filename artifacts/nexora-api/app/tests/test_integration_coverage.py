@@ -72,3 +72,17 @@ def test_bitbucket_enrichment():
     assert e["pipeline_sync"] is True
     assert e["discovery"] is True
     assert e["alert_ingest"] is True
+
+
+def test_enterprise_mutation_keys():
+    for key in ("SERVICENOW", "SENTRY", "SPLUNK"):
+        e = enrichment_for(key)
+        assert e["enterprise_mutations"] is True
+    assert enrichment_for("GITHUB")["enterprise_mutations"] is False
+
+
+def test_all_integrations_have_credential_schema():
+    from app.security.secrets.service import REQUIRED_FIELDS
+
+    missing = [k for k in ALL_KEYS if k not in REQUIRED_FIELDS]
+    assert not missing, f"REQUIRED_FIELDS missing: {missing}"
