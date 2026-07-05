@@ -166,4 +166,7 @@ async def test_security_scan_gitops_dashboard_dora(client):
 
     dora = await client.get("/v1/delivery/dora", headers=auth_headers(token))
     assert dora.status_code == 200
-    assert dora.json()["deployment_frequency_per_day"] >= 0
+    body = dora.json()
+    assert body.get("data_sufficient") is False
+    assert body.get("lead_time_hours") is None
+    assert body.get("mttr_hours") is None

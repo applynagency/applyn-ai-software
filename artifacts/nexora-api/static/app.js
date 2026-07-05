@@ -4742,6 +4742,55 @@ function renderOpsConnectBanner(label, providerKey, message) {
   </div>`;
 }
 
+const OPS_FIDELITY_DOMAIN_KEYS = {
+  observe: ["PROMETHEUS", "ALERTMANAGER", "DATADOG", "GRAFANA", "LOKI"],
+  deliver: ["JENKINS", "GITHUB", "GITLAB", "CIRCLECI", "AZURE_DEVOPS", "BITBUCKET", "BUILDKITE", "HARNESS", "ARGOCD", "FLUX"],
+  incident: ["PAGERDUTY", "SERVICENOW", "OPSGENIE"],
+  security: ["SONARQUBE", "KUBERNETES", "AWS", "AZURE"],
+};
+
+function computeOpsDataFidelity(stateObj) {
+  const integrations = Array.isArray(stateObj?.integrationConnections)
+    ? stateObj.integrationConnections
+    : (stateObj?.integrationConnections?.items || []);
+  const verified = integrations.filter((c) => /VERIFIED|CONNECTED/i.test(String(c.status || "")));
+  const synced = integrations.filter((c) => c.last_sync_at);
+  const verifiedKeys = new Set(verified.map((c) => String(c.integration_key || "").toUpperCase()));
+  const domains = Object.fromEntries(
+    Object.entries(OPS_FIDELITY_DOMAIN_KEYS).map(([domain, keys]) => [
+      domain,
+      keys.some((k) => verifiedKeys.has(k)),
+    ]),
+  );
+  const domainCount = Object.values(domains).filter(Boolean).length;
+  let level = "simulated";
+  if (verified.length >= 2 && (synced.length >= 1 || domainCount >= 2)) level = "live";
+  else if (verified.length >= 1 || domainCount >= 1) level = "partial";
+  return { level, verified: verified.length, synced: synced.length, domains, domainCount };
+}
+
+function renderOpsDataFidelityBadge(fidelity) {
+  if (!fidelity) return "";
+  const specs = {
+    live: { label: "Live data", color: "#16a34a", bg: "#f0fdf4", hint: "Verified integrations are supplying operational data." },
+    partial: { label: "Partial data", color: "#d97706", bg: "#fffbeb", hint: "Some domains connected — connect observability, CI/CD, and incident tools for full coverage." },
+    simulated: { label: "No live data", color: "#dc2626", bg: "#fef2f2", hint: "Connect and verify integrations to replace sample/offline signals with real estate data." },
+  };
+  const spec = specs[fidelity.level] || specs.simulated;
+  const missing = Object.entries(fidelity.domains || {})
+    .filter(([, ok]) => !ok)
+    .map(([d]) => d)
+    .join(", ");
+  return `<div class="ops-fidelity-badge" role="status" style="background:${spec.bg};border:1px solid ${spec.color}33;margin-bottom:12px;padding:10px 14px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div>
+      <strong style="color:${spec.color};font-size:13px;">${escapeHtml(spec.label)}</strong>
+      <span class="muted" style="font-size:12px;margin-left:8px;">${escapeHtml(spec.hint)}</span>
+      ${missing && fidelity.level !== "live" ? `<span class="muted" style="font-size:11px;display:block;margin-top:4px;">Missing: ${escapeHtml(missing)}</span>` : ""}
+    </div>
+    <a class="btn btn-secondary btn-sm" href="/integrations/onboarding" data-nav="/integrations/onboarding">Connect tools</a>
+  </div>`;
+}
+
 function saveDashboardGuideDismissed(dismissed) {
   try {
     localStorage.setItem(DASHBOARD_GUIDE_STORAGE_KEY, dismissed ? "true" : "false");

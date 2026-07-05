@@ -56,6 +56,7 @@ from app.repositories.delivery import (
     DeliverySecurityScanRepository,
     SourceConnectionRepository,
 )
+from app.repositories.incident import IncidentInvestigationRepository
 from app.repositories.integration import IntegrationConnectionRepository
 from app.schemas.delivery import DeploymentCreate
 from app.security.secrets import SecretManagerService
@@ -97,6 +98,7 @@ class DeliveryService:
         self.gitops = DeliveryGitOpsAppRepository(session)
         self.operations = DeliveryOperationRepository(session)
         self.credentials = DeploymentCredentialRepository(session)
+        self.incidents = IncidentInvestigationRepository(session)
         self.secrets = SecretManagerService(session)
         self.audit = AuditLogRepository(session)
 
@@ -979,6 +981,7 @@ class DeliveryService:
         self._ensure_read(user, org_context)
         deploys = await self.deployments.list_for_org(organization_id)
         runs = await self.pipeline_runs.list_for_org(organization_id)
+        incident_rows, _ = await self.incidents.list_for_org(organization_id, limit=500)
         deploy_dicts = [
             {"status": d.status, "created_at": d.created_at, "completed_at": d.completed_at}
             for d in deploys
@@ -987,7 +990,17 @@ class DeliveryService:
             {"status": r.status, "started_at": r.created_at, "finished_at": r.finished_at}
             for r in runs
         ]
-        return compute_dora(deployments=deploy_dicts, pipeline_runs=run_dicts, window_days=window_days)
+        incident_dicts = [
+            {"created_at": i.created_at, "resolved_at": i.resolved_at}
+            for i in incident_rows
+            if i.resolved_at
+        ]
+        return compute_dora(
+            deployments=deploy_dicts,
+            pipeline_runs=run_dicts,
+            incidents=incident_dicts,
+            window_days=window_days,
+        )
 
     async def dashboard(self, user: User, org_context: OrgContext):
         organization_id = org_context.requires_organization

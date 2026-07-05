@@ -274,6 +274,8 @@ globalThis.__nexoraExports = {
   NAV_COLLAPSED_STORAGE_KEY,
   OPS_OPERATIONAL_FLOWS,
   buildOpsDashboardSnapshot,
+  computeOpsDataFidelity,
+  renderOpsDataFidelityBadge,
   computeOpsRecommendedAction,
   opsFlowLaneCount,
   isDashboardQuiet,

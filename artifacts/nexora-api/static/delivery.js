@@ -1105,22 +1105,30 @@ function renderDeliverySecurity() {
 
 function renderDeliveryDora() {
   const d = state.dlvDora || (state.dlvDashboard && state.dlvDashboard.dora) || {};
-  if (!d.deployment_frequency_per_day && !state.dlvDora && !state.dlvDashboard) {
+  if (!d.deployment_frequency_per_day && d.deployment_frequency_per_day !== 0 && !state.dlvDora && !state.dlvDashboard) {
     return renderFeatureUnavailablePage("DORA", "DORA metrics are not available.");
   }
   const ciKeys = ["JENKINS", "GITHUB", "GITLAB", "CIRCLECI", "AZURE_DEVOPS", "BITBUCKET", "BUILDKITE", "HARNESS"];
   const needsCi = !ciKeys.some((k) => deliveryHasVerifiedProvider(k));
-  const banner = needsCi && typeof renderOpsConnectBanner === "function"
-    ? renderOpsConnectBanner("Jenkins, GitHub Actions, or Buildkite", "JENKINS", "Sync CI/CD pipelines to populate DORA metrics.")
+  const insufficient = d.data_sufficient === false;
+  const banner = (needsCi || insufficient) && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner("Jenkins, GitHub Actions, or Buildkite", "JENKINS", "Sync CI/CD pipelines to populate DORA metrics from real build history.")
     : (needsCi ? renderDeliveryConnectBanner("Jenkins, GitHub Actions, or Buildkite", "JENKINS") : "");
+  const insufficientCard = insufficient ? `
+    <section class="card ops-data-insufficient" style="margin-bottom:12px;border-left:4px solid #d97706;">
+      <strong style="color:#92400e;">Insufficient data</strong>
+      <p class="muted" style="font-size:12px;margin:6px 0 0;">DORA metrics require synced pipeline runs or deployments in the last ${d.window_days || 30} days. Connect CI/CD tools, verify, then <strong>Sync pipelines</strong>.</p>
+    </section>` : "";
+  const fmt = (val, suffix = "") => (val == null || val === "" ? "—" : `${val}${suffix}`);
   return `<div class="container">${renderHeader("DORA Dashboard", "Engineering effectiveness")}${renderAlerts()}
     ${banner}
-    <p class="muted" style="font-size:12px;margin-bottom:12px;">Metrics are computed from synced CI/CD pipelines (Jenkins, GitHub Actions, GitLab, CircleCI, Azure DevOps, Bitbucket, Buildkite, Harness). Connect and verify integrations, then use <strong>Sync pipelines</strong> on each tool.</p>
+    ${insufficientCard}
+    <p class="muted" style="font-size:12px;margin-bottom:12px;">Metrics are computed from synced CI/CD pipelines. No fabricated defaults are shown when data is missing.</p>
     <section class="card"><div class="ops-stats">
-      ${rdMetric("Deployment Frequency", `${d.deployment_frequency_per_day ?? "—"}/day`)}
-      ${rdMetric("Lead Time", `${d.lead_time_hours ?? "—"}h`)}
-      ${rdMetric("Change Failure Rate", `${d.change_failure_rate_percent ?? "—"}%`)}
-      ${rdMetric("MTTR", `${d.mttr_hours ?? "—"}h`)}
+      ${rdMetric("Deployment Frequency", `${fmt(d.deployment_frequency_per_day)}/day`)}
+      ${rdMetric("Lead Time", `${fmt(d.lead_time_hours)}h`)}
+      ${rdMetric("Change Failure Rate", `${fmt(d.change_failure_rate_percent)}%`)}
+      ${rdMetric("MTTR", `${fmt(d.mttr_hours)}h`)}
     </div></section>
   </div>`;
 }

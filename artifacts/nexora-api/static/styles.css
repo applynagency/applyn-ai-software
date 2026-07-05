@@ -2981,6 +2981,20 @@ h3 {
   text-align: center;
 }
 
+.ops-signal-source {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+  text-align: center;
+}
+.ops-signal-source-live { color: #16a34a; }
+.ops-signal-source-sample { color: #d97706; }
+.ops-signal-source-partial { color: #2563eb; }
+.ops-signal-source-none { color: #94a3b8; }
+
 .ops-dashboard-grid {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;

@@ -36,10 +36,39 @@ test("ops dashboard: stats-first command center composition", () => {
     opsSource.indexOf("function bindOpsCommandCenterEvents"),
   );
   assert.match(dashFn, /renderOpsAlertStrip/);
+  assert.match(dashFn, /renderOpsDataFidelityBadge/);
   assert.match(dashFn, /renderOpsDomainBars/);
   assert.match(dashFn, /renderOpsTrendCharts/);
-  assert.match(opsSource, /\/v1\/monitoring\/dashboard/);
-  assert.doesNotMatch(dashFn, /renderOpsFlowLanes/);
+  assert.match(opsSource, /signalSources/);
+  assert.match(opsSource, /opsSignalSourceLabel/);
+  assert.match(opsSource, /observability\/metrics\/query/);
+});
+
+test("ops dashboard: signal source labels", () => {
+  const opsSource = readFileSync(opsChunkPath, "utf8");
+  assert.match(opsSource, /ops-signal-source-live/);
+  assert.match(opsSource, /ops-signal-source-sample/);
+  assert.match(opsSource, /function opsSignalSourceLabel/);
+});
+
+test("ops dashboard: data fidelity badge levels", () => {
+  const appSource = readFileSync(appJsPath, "utf8");
+  assert.match(appSource, /function computeOpsDataFidelity/);
+  assert.match(appSource, /function renderOpsDataFidelityBadge/);
+  const { computeOpsDataFidelity } = loadFrontendExports();
+  const empty = computeOpsDataFidelity({ integrationConnections: [] });
+  assert.equal(empty.level, "simulated");
+  const partial = computeOpsDataFidelity({
+    integrationConnections: [{ integration_key: "PROMETHEUS", status: "VERIFIED" }],
+  });
+  assert.equal(partial.level, "partial");
+  const live = computeOpsDataFidelity({
+    integrationConnections: [
+      { integration_key: "PROMETHEUS", status: "VERIFIED", last_sync_at: "2026-01-01" },
+      { integration_key: "GITHUB", status: "CONNECTED" },
+    ],
+  });
+  assert.equal(live.level, "live");
 });
 
 test("ops dashboard: recommended action prioritizes critical incidents", () => {

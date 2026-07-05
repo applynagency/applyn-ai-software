@@ -15,7 +15,7 @@ async function loadOpsDashboardSignals() {
     loadCredentials().catch(() => { state.credentials = []; }),
     api("/v1/integrations/connections").then((r) => { state.integrationConnections = r || []; }).catch(() => { state.integrationConnections = []; }),
   ]);
-  const [myWork, queue, alerts, changes, deliveryOps, monDash, pipelineRuns] = await Promise.all([
+  const [myWork, queue, alerts, changes, deliveryOps, monDash, pipelineRuns, metricsProbe] = await Promise.all([
     api("/v1/ops-workspace/my-work").catch(() => null),
     api("/v1/ops-workspace/queue").catch(() => null),
     api("/v1/monitoring/alerts?limit=200").catch(() => ({ items: [] })),
@@ -23,6 +23,7 @@ async function loadOpsDashboardSignals() {
     api("/v1/delivery/operations").catch(() => []),
     api("/v1/monitoring/dashboard").catch(() => null),
     api("/v1/delivery/pipeline-runs?limit=100").catch(() => []),
+    api("/v1/observability/metrics/query", { method: "POST", body: { query: "up", window: "5m" } }).catch(() => null),
   ]);
   state.opsMyWork = myWork;
   state.opsQueue = queue;
@@ -39,6 +40,22 @@ async function loadOpsDashboardSignals() {
     : (deliveryOpsRaw?.items || []);
   const pendingApprovals = deliveryOpsList.filter((o) => String(o.status || "") === "PENDING_APPROVAL");
   const runsList = Array.isArray(pipelineRuns) ? pipelineRuns : (pipelineRuns?.items || []);
+  const integrations = Array.isArray(state.integrationConnections)
+    ? state.integrationConnections
+    : (state.integrationConnections?.items || []);
+  const verifiedKeys = new Set(
+    integrations
+      .filter((c) => /VERIFIED|CONNECTED/i.test(String(c.status || "")))
+      .map((c) => String(c.integration_key || "").toUpperCase()),
+  );
+  const obsKeys = ["PROMETHEUS", "ALERTMANAGER", "DATADOG", "GRAFANA", "LOKI"];
+  const ciKeys = ["JENKINS", "GITHUB", "GITLAB", "CIRCLECI", "AZURE_DEVOPS", "BITBUCKET", "BUILDKITE", "HARNESS"];
+  const hasObsIntegration = obsKeys.some((k) => verifiedKeys.has(k));
+  const hasCiIntegration = ciKeys.some((k) => verifiedKeys.has(k));
+  const metricsLive = metricsProbe && metricsProbe.simulated === false;
+  const pipelineLive = runsList.length > 0;
+  const alertsLive = hasObsIntegration || firingAlerts.length > 0;
+  const servicesLive = hasObsIntegration && (state.serviceOverview?.services || state.serviceHealth || []).length > 0;
   const incidentTrend = (monDash?.incident_trend || []).map((p) => ({
     label: p.period || "",
     count: p.count || 0,
@@ -50,6 +67,12 @@ async function loadOpsDashboardSignals() {
     pendingApprovals,
     attentionItems: myWork?.total_attention_items || 0,
     queueTotal: queue?.total || (queue?.items || []).length,
+    signalSources: {
+      metrics: metricsLive ? "live" : (metricsProbe ? "sample" : "none"),
+      alerts: alertsLive ? "live" : "none",
+      pipelines: pipelineLive ? "live" : (hasCiIntegration ? "connected" : "none"),
+      services: servicesLive ? "live" : (hasObsIntegration ? "connected" : "none"),
+    },
     trends: {
       incidents: incidentTrend.length ? incidentTrend : bucketDailyTrend(state.incidents, "created_at", 7),
       alerts: bucketDailyTrend(firingAlerts, "created_at", 7),
@@ -329,6 +352,7 @@ function buildOpsDashboardSnapshot(stateObj) {
     firingAlerts: (dash.firingAlerts || []).length,
     pendingChanges: (dash.pendingChanges || []).length,
     pendingApprovals: (dash.pendingApprovals || []).length,
+    signalSources: dash.signalSources || {},
   };
 }
 function computeOpsRecommendedAction(snapshot) {
@@ -496,14 +520,21 @@ function renderOpsDomainBars(snapshot) {
       <div class="ops-domain-bar-list">${bars}</div>
     </section>`;
 }
+function opsSignalSourceLabel(mode) {
+  if (mode === "live") return `<span class="ops-signal-source ops-signal-source-live">live</span>`;
+  if (mode === "sample") return `<span class="ops-signal-source ops-signal-source-sample">sample</span>`;
+  if (mode === "connected") return `<span class="ops-signal-source ops-signal-source-partial">connected</span>`;
+  return `<span class="ops-signal-source ops-signal-source-none">no backend</span>`;
+}
 function renderOpsSignalsBar(snapshot) {
+  const sources = snapshot.signalSources || {};
   const signals = [
-    { key: "openIncidents", label: "Open Incidents", value: snapshot.openIncidents, href: "/incidents", warn: snapshot.openIncidents > 0 },
-    { key: "firingAlerts", label: "Firing Alerts", value: snapshot.firingAlerts, href: "/alerts", warn: snapshot.firingAlerts > 0 },
-    { key: "servicesAtRisk", label: "Services at Risk", value: snapshot.servicesAtRisk, href: "/services", warn: snapshot.servicesAtRisk > 0 },
-    { key: "queueTotal", label: "Needs Triage", value: snapshot.queueTotal, href: "/incidents", warn: snapshot.queueTotal > 0 },
-    { key: "pendingApprovals", label: "Pending Approvals", value: snapshot.pendingApprovals, href: "/delivery/approvals", warn: snapshot.pendingApprovals > 0 },
-    { key: "pendingChanges", label: "Change Requests", value: snapshot.pendingChanges, href: "/delivery/changes", warn: snapshot.pendingChanges > 0 },
+    { key: "openIncidents", label: "Open Incidents", value: snapshot.openIncidents, href: "/incidents", warn: snapshot.openIncidents > 0, source: "live" },
+    { key: "firingAlerts", label: "Firing Alerts", value: snapshot.firingAlerts, href: "/alerts", warn: snapshot.firingAlerts > 0, source: sources.alerts },
+    { key: "servicesAtRisk", label: "Services at Risk", value: snapshot.servicesAtRisk, href: "/services", warn: snapshot.servicesAtRisk > 0, source: sources.services },
+    { key: "queueTotal", label: "Needs Triage", value: snapshot.queueTotal, href: "/incidents", warn: snapshot.queueTotal > 0, source: "live" },
+    { key: "pendingApprovals", label: "Pending Approvals", value: snapshot.pendingApprovals, href: "/delivery/approvals", warn: snapshot.pendingApprovals > 0, source: sources.pipelines },
+    { key: "pendingChanges", label: "Change Requests", value: snapshot.pendingChanges, href: "/delivery/changes", warn: snapshot.pendingChanges > 0, source: sources.pipelines },
   ];
   const helpByKey = Object.fromEntries(OPS_SIGNAL_HELP.map((h) => [h.key, h.help]));
   return `
@@ -514,6 +545,7 @@ function renderOpsSignalsBar(snapshot) {
           <a class="ops-signal${s.warn ? " ops-signal-warn" : ""}" href="${escapeHtml(s.href)}" data-nav="${escapeHtml(s.href)}" title="${escapeHtml(helpByKey[s.key] || "")}">
             <span class="ops-signal-value">${s.value}</span>
             <span class="ops-signal-label">${escapeHtml(s.label)}</span>
+            ${opsSignalSourceLabel(s.source)}
           </a>`).join("")}
       </div>
     </section>`;
@@ -689,11 +721,14 @@ function renderOpsAttentionList(stateObj, snapshot) {
 }
 function renderOpsCommandCenterDashboard() {
   const snapshot = buildOpsDashboardSnapshot(state);
+  const fidelity = typeof computeOpsDataFidelity === "function" ? computeOpsDataFidelity(state) : null;
+  const fidelityBadge = typeof renderOpsDataFidelityBadge === "function" ? renderOpsDataFidelityBadge(fidelity) : "";
   const needsConnect = snapshot.integrations === 0 && snapshot.infrastructure === 0;
   return `
     <div class="container ops-command-center">
       ${renderHeader("AI Ops Command Center", "Live signals across your estate")}
       ${renderAlerts()}
+      ${fidelityBadge}
       ${renderOpsDashboardWelcome()}
       ${renderOpsAlertStrip(snapshot)}
       ${renderOpsSignalsBar(snapshot)}

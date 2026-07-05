@@ -177,15 +177,36 @@ class SecurityPlatformService:
             "delivery_tools": sec_registry.supported_delivery_tools(),
         }
 
+    async def _security_has_live_data(self, organization_id: str) -> bool:
+        statuses = {ConnectionStatus.VERIFIED.value, ConnectionStatus.CONNECTED.value}
+        live_keys = {"SONARQUBE", "KUBERNETES", "AWS", "AZURE", "GCP"}
+        for conn in await self.marketplace_connections.list_for_org(organization_id):
+            if (conn.integration_key or "").upper() in live_keys and conn.status in statuses:
+                return True
+        scans, _ = await self.scans.list_for_org(organization_id, limit=50)
+        return any(not s.simulated for s in scans)
+
     # -------------------------------------------------------------- overview
     async def overview(self, user: User, org_context: OrgContext) -> dict:
         organization_id = self._ensure_read(user, org_context)
         rows, total = await self.findings.list_for_org(organization_id, limit=500)
         open_rows = [r for r in rows if r.status in ("OPEN", "ACKNOWLEDGED", "IN_REMEDIATION")]
         critical = sum(1 for r in open_rows if r.severity == "CRITICAL")
-        posture = compute_posture(findings=[self._finding_dict(r) for r in rows])
+        live_data = await self._security_has_live_data(organization_id)
         pending = await self.remediations.list_for_org(organization_id, status="PROPOSED")
         scans, _ = await self.scans.list_for_org(organization_id, limit=10)
+        if not live_data:
+            return {
+                "posture_score": None,
+                "grade": None,
+                "open_critical": critical,
+                "open_findings": len(open_rows),
+                "recent_scans": len(scans),
+                "pending_remediations": len(pending),
+                "live_data": False,
+                "data_sufficient": False,
+            }
+        posture = compute_posture(findings=[self._finding_dict(r) for r in rows])
         snap = SecPostureSnapshot(
             organization_id=organization_id,
             posture_score=posture["posture_score"],
@@ -212,6 +233,8 @@ class SecurityPlatformService:
             "open_findings": len(open_rows),
             "recent_scans": len(scans),
             "pending_remediations": len(pending),
+            "live_data": True,
+            "data_sufficient": True,
         }
 
     # ---------------------------------------------------------------- scans
@@ -576,12 +599,24 @@ class SecurityPlatformService:
     # ------------------------------------------------------------- analytics
     async def analytics(self, user: User, org_context: OrgContext) -> dict:
         organization_id = self._ensure_read(user, org_context)
+        if not await self._security_has_live_data(organization_id):
+            return {
+                "posture_score": None,
+                "grade": None,
+                "by_severity": {},
+                "by_source": {},
+                "sla_breaches": 0,
+                "trend": [],
+                "live_data": False,
+                "data_sufficient": False,
+            }
         rows, _ = await self.findings.list_for_org(organization_id, limit=500)
         snaps = await self.posture.list_for_org(organization_id)
-        return compute_posture(
+        result = compute_posture(
             findings=[self._finding_dict(r) for r in rows],
             snapshots=[{"score": s.posture_score, "at": str(s.created_at)} for s in snaps[:14]],
         )
+        return {**result, "live_data": True, "data_sufficient": True}
 
     # ---------------------------------------------------------- domain views
     async def vulnerabilities(self, user: User, org_context: OrgContext) -> dict:
@@ -602,19 +637,33 @@ class SecurityPlatformService:
         return await self.sboms.list_for_org(organization_id)
 
     async def kubernetes_security(self, user: User, org_context: OrgContext) -> dict:
+        organization_id = self._ensure_read(user, org_context)
+        live_data = await self._security_has_live_data(organization_id)
         rows, _ = await self.list_findings(user, org_context, source="KUBERNETES", limit=50)
+        if not live_data:
+            return {
+                "cluster_score": None,
+                "findings": len(rows),
+                "live_data": False,
+                "top": [{"title": r.title, "severity": r.severity} for r in rows[:10]],
+            }
         return {
             "cluster_score": max(0, 100 - sum(10 for r in rows if r.severity in ("CRITICAL", "HIGH"))),
             "findings": len(rows),
+            "live_data": True,
             "top": [{"title": r.title, "severity": r.severity} for r in rows[:10]],
         }
 
     async def cloud_posture(self, user: User, org_context: OrgContext) -> dict:
+        organization_id = self._ensure_read(user, org_context)
         rows, _ = await self.list_findings(user, org_context, source="CLOUD", limit=50)
-        latest = await self.posture.latest(org_context.requires_organization)
+        live_data = await self._security_has_live_data(organization_id)
+        latest = await self.posture.latest(organization_id)
+        score = latest.posture_score if latest and live_data else None
         return {
-            "account_score": latest.posture_score if latest else 85,
+            "account_score": score,
             "findings": len(rows),
+            "live_data": live_data,
             "top": [{"title": r.title, "severity": r.severity} for r in rows[:10]],
         }
 
@@ -645,11 +694,13 @@ class SecurityPlatformService:
 
     async def compliance_view(self, user: User, org_context: OrgContext) -> dict:
         organization_id = self._ensure_read(user, org_context)
+        live_data = await self._security_has_live_data(organization_id)
         latest = await self.posture.latest(organization_id)
         rows, _ = await self.findings.list_for_org(organization_id, limit=100)
         return {
-            "score": latest.posture_score if latest else 80,
-            "grade": latest.grade if latest else "B",
+            "score": latest.posture_score if latest and live_data else None,
+            "grade": latest.grade if latest and live_data else None,
+            "live_data": live_data,
             "frameworks": ["SOC2", "CIS", "NIST"],
             "findings": [{"check": r.source, "severity": r.severity, "title": r.title} for r in rows[:20]],
         }

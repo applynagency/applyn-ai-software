@@ -94,17 +94,19 @@ class RemediationProposalView(BaseModel):
 
 
 class OverviewView(BaseModel):
-    posture_score: int
-    grade: str
+    posture_score: int | None = None
+    grade: str | None = None
     open_critical: int
     open_findings: int
     recent_scans: int
     pending_remediations: int
+    live_data: bool = False
+    data_sufficient: bool = False
 
 
 class AnalyticsView(BaseModel):
-    posture_score: int
-    grade: str
+    posture_score: int | None = None
+    grade: str | None = None
     by_severity: dict
     by_source: dict
     sla_breaches: int
@@ -136,10 +138,11 @@ class SbomView(BaseModel):
 
 
 class ComplianceView(BaseModel):
-    score: int
-    grade: str
+    score: int | None = None
+    grade: str | None = None
     frameworks: list
     findings: list
+    live_data: bool = False
 
 
 class IdentitySecurityView(BaseModel):

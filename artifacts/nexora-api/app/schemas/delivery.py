@@ -239,12 +239,13 @@ class OperationView(BaseModel):
 
 
 class DoraMetricsView(BaseModel):
-    deployment_frequency_per_day: float
-    lead_time_hours: float
-    change_failure_rate_percent: float
-    mttr_hours: float
+    deployment_frequency_per_day: float | None = None
+    lead_time_hours: float | None = None
+    change_failure_rate_percent: float | None = None
+    mttr_hours: float | None = None
     window_days: int
     evidence: dict
+    data_sufficient: bool = False
 
 
 class DashboardView(BaseModel):

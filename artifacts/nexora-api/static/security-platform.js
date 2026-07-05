@@ -74,14 +74,32 @@ function secPageBanner(page) {
   }
   return renderSecConnectBanner(spec[0], spec[1]);
 }
+function secPostureDisplay(o) {
+  if (o.data_sufficient === false || o.live_data === false) {
+    return { score: "—", grade: "N/A", insufficient: true };
+  }
+  return {
+    score: o.posture_score != null ? String(o.posture_score) : "—",
+    grade: o.grade || "—",
+    insufficient: false,
+  };
+}
+function renderSecInsufficientBanner() {
+  return `<section class="card ops-data-insufficient" style="margin-bottom:12px;border-left:4px solid #d97706;">
+    <strong style="color:#92400e;">Insufficient live scan data</strong>
+    <p class="muted" style="font-size:12px;margin:6px 0 0;">Posture scores require a verified SonarQube, Kubernetes, or cloud integration — or at least one non-simulated scan run. Offline/demo scans do not produce trustworthy grades.</p>
+  </section>`;
+}
 function renderSecDashboard() {
   const o = state.secOverview || {};
+  const posture = secPostureDisplay(o);
   return `<div class="container">
     ${renderHeader("Security Overview", "Unified DevSecOps and cloud security posture")}
     ${renderAlerts()}
     ${secPageBanner("sec-dashboard")}
+    ${posture.insufficient ? renderSecInsufficientBanner() : ""}
     <section class="card"><div class="ops-stats">
-      ${rdMetric("Posture", o.posture_score != null ? `${o.posture_score} (${o.grade || "—"})` : "—")}
+      ${rdMetric("Posture", posture.insufficient ? "—" : `${posture.score} (${posture.grade})`)}
       ${rdMetric("Open Critical", o.open_critical || 0)}
       ${rdMetric("Open Findings", o.open_findings || 0)}
       ${rdMetric("Pending Remediations", o.pending_remediations || 0)}
@@ -116,9 +134,11 @@ function renderSecVulns() {
 }
 function renderSecK8s() {
   const d = state.secK8s || {};
+  const insufficient = d.live_data === false;
   return `<div class="container">${renderHeader("Kubernetes Security", "CIS benchmark and workload posture")}${renderAlerts()}
     ${secPageBanner("sec-k8s")}
-    <section class="card"><div class="ops-stats">${rdMetric("Cluster Score", d.cluster_score || "—")}${rdMetric("Findings", d.findings || 0)}</div></section>
+    ${insufficient ? renderSecInsufficientBanner() : ""}
+    <section class="card"><div class="ops-stats">${rdMetric("Cluster Score", insufficient ? "—" : (d.cluster_score ?? "—"))}${rdMetric("Findings", d.findings || 0)}</div></section>
   </div>`;
 }
 function renderSecCloud() {
@@ -130,9 +150,12 @@ function renderSecCloud() {
 }
 function renderSecCompliance() {
   const d = state.secCompliance || {};
+  const o = state.secOverview || {};
+  const insufficient = o.data_sufficient === false || o.live_data === false;
   return `<div class="container">${renderHeader("Compliance", "Framework mapping and policy results")}${renderAlerts()}
     ${secPageBanner("sec-compliance")}
-    <section class="card"><div class="ops-stats">${rdMetric("Score", d.score || "—")}${rdMetric("Grade", d.grade || "—")}</div></section>
+    ${insufficient ? renderSecInsufficientBanner() : ""}
+    <section class="card"><div class="ops-stats">${rdMetric("Score", insufficient ? "—" : (d.score || "—"))}${rdMetric("Grade", insufficient ? "N/A" : (d.grade || "—"))}</div></section>
   </div>`;
 }
 function renderSecRemediation() {
@@ -146,10 +169,13 @@ function renderSecRemediation() {
 }
 function renderSecAnalytics() {
   const a = state.secAnalytics || {};
+  const o = state.secOverview || {};
+  const insufficient = o.data_sufficient === false || o.live_data === false;
   return `<div class="container">${renderHeader("Security Analytics", "Posture trends and SLA breaches")}${renderAlerts()}
     ${secPageBanner("sec-analytics")}
+    ${insufficient ? renderSecInsufficientBanner() : ""}
     <section class="card"><div class="ops-stats">
-      ${rdMetric("Posture", a.posture_score || "—")}
+      ${rdMetric("Posture", insufficient ? "—" : (a.posture_score || "—"))}
       ${rdMetric("SLA Breaches", a.sla_breaches || 0)}
     </div></section>
   </div>`;

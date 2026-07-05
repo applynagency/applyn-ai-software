@@ -59,7 +59,11 @@ async def test_security_overview_and_providers(client):
     assert "scan_kinds" in prov.json()
     overview = await client.get("/v1/security/overview", headers=headers)
     assert overview.status_code == 200
-    assert "posture_score" in overview.json()
+    body = overview.json()
+    assert "posture_score" in body
+    assert body.get("live_data") is False
+    assert body.get("data_sufficient") is False
+    assert body.get("posture_score") is None
 
 
 @pytest.mark.asyncio
