@@ -223,3 +223,24 @@ test("customer pilot safety preserved in app.js", () => {
   assert.match(appSource, /canAccessOperatorPilotConsole/);
   assert.doesNotMatch(appSource, /renderCustomerPilot[\s\S]{0,600}renderIncidentsList/s);
 });
+
+test("on-call page renders external PagerDuty schedules", () => {
+  const source = readSource("incidents.js");
+  assert.match(source, /external_schedules/);
+  assert.match(source, /External schedules/);
+  const { renderIncidentsOnCall, state } = loadFrontendWithIncidents();
+  state.onCallLoading = false;
+  state.onCallUnavailable = false;
+  state.onCallData = {
+    current: [],
+    schedules: [],
+    policies: [],
+    external_schedules: [{
+      provider: "PAGERDUTY",
+      schedules: [{ id: "pd-1", name: "Primary", layer_count: 2, time_zone: "UTC" }],
+    }],
+  };
+  const html = renderIncidentsOnCall();
+  assert.match(html, /Primary/);
+  assert.match(html, /External schedules/);
+});

@@ -301,6 +301,7 @@ async function loadOnCallPageData() {
       schedules: schedules || [],
       current: current || [],
       policies: policies || [],
+      external_schedules: (platform && platform.external_schedules) ? platform.external_schedules : [],
     };
     state.onCallUnavailable = false;
   } catch {
@@ -872,6 +873,16 @@ function renderIncidentsOnCall() {
   const current = d.current || [];
   const schedules = d.schedules || [];
   const policies = d.policies || [];
+  const external = d.external_schedules || [];
+  const externalRows = external.flatMap((block) => {
+    const provider = block.provider || "EXTERNAL";
+    return (block.schedules || []).map((s) => `
+      <div class="ops-list-row" style="flex-direction:column;align-items:stretch;">
+        <strong>${escapeHtml(s.name || s.id)}</strong>
+        <span class="muted" style="font-size:11px;">${escapeHtml(provider)} · ${escapeHtml(s.time_zone || "UTC")}${s.layer_count ? ` · ${s.layer_count} layer(s)` : ""}</span>
+        ${s.description ? `<span class="muted" style="font-size:11px;">${escapeHtml(truncateIncidentText(s.description, 120))}</span>` : ""}
+      </div>`);
+  }).join("");
   return `
     <div class="container">
       ${renderHeader("On-call", "Schedules and escalation")}
@@ -898,6 +909,11 @@ function renderIncidentsOnCall() {
           </select>
           <button class="btn btn-primary btn-sm" type="submit">Create schedule</button>
         </form>` : ""}
+      </section>
+      <section class="card">
+        <h2>External schedules</h2>
+        <p class="muted" style="font-size:12px;">PagerDuty schedules from verified integrations — read-only mirror for cross-tool on-call context.</p>
+        ${externalRows || `<p class="muted">No external schedules. Connect <a href="/integrations/onboarding?provider=PAGERDUTY" data-nav="/integrations/onboarding?provider=PAGERDUTY">PagerDuty</a> to visualize imported rotations.</p>`}
       </section>
       <section class="card">
         <h2>Escalation policies (${policies.length})</h2>

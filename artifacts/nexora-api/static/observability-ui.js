@@ -16,7 +16,7 @@ function renderTraceTimeline(totalMs) {
     const ms = Math.round(total * f);
     return `<span class="trace-waterfall-tick" style="left:${(f * 100).toFixed(1)}%">${ms}ms</span>`;
   }).join("");
-  return `<div class="trace-waterfall-timeline" aria-hidden="true">${ticks}</div>`;
+  return `<div class="trace-waterfall-timeline" role="presentation" aria-label="Trace duration timeline">${ticks}</div>`;
 }
 function renderTraceWaterfall(spans, traceDurationMs, traceId) {
   if (!spans || !spans.length) return "";
@@ -39,19 +39,19 @@ function renderTraceWaterfall(spans, traceDurationMs, traceId) {
       const tags = span.tags && Object.keys(span.tags).length
         ? Object.entries(span.tags).slice(0, 4).map(([k, v]) => `${k}=${v}`).join(", ")
         : "";
-      rows.push(`<div class="trace-waterfall-row${sel}" style="--depth:${depth}" data-trace-span="${escapeHtml(span.span_id || "")}" data-trace-id="${escapeHtml(traceId || "")}">
+      rows.push(`<div class="trace-waterfall-row${sel}" style="--depth:${depth}" data-trace-span="${escapeHtml(span.span_id || "")}" data-trace-id="${escapeHtml(traceId || "")}" role="listitem" tabindex="0" aria-label="${escapeHtml(span.service || "")} ${escapeHtml(span.operation || "span")} ${span.duration_ms || 0} milliseconds${span.status === "error" ? " error" : ""}">
         <span class="trace-waterfall-label" title="${escapeHtml(span.operation || "")}">${escapeHtml(span.service || "")} · ${escapeHtml(span.operation || "span")}</span>
-        <div class="trace-waterfall-track" aria-hidden="true"><div class="trace-waterfall-bar${err}" style="left:${left.toFixed(2)}%;width:${width.toFixed(2)}%"></div></div>
-        <span class="trace-waterfall-ms muted">${span.duration_ms || 0}ms</span>
+        <div class="trace-waterfall-track" role="presentation" aria-hidden="true"><div class="trace-waterfall-bar${err}" style="left:${left.toFixed(2)}%;width:${width.toFixed(2)}%"></div></div>
+        <span class="trace-waterfall-ms muted" aria-hidden="true">${span.duration_ms || 0}ms</span>
       </div>
       ${selected === span.span_id ? `<div class="trace-span-detail muted" style="padding-left:calc(var(--depth,0) * 14px + 12px);font-size:11px;margin-bottom:4px;">${tags ? escapeHtml(tags) : "No tags"}</div>` : ""}`);
       if (span.span_id) walk(span.span_id, depth + 1);
     });
   }
   walk("", 0);
-  return `<div class="trace-waterfall-wrap">
+  return `<div class="trace-waterfall-wrap" role="region" aria-label="Trace span waterfall">
     ${renderTraceTimeline(total)}
-    <div class="trace-waterfall">${rows.join("")}</div>
+    <div class="trace-waterfall" role="list">${rows.join("")}</div>
   </div>`;
 }
 function renderObsConnectBanner(providerLabel, integrationKey) {

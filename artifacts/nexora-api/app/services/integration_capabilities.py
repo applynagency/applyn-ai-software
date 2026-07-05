@@ -9,8 +9,10 @@ from app.services.universal_discovery_adapters import supports_universal_discove
 # Marketplace keys that sync CI/CD pipelines into Delivery.
 PIPELINE_INTEGRATION_KEYS = frozenset({
     "JENKINS", "CIRCLECI", "AZURE_DEVOPS", "GITHUB", "GITLAB", "BITBUCKET",
-    "BUILDKITE", "HARNESS",
+    "BUILDKITE", "HARNESS", "DRONE", "ARGO_WORKFLOWS",
 })
+
+SECURITY_SCAN_INTEGRATION_KEYS = frozenset({"SONARQUBE", "SNYK", "TRIVY"})
 
 GITOPS_INTEGRATION_KEYS = frozenset({"ARGOCD", "FLUX"})
 
@@ -190,9 +192,31 @@ INTEGRATION_VALUE: dict[str, dict] = {
         "unlocks_live": ["Delivery GitOps view", "Drift detection"],
         "pages": ["/delivery/gitops", "/discovery"],
     },
+    "DRONE": {
+        "unlocks_now": ["Live verify", "Repository discovery", "Failed build alerts"],
+        "unlocks_live": ["Delivery pipelines", "DORA from build history"],
+        "pages": ["/delivery/pipelines", "/delivery/dora"],
+    },
+    "ARGO_WORKFLOWS": {
+        "unlocks_now": ["Live verify", "Workflow template discovery"],
+        "unlocks_live": ["Delivery pipelines", "Workflow run history"],
+        "pages": ["/delivery/pipelines", "/discovery"],
+    },
+    "SNYK": {
+        "unlocks_now": ["Live verify", "Org project discovery"],
+        "unlocks_live": ["Security scans", "Dependency & license findings"],
+        "pages": ["/security", "/security/scans"],
+    },
+    "TRIVY": {
+        "unlocks_now": ["Live verify", "Scanner endpoint check"],
+        "unlocks_live": ["Container & filesystem scans", "SBOM inventory"],
+        "pages": ["/security", "/security/sbom"],
+    },
 }
 
-ENTERPRISE_MUTATION_KEYS = frozenset({"SERVICENOW", "SENTRY", "SPLUNK", "PAGERDUTY", "JIRA"})
+ENTERPRISE_MUTATION_KEYS = frozenset({
+    "SERVICENOW", "SENTRY", "SPLUNK", "PAGERDUTY", "JIRA", "OPSGENIE",
+})
 
 
 def _default_value(key: str, definition: dict) -> dict:
@@ -212,7 +236,7 @@ def enrichment_for(integration_key: str) -> dict:
     gitops_sync = key in GITOPS_INTEGRATION_KEYS
     discovery = supports_universal_discovery(key)
     ingest = key in INGEST_PROVIDERS
-    live_data = discovery or ingest or pipeline_sync or gitops_sync
+    live_data = discovery or ingest or pipeline_sync or gitops_sync or key in SECURITY_SCAN_INTEGRATION_KEYS
     return {
         "integration_key": key,
         "live_data": live_data,

@@ -17,6 +17,10 @@ from app.security_platform.sbom_parser import parse_sbom
 
 
 async def validate_provider(provider_type: str, *, enabled: bool, config: dict | None = None) -> dict[str, Any]:
+    config = config or {}
+    ptype = provider_type.upper()
+    if ptype == "SNYK" and config.get("api_token") and config.get("org_id"):
+        return {"mode": "live", "message": "Snyk API credentials configured", "binary": None}
     mode = detect_mode(provider_type, enabled=enabled)
     binary = resolve_binary(provider_type)
     message = f"Provider {provider_type} mode={mode}"
@@ -138,6 +142,37 @@ async def _run_live(ptype: str, kind: str, target: str, *, config: dict) -> dict
             "status": "COMPLETED", "findings": [],
             "sbom": parsed, "summary": {"components": parsed["component_count"]},
         }
+
+    if ptype == "SNYK":
+        token = config.get("api_token") or config.get("token")
+        org_id = config.get("org_id")
+        if token and org_id:
+            from app.delivery.pipelines.ci_http import get_json
+            try:
+                data = get_json(
+                    f"https://api.snyk.io/rest/orgs/{org_id}/projects?version=2024-04-18&limit=10",
+                    headers={"Authorization": f"token {token}", "Content-Type": "application/vnd.api+json"},
+                    timeout=30.0,
+                )
+                projects = (data.get("data") or []) if isinstance(data, dict) else []
+                findings = [{
+                    "severity": "INFO",
+                    "title": f"Project: {(p.get('attributes') or {}).get('name', p.get('id', 'project'))}",
+                    "recommendation": "Run full Snyk test via CLI or API for issue details",
+                    "source": "DEPENDENCY",
+                } for p in projects[:10] if isinstance(p, dict)]
+                return {
+                    "kind": kind.upper(), "tool": "SNYK", "target": target,
+                    "status": "COMPLETED",
+                    "findings": findings,
+                    "summary": {"total": len(findings), "projects": len(projects)},
+                }
+            except RuntimeError as exc:
+                return {
+                    "kind": kind.upper(), "tool": "SNYK", "target": target,
+                    "status": "FAILED", "findings": [],
+                    "summary": {"total": 0}, "error": str(exc)[:200],
+                }
 
     return offline_registry.run_scan(kind, target, config=config)
 

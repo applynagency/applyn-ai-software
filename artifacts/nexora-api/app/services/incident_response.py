@@ -139,6 +139,7 @@ class IncidentResponsePlatformService:
         for s in schedules[:10]:
             rows = await self.overrides.list_for_schedule(organization_id, s.id)
             all_overrides.extend(rows)
+        external_schedules = await self._external_oncall_schedules(organization_id)
         return {
             "schedules": [
                 {"id": s.id, "name": s.name, "team": s.team, "rotation_type": s.rotation_type}
@@ -150,7 +151,29 @@ class IncidentResponsePlatformService:
                 for o in all_overrides[:20]
             ],
             "shift_timeline": timeline,
+            "external_schedules": external_schedules,
         }
+
+    async def _external_oncall_schedules(self, organization_id: str) -> list[dict]:
+        from app.repositories.integration import IntegrationConnectionRepository
+        from app.security.secrets.service import SecretManagerService
+        from app.services.enterprise_enrichment import pagerduty_schedules
+
+        repos = IntegrationConnectionRepository(self.session)
+        secrets = SecretManagerService(self.session)
+        out: list[dict] = []
+        for conn in await repos.list_for_org(organization_id):
+            key = (conn.integration_key or "").upper()
+            if key != "PAGERDUTY" or conn.status not in ("VERIFIED", "CONNECTED"):
+                continue
+            try:
+                secret = await secrets.resolve_for_connection(conn)
+                summary = pagerduty_schedules(secret)
+                if summary.get("available"):
+                    out.append(summary)
+            except Exception:  # noqa: BLE001
+                continue
+        return out
 
     async def create_override(
         self, user: User, org_context: OrgContext, payload: ScheduleOverrideCreate,

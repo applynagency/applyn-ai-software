@@ -65,10 +65,13 @@ const SEC_PAGE_PROVIDERS = {
   "sec-backfill": ["SonarQube", "SONARQUBE"],
   "sec-rem-exec": ["SonarQube", "SONARQUBE"],
 };
+function secHasLiveScanner() {
+  if (typeof hasVerifiedIntegration !== "function") return false;
+  return ["SONARQUBE", "SNYK", "TRIVY"].some((k) => hasVerifiedIntegration(k));
+}
 function secPageBanner(page) {
-  const spec = SEC_PAGE_PROVIDERS[page] || ["SonarQube", "SONARQUBE"];
-  const has = typeof hasVerifiedIntegration === "function" && hasVerifiedIntegration(spec[1]);
-  if (has) return "";
+  const spec = SEC_PAGE_PROVIDERS[page] || ["SonarQube, Snyk, or Trivy", "SONARQUBE"];
+  if (secHasLiveScanner()) return "";
   if (typeof renderOpsConnectBanner === "function") {
     return renderOpsConnectBanner(spec[0], spec[1]);
   }
@@ -87,7 +90,7 @@ function secPostureDisplay(o) {
 function renderSecInsufficientBanner() {
   return `<section class="card ops-data-insufficient" style="margin-bottom:12px;border-left:4px solid #d97706;">
     <strong style="color:#92400e;">Insufficient live scan data</strong>
-    <p class="muted" style="font-size:12px;margin:6px 0 0;">Posture scores require a verified SonarQube, Kubernetes, or cloud integration — or at least one non-simulated scan run. Offline/demo scans do not produce trustworthy grades.</p>
+    <p class="muted" style="font-size:12px;margin:6px 0 0;">Posture scores require a verified SonarQube, Snyk, Trivy, Kubernetes, or cloud integration — or at least one non-simulated scan run. Offline/demo scans do not produce trustworthy grades.</p>
   </section>`;
 }
 function renderSecDashboard() {
@@ -187,11 +190,11 @@ function renderSecProviders() {
   ).join("");
   return `<div class="container">${renderHeader("Provider Integrations", "Live vs offline scanner providers")}${renderAlerts()}
     ${secPageBanner("sec-providers")}
-    <section class="card"><p class="muted">Offline/simulated results are used when binaries are unavailable or providers are disabled. <strong>SonarQube</strong> is the only live scanner path today.</p>
+    <section class="card"><p class="muted">Offline/simulated results are used when binaries are unavailable or providers are disabled. <strong>SonarQube</strong> is the primary live scanner; <strong>Snyk</strong> and <strong>Trivy</strong> add live paths when connected and validated.</p>
     <div class="ops-list">${rows || `<p class="muted">No providers configured.</p>`}</div></section>
     <section class="card" style="margin-top:12px;border-left:3px solid #e2e8f0;">
-      <h2>Planned scanner connectors</h2>
-      <p class="muted" style="font-size:13px;">Snyk, Trivy, Checkmarx, and additional SAST/DAST vendors are on the integration roadmap — connect SonarQube for live posture until they ship.</p>
+      <h2>Scanner connectors</h2>
+      <p class="muted" style="font-size:13px;">Connect SonarQube, Snyk, or Trivy from the integration marketplace. Checkmarx and additional SAST/DAST vendors remain on the roadmap.</p>
     </section>
   </div>`;
 }

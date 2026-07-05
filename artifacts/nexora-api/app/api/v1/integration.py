@@ -270,7 +270,7 @@ async def enterprise_integration_summary(
     providers: list[dict] = []
     for conn in conns:
         key = (conn.integration_key or "").upper()
-        if key not in {"SERVICENOW", "SPLUNK", "SENTRY", "PAGERDUTY", "JIRA"}:
+        if key not in {"SERVICENOW", "SPLUNK", "SENTRY", "PAGERDUTY", "JIRA", "OPSGENIE"}:
             continue
         row = {"connection_id": conn.id, "integration_key": key, "available": False}
         if conn.credential_id:

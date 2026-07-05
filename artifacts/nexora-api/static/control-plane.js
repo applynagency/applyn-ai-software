@@ -161,6 +161,9 @@ function renderControlPlaneClusters() {
     <div class="container">
       ${renderHeader("Kubernetes Clusters", "Connect, discover, and operate clusters")}
       ${renderAlerts()}
+      <section class="card" style="border-left:3px solid #e2e8f0;margin-bottom:12px;">
+        <p class="muted" style="font-size:13px;margin:0;"><strong>${clusters.length}</strong> cluster(s) registered. Multi-cluster federation and DR orchestration are roadmap — register each cluster separately and use Inventory for cross-cluster visibility.</p>
+      </section>
       ${registerForm}
       <section class="card"><h2>Clusters (${clusters.length})</h2><div class="ops-list">${rows || `<p class="muted">No clusters registered.</p>`}</div></section>
     </div>`;

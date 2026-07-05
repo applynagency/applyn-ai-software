@@ -92,6 +92,10 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     "BUILDKITE": ["organization", "api_token"],
     "HARNESS": ["account_id", "api_key"],
     "FLUX": ["kubeconfig"],
+    "DRONE": ["endpoint", "token"],
+    "ARGO_WORKFLOWS": ["endpoint", "token"],
+    "SNYK": ["api_token", "org_id"],
+    "TRIVY": ["endpoint"],
 }
 
 # Field names that must NEVER be logged or surfaced anywhere.

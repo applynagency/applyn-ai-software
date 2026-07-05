@@ -635,7 +635,7 @@ function renderHelpGettingStarted() {
       <h3>Integration roadmap</h3>
       <p class="muted">35 integrations ship today with live pipeline sync (Harness, Buildkite), Flux GitOps (Kustomizations + HelmReleases), trace waterfall explorer, and enterprise CMDB/issue enrichment.</p>
       <ul class="muted" style="margin:8px 0 0;padding-left:20px;">
-        <li>Expanded security scanner connectors (Snyk, Trivy, Checkmarx — planned)</li>
+        <li>Security scanner connectors — SonarQube (live), Snyk and Trivy (live when connected); Checkmarx planned</li>
         <li>Drone CI and Argo Workflows pipeline sync (backend registry — marketplace onboarding planned)</li>
         <li>Multi-cluster federation and DR orchestration (control plane inventory today — scale roadmap)</li>
       </ul>

@@ -161,6 +161,9 @@ run_smoke_tests() {
 
   log "Running P0–P2 API smoke"
   node scripts/smoke-p0-p2-pass.mjs
+
+  log "Running P3 operational evidence smoke"
+  node scripts/smoke-p3-pass.mjs
 }
 
 enforce_coverage() {

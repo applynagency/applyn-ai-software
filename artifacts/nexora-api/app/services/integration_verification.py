@@ -1103,6 +1103,68 @@ async def _verify_flux(secret: dict) -> ProviderProbe:
     return await _verify_kubernetes(secret)
 
 
+async def _verify_drone(secret: dict) -> ProviderProbe:
+    endpoint = secret["endpoint"].rstrip("/")
+    headers = {"Authorization": f"Bearer {secret['token']}", "Accept": "application/json"}
+    data = await _http_request("GET", f"{endpoint}/api/user", headers=headers)
+    body = data["_json"]
+    login = body.get("login") or body.get("data", {}).get("login") or ""
+    return ProviderProbe(
+        identity={"endpoint": endpoint, "login": login},
+        version=None,
+        permissions=["repos:read", "builds:read"],
+        warnings=[],
+        partial=False,
+    )
+
+
+async def _verify_argo_workflows(secret: dict) -> ProviderProbe:
+    endpoint = secret["endpoint"].rstrip("/")
+    headers = {"Authorization": f"Bearer {secret['token']}", "Accept": "application/json"}
+    await _http_request("GET", f"{endpoint}/api/v1/info", headers=headers)
+    return ProviderProbe(
+        identity={"endpoint": endpoint},
+        version=None,
+        permissions=["workflows:read"],
+        warnings=[],
+        partial=False,
+    )
+
+
+async def _verify_snyk(secret: dict) -> ProviderProbe:
+    headers = {
+        "Authorization": f"token {secret['api_token']}",
+        "Content-Type": "application/vnd.api+json",
+    }
+    await _http_request(
+        "GET",
+        f"https://api.snyk.io/rest/orgs/{secret['org_id']}?version=2024-04-18",
+        headers=headers,
+    )
+    return ProviderProbe(
+        identity={"org_id": secret["org_id"]},
+        version=None,
+        permissions=["projects:read", "issues:read"],
+        warnings=[],
+        partial=False,
+    )
+
+
+async def _verify_trivy(secret: dict) -> ProviderProbe:
+    endpoint = secret["endpoint"].rstrip("/")
+    try:
+        await _http_request("GET", f"{endpoint}/healthz", headers={})
+    except Exception:
+        await _http_request("GET", endpoint, headers={})
+    return ProviderProbe(
+        identity={"endpoint": endpoint},
+        version=None,
+        permissions=["scan:read"],
+        warnings=["Trivy server health probe — CLI scans run via Security platform."],
+        partial=True,
+    )
+
+
 _VERIFIERS = {
     "AWS": _verify_aws,
     "AZURE": _verify_azure,
@@ -1139,6 +1201,10 @@ _VERIFIERS = {
     "BUILDKITE": _verify_buildkite,
     "HARNESS": _verify_harness,
     "FLUX": _verify_flux,
+    "DRONE": _verify_drone,
+    "ARGO_WORKFLOWS": _verify_argo_workflows,
+    "SNYK": _verify_snyk,
+    "TRIVY": _verify_trivy,
 }
 
 

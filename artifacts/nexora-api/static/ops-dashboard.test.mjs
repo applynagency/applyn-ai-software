@@ -129,3 +129,10 @@ test("ops dashboard: lane counts reflect live signals", () => {
   assert.equal(opsFlowLaneCount("deliver", snap), 2);
   assert.equal(opsFlowLaneCount("observe", snap), 3);
 });
+
+test("ops trend charts expose source labels and aria", () => {
+  const opsSource = readFileSync(opsChunkPath, "utf8");
+  assert.match(opsSource, /opsTrendSourceLabel/);
+  assert.match(opsSource, /aria-label="Operational trends"/);
+  assert.match(opsSource, /role="img"/);
+});

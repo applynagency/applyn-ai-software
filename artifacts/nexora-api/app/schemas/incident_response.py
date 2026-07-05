@@ -31,6 +31,7 @@ class OncallDashboardView(BaseModel):
     current_oncall: list
     overrides: list
     shift_timeline: list
+    external_schedules: list = Field(default_factory=list)
 
 
 class EscalationRunRequest(BaseModel):

@@ -1,4 +1,4 @@
-"""Coverage tests — all 35 marketplace integrations have live-data paths."""
+"""Coverage tests — all 39 marketplace integrations have live-data paths."""
 
 import pytest
 
@@ -14,8 +14,8 @@ from app.services.universal_discovery_adapters import supports_universal_discove
 ALL_KEYS = set(INTEGRATION_DEFINITIONS.keys())
 
 
-def test_all_35_integrations_defined():
-    assert len(ALL_KEYS) == 35
+def test_all_39_integrations_defined():
+    assert len(ALL_KEYS) == 39
 
 
 @pytest.mark.parametrize("key", sorted(ALL_KEYS))
@@ -33,7 +33,10 @@ def test_every_integration_has_live_data_path(key):
 
 
 def test_pipeline_sync_keys():
-    for key in ("JENKINS", "CIRCLECI", "AZURE_DEVOPS", "GITHUB", "GITLAB", "BITBUCKET", "BUILDKITE", "HARNESS"):
+    for key in (
+        "JENKINS", "CIRCLECI", "AZURE_DEVOPS", "GITHUB", "GITLAB", "BITBUCKET",
+        "BUILDKITE", "HARNESS", "DRONE", "ARGO_WORKFLOWS",
+    ):
         assert supports_pipeline_sync(key)
 
 
@@ -74,8 +77,15 @@ def test_bitbucket_enrichment():
     assert e["alert_ingest"] is True
 
 
+def test_security_scan_keys():
+    from app.services.integration_capabilities import SECURITY_SCAN_INTEGRATION_KEYS
+    for key in ("SONARQUBE", "SNYK", "TRIVY"):
+        assert key in SECURITY_SCAN_INTEGRATION_KEYS
+        assert enrichment_for(key)["live_data"] is True
+
+
 def test_enterprise_mutation_keys():
-    for key in ("SERVICENOW", "SENTRY", "SPLUNK"):
+    for key in ("SERVICENOW", "SENTRY", "SPLUNK", "PAGERDUTY", "JIRA", "OPSGENIE"):
         e = enrichment_for(key)
         assert e["enterprise_mutations"] is True
     assert enrichment_for("GITHUB")["enterprise_mutations"] is False

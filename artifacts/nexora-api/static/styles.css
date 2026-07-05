@@ -4574,3 +4574,45 @@ h3 {
   align-items: center;
   flex-wrap: wrap;
 }
+
+/* P4: mobile + a11y polish for ops trends, tables, trace waterfall */
+@media (max-width: 720px) {
+  .ops-trend-grid .ops-spark-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .ops-spark-card {
+    min-width: 0;
+  }
+  .ops-list-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .trace-waterfall-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .trace-waterfall-label {
+    max-width: 100%;
+  }
+  .trace-waterfall-track {
+    width: 100%;
+    min-height: 14px;
+  }
+  .trace-waterfall-ms {
+    text-align: left;
+  }
+}
+@media (max-width: 560px) {
+  .ops-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .trace-waterfall-tick {
+    font-size: 8px;
+  }
+}
+.trace-waterfall-row:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}

@@ -1174,10 +1174,16 @@ function renderDeliveryGitops() {
 
 function renderDeliverySecurity() {
   const scans = state.dlvScans || [];
+  const secKeys = ["SONARQUBE", "SNYK", "TRIVY"];
+  const needsConnect = !secKeys.some((k) => deliveryHasVerifiedProvider(k));
+  const banner = needsConnect && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner("SonarQube, Snyk, or Trivy", "SONARQUBE", "Connect a security scanner to populate delivery gate results from live scans.")
+    : (needsConnect ? renderDeliveryConnectBanner("SonarQube, Snyk, or Trivy", "SONARQUBE") : "");
   const rows = scans.map((s) => `
     <div class="ops-list-row"><span><strong>${escapeHtml(s.tool)}</strong> ${escapeHtml(s.target)}</span>
       <span class="muted">${escapeHtml(truncateDeliveryText(JSON.stringify(s.summary || {}), 120))}</span></div>`).join("");
   return `<div class="container">${renderHeader("Security Gates", "Vulnerability scans (read-only)")}${renderAlerts()}
+    ${banner}
     <section class="card"><div class="ops-list">${rows || `<p class="muted">No scans.</p>`}</div></section>
   </div>`;
 }
@@ -1279,7 +1285,14 @@ function renderDeliveryFreezeWindows() {
 
 function renderDeliveryRrAnalytics() {
   const a = state.dlvReleaseAnalytics || {};
+  const ciKeys = ["JENKINS", "GITHUB", "GITLAB", "CIRCLECI", "AZURE_DEVOPS", "BITBUCKET", "BUILDKITE", "HARNESS", "DRONE", "ARGO_WORKFLOWS"];
+  const needsCi = !ciKeys.some((k) => deliveryHasVerifiedProvider(k));
+  const empty = !(a.total_releases || a.verification_passed || a.rollbacks);
+  const banner = (needsCi || empty) && typeof renderOpsConnectBanner === "function"
+    ? renderOpsConnectBanner("Jenkins, GitHub Actions, or Drone", "JENKINS", "Sync CI/CD pipelines to populate release analytics from real deployment history.")
+    : (needsCi ? renderDeliveryConnectBanner("Jenkins, GitHub Actions, or Drone", "JENKINS") : "");
   return `<div class="container">${renderHeader("Release Analytics", "Read-only analytics")}${renderAlerts()}
+    ${banner}
     <section class="card"><div class="ops-stats">
       ${rdMetric("Total Releases", a.total_releases || 0)}${rdMetric("Verification Passed", a.verification_passed || 0)}
       ${rdMetric("Rollbacks", a.rollbacks || 0)}

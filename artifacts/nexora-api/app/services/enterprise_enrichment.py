@@ -176,6 +176,36 @@ def sentry_resolve_issue(secret: dict, issue_id: str) -> dict:
     return {"status": "resolved", "issue_id": issue_id, "title": data.get("title")}
 
 
+def pagerduty_schedules(secret: dict) -> dict:
+    api_key = secret.get("api_key")
+    if not api_key:
+        return {"available": False}
+    headers = {
+        "Authorization": f"Token token={api_key}",
+        "Accept": "application/vnd.pagerduty+json;version=2",
+    }
+    data = _http_get_json(
+        "https://api.pagerduty.com/schedules?limit=25&include%5B%5D=final_schedule",
+        headers=headers,
+    )
+    rows = data.get("schedules") if isinstance(data, dict) else []
+    schedules = rows if isinstance(rows, list) else []
+    out = []
+    for s in schedules[:15]:
+        if not isinstance(s, dict):
+            continue
+        final = s.get("final_schedule") or {}
+        layers = final.get("rendered_schedule_entries") or final.get("schedule_layers") or []
+        out.append({
+            "id": s.get("id"),
+            "name": s.get("name"),
+            "time_zone": s.get("time_zone"),
+            "description": s.get("description"),
+            "layer_count": len(layers) if isinstance(layers, list) else 0,
+        })
+    return {"available": True, "provider": "PAGERDUTY", "schedules": out}
+
+
 def pagerduty_summary(secret: dict) -> dict:
     api_key = secret.get("api_key")
     if not api_key:
@@ -294,18 +324,73 @@ def jira_add_comment(secret: dict, issue_id: str, *, note: str = "") -> dict:
     return {"status": "commented", "issue_id": issue_id, "comment_id": data.get("id")}
 
 
+def opsgenie_summary(secret: dict) -> dict:
+    api_key = secret.get("api_key")
+    if not api_key:
+        return {"available": False}
+    headers = {
+        "Authorization": f"GenieKey {api_key}",
+        "Accept": "application/json",
+    }
+    data = _http_get_json(
+        "https://api.opsgenie.com/v2/alerts?query=status:open&limit=25",
+        headers=headers,
+    )
+    alerts = data.get("data") if isinstance(data, dict) else []
+    rows = alerts if isinstance(alerts, list) else []
+    return {
+        "available": True,
+        "open_alerts": len(rows),
+        "top_alerts": [
+            {
+                "id": a.get("id"),
+                "title": a.get("message"),
+                "status": a.get("status"),
+            }
+            for a in rows[:5]
+            if isinstance(a, dict)
+        ],
+        "mutations_supported": ["acknowledge_alert"],
+    }
+
+
+def opsgenie_acknowledge_alert(secret: dict, alert_id: str, **kwargs) -> dict:
+    api_key = secret.get("api_key")
+    if not api_key or not alert_id:
+        return {"status": "failed", "reason": "missing_credentials_or_alert"}
+    headers = {
+        "Authorization": f"GenieKey {api_key}",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+    note = kwargs.get("note") or "Acknowledged via Nexora"
+    body = {"note": note}
+    payload = json.dumps(body).encode()
+    url = f"https://api.opsgenie.com/v2/alerts/{alert_id}/acknowledge?identifierType=id"
+    req = urllib.request.Request(url, data=payload, method="POST", headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=20.0) as resp:  # noqa: S310
+            data = json.loads(resp.read().decode()) if resp.length else {}
+    except urllib.error.HTTPError as exc:
+        return {"status": "failed", "reason": exc.read().decode(errors="replace")[:200]}
+    result = (data.get("result") or "") if isinstance(data, dict) else ""
+    return {"status": "acknowledged", "alert_id": alert_id, "result": result}
+
+
 _SUMMARIZERS = {
     "SERVICENOW": servicenow_summary,
     "SPLUNK": splunk_summary,
     "SENTRY": sentry_summary,
     "PAGERDUTY": pagerduty_summary,
     "JIRA": jira_summary,
+    "OPSGENIE": opsgenie_summary,
 }
 
 _MUTATORS: dict[str, Any] = {
     "SERVICENOW": servicenow_acknowledge_incident,
     "SENTRY": sentry_resolve_issue,
     "PAGERDUTY": pagerduty_acknowledge_incident,
+    "OPSGENIE": opsgenie_acknowledge_alert,
 }
 
 
@@ -341,4 +426,6 @@ def mutate_provider(integration_key: str, secret: dict, action: str, resource_id
         return splunk_trigger_search(secret, resource_id)
     if action == "add_comment" and key == "JIRA":
         return jira_add_comment(secret, resource_id, note=kwargs.get("note", ""))
+    if action == "acknowledge_alert" and key == "OPSGENIE":
+        return opsgenie_acknowledge_alert(secret, resource_id, note=kwargs.get("note", ""))
     return {"status": "failed", "reason": f"unsupported_action:{action}"}

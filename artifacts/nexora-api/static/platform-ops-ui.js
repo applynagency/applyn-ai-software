@@ -90,6 +90,9 @@ function renderPeInfrastructure() {
   }).join("");
   return `<div class="container">${renderHeader("Infrastructure", "Terraform stacks and operations")}${renderAlerts()}
     ${peConnectBanner("Terraform Cloud", "TERRAFORM", !stacks.length && !peHas("TERRAFORM"))}
+    <section class="card" style="border-left:3px solid #f59e0b;margin-bottom:12px;">
+      <p class="muted" style="font-size:13px;margin:0;">IaC <strong>plan</strong> may call Terraform Cloud when connected; <strong>apply/destroy</strong> remains simulated unless your deployment enables live providers. Treat non-live runs as advisory only.</p>
+    </section>
     <section class="card"><h2>Stacks</h2><div class="ops-list">${stackRows || `<p class="muted">No stacks.</p>`}</div></section>
     <section class="card"><h2>Recent Runs</h2><div class="ops-list">${runRows || `<p class="muted">No runs.</p>`}</div></section>
   </div>`;

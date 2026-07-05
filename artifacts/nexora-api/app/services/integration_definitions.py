@@ -280,6 +280,38 @@ INTEGRATION_DEFINITIONS: dict[str, dict] = {
         "docs_url": "https://fluxcd.io/flux/",
         "description": "Read Flux CD GitOps reconciliation state from Kubernetes.",
     },
+    "DRONE": {
+        "name": "Drone CI", "category": IntegrationCategory.PROJECT.value,
+        "auth_type": "TOKEN",
+        "required_fields": ["endpoint", "token"],
+        "capabilities": ["Read repositories", "Read builds", "Read pipeline status"],
+        "docs_url": "https://docs.drone.io/",
+        "description": "Read Drone CI repositories and build history.",
+    },
+    "ARGO_WORKFLOWS": {
+        "name": "Argo Workflows", "category": IntegrationCategory.ORCHESTRATION.value,
+        "auth_type": "TOKEN",
+        "required_fields": ["endpoint", "token"],
+        "capabilities": ["Read workflows", "Read workflow templates", "Read pipeline runs"],
+        "docs_url": "https://argo-workflows.readthedocs.io/",
+        "description": "Read Argo Workflows templates and execution history.",
+    },
+    "SNYK": {
+        "name": "Snyk", "category": IntegrationCategory.PROJECT.value,
+        "auth_type": "API_TOKEN",
+        "required_fields": ["api_token", "org_id"],
+        "capabilities": ["Dependency scan", "Container scan", "License policy"],
+        "docs_url": "https://docs.snyk.io/",
+        "description": "Run Snyk dependency and container vulnerability scans.",
+    },
+    "TRIVY": {
+        "name": "Trivy", "category": IntegrationCategory.PROJECT.value,
+        "auth_type": "ENDPOINT",
+        "required_fields": ["endpoint"],
+        "capabilities": ["Container image scan", "Filesystem scan", "SBOM generation"],
+        "docs_url": "https://aquasecurity.github.io/trivy/",
+        "description": "Scan container images and filesystems via Trivy server or CLI.",
+    },
 }
 
 # Secret field names that must never be surfaced/logged (extends 35A set).

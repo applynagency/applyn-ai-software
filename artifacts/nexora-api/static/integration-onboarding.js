@@ -45,7 +45,7 @@ var NOTIFICATION_INTEGRATION_KEYS = new Set(["SLACK", "MICROSOFT_TEAMS"]);
 
 var PIPELINE_INTEGRATION_KEYS = new Set([
   "JENKINS", "GITHUB", "GITLAB", "BITBUCKET", "CIRCLECI", "AZURE_DEVOPS",
-  "BUILDKITE", "HARNESS",
+  "BUILDKITE", "HARNESS", "DRONE", "ARGO_WORKFLOWS",
 ]);
 
 var INTEGRATION_PAGE_ACTIONS = {
@@ -132,7 +132,7 @@ function integrationDashboardActions(c, enrich, canWrite) {
 async function loadIntegrationEnterpriseSummary(connectionId, integrationKey) {
   const key = (integrationKey || "").toUpperCase();
   state.integrationEnterpriseSummary = null;
-  if (!["SERVICENOW", "SPLUNK", "SENTRY", "PAGERDUTY", "JIRA"].includes(key)) return;
+  if (!["SERVICENOW", "SPLUNK", "SENTRY", "PAGERDUTY", "JIRA", "OPSGENIE"].includes(key)) return;
   try {
     const summary = await api("/v1/integrations/enterprise/summary");
     const row = (summary?.providers || []).find((p) => p.connection_id === connectionId);
@@ -144,7 +144,7 @@ async function loadIntegrationEnterpriseSummary(connectionId, integrationKey) {
 
 function renderIntegrationEnterprisePanel(c) {
   const key = (c.integration_key || "").toUpperCase();
-  if (!["SERVICENOW", "SPLUNK", "SENTRY", "PAGERDUTY", "JIRA"].includes(key)) return "";
+  if (!["SERVICENOW", "SPLUNK", "SENTRY", "PAGERDUTY", "JIRA", "OPSGENIE"].includes(key)) return "";
   const row = state.integrationEnterpriseSummary;
   if (!row) {
     return `<section class="card" style="margin-top:12px;">
@@ -205,6 +205,15 @@ function renderIntegrationEnterprisePanel(c) {
         <input class="form-input" data-enterprise-resource placeholder="Jira issue id or key" style="max-width:220px;font-size:12px;" />
         <input class="form-input" data-enterprise-note placeholder="Comment (optional)" style="max-width:220px;font-size:12px;" />
         <button type="button" class="btn btn-secondary btn-sm" data-enterprise-mutate="add_comment">Add comment</button>
+      </div>`;
+    }
+  } else if (key === "OPSGENIE") {
+    stats = `<p class="muted" style="font-size:12px;">${row.open_alerts || 0} open alert(s)</p>
+      ${(row.top_alerts || []).length ? `<ul class="muted" style="font-size:11px;margin:8px 0 0;padding-left:18px;">${row.top_alerts.map((a) => `<li>${escapeHtml(a.title || "Alert")} · ${escapeHtml(a.status || "")}</li>`).join("")}</ul>` : ""}`;
+    if (canWrite && (row.mutations_supported || []).includes("acknowledge_alert")) {
+      actions = `<div class="actions" style="margin-top:8px;gap:8px;flex-wrap:wrap;">
+        <input class="form-input" data-enterprise-resource placeholder="Opsgenie alert id" style="max-width:220px;font-size:12px;" />
+        <button type="button" class="btn btn-secondary btn-sm" data-enterprise-mutate="acknowledge_alert">Acknowledge alert</button>
       </div>`;
     }
   }

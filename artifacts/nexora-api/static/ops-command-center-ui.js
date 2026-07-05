@@ -131,30 +131,42 @@ function bucketPipelineSuccess(runs, days = 7) {
     count: b.total ? Math.round((b.success / b.total) * 100) : 0,
   }));
 }
-function renderOpsSparkline(title, points, href, color, suffix = "") {
+function renderOpsSparkline(title, points, href, color, suffix = "", sourceLabel = "") {
   const max = Math.max(1, ...points.map((p) => p.count));
   const bars = points.map((p) => {
     const h = Math.max(4, Math.round((p.count / max) * 100));
     const day = String(p.label || "").split(" ").pop() || p.label;
-    return `<div class="ops-spark-bar" title="${escapeHtml(p.label)}: ${p.count}${suffix}">
+    return `<div class="ops-spark-bar" title="${escapeHtml(p.label)}: ${p.count}${suffix}" role="img" aria-label="${escapeHtml(title)} ${escapeHtml(day)}: ${p.count}${suffix}">
       <span class="ops-spark-fill" style="height:${h}%;background:${color}"></span>
       <span class="ops-spark-label">${escapeHtml(day)}</span>
     </div>`;
   }).join("");
-  return `<a class="ops-spark-card" href="${escapeHtml(href)}" data-nav="${escapeHtml(href)}">
-    <span class="ops-spark-title">${escapeHtml(title)}</span>
+  const src = sourceLabel ? `<span class="ops-spark-source muted" style="font-size:10px;">${escapeHtml(sourceLabel)}</span>` : "";
+  return `<a class="ops-spark-card" href="${escapeHtml(href)}" data-nav="${escapeHtml(href)}" aria-label="${escapeHtml(title)} 7-day trend">
+    <span class="ops-spark-title">${escapeHtml(title)} ${src}</span>
     <div class="ops-spark-bars">${bars}</div>
   </a>`;
 }
-function renderOpsTrendCharts(trends) {
+function opsTrendSourceLabel(key, sources) {
+  const s = sources || {};
+  const v = s[key];
+  if (v === "live") return "live data";
+  if (v === "connected") return "connected";
+  if (v === "sample") return "sample";
+  return v ? String(v) : "no data";
+}
+function renderOpsTrendCharts(trends, signalSources) {
   if (!trends) return "";
+  const src = signalSources || {};
+  const legend = `<p class="muted" style="font-size:11px;margin:0 0 10px;">Trends use backend counts only — pipelines: ${escapeHtml(opsTrendSourceLabel("pipelines", src))}, alerts: ${escapeHtml(opsTrendSourceLabel("alerts", src))}, incidents: historical.</p>`;
   return `
     <section class="card ops-trend-grid" aria-label="Operational trends">
       <h2 class="ops-panel-title">7-day trends</h2>
+      ${legend}
       <div class="ops-spark-grid">
-        ${renderOpsSparkline("Incidents", trends.incidents || [], "/incidents", "#dc2626")}
-        ${renderOpsSparkline("Firing alerts", trends.alerts || [], "/alerts", "#ea580c")}
-        ${renderOpsSparkline("Pipeline success", trends.pipelines || [], "/delivery/pipelines", "#7c3aed", "%")}
+        ${renderOpsSparkline("Incidents", trends.incidents || [], "/incidents", "#dc2626", "", "incidents")}
+        ${renderOpsSparkline("Firing alerts", trends.alerts || [], "/alerts", "#ea580c", "", opsTrendSourceLabel("alerts", src))}
+        ${renderOpsSparkline("Pipeline success", trends.pipelines || [], "/delivery/pipelines", "#7c3aed", "%", opsTrendSourceLabel("pipelines", src))}
       </div>
     </section>`;
 }
@@ -733,7 +745,7 @@ function renderOpsCommandCenterDashboard() {
       ${renderOpsAlertStrip(snapshot)}
       ${renderOpsSignalsBar(snapshot)}
       ${renderOpsPriorityCard(snapshot)}
-      ${renderOpsTrendCharts(state.opsDashboard?.trends)}
+      ${renderOpsTrendCharts(state.opsDashboard?.trends, state.opsDashboard?.signalSources)}
       ${needsConnect ? renderOpsDashboardSetupStrip() : ""}
       <div class="ops-dashboard-grid">
         ${renderOpsModuleStats(snapshot)}
