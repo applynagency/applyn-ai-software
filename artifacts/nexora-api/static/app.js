@@ -3474,7 +3474,7 @@ async function probeApiRouteAvailable(path) {
   if (token) headers.set("Authorization", `Bearer ${token}`);
   try {
     const response = await fetch(apiUrl(path), { method: "GET", headers });
-    return response.status !== 404 && response.status !== 403 && response.status !== 401;
+    return response.status !== 404;
   } catch {
     return false;
   }
@@ -4403,8 +4403,6 @@ function visibleNavGroups() {
   const filterItems = (items) => (items || []).filter((item) => {
     if (item.adminOnly && !isOrgAdminRole()) return false;
     if (item.requiresSso && !(state.identityCapabilities?.sso)) return false;
-    if (item.requiresAudit && !(state.operationsCapabilities?.audit)) return false;
-    if (item.requiresJobs && !(state.operationsCapabilities?.jobs)) return false;
     if (item.requiresBilling && !(state.billingEnabled)) return false;
     if (item.pilotOnly && !state.pilotModeEnabled) return false;
     if (item.customerPilotOnly && !state.customerPilotVisible) return false;

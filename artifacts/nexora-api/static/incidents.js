@@ -795,6 +795,15 @@ function renderPostmortemDetail() {
     </div>`;
 }
 
+function onCallUserLabel(entry) {
+  if (entry.user_name) return entry.user_name;
+  if (entry.user_email) return entry.user_email;
+  if (entry.current_oncall_user_name) return entry.current_oncall_user_name;
+  if (entry.current_oncall_user_email) return entry.current_oncall_user_email;
+  const uid = entry.user_id || entry.current_oncall_user_id;
+  return uid ? String(uid).slice(0, 8) : "—";
+}
+
 function renderIncidentsOnCall() {
   if (state.onCallLoading) {
     return `<div class="container">${renderHeader("On-call", "Loading…")}${renderAlerts()}${renderSkeleton("page")}</div>`;
@@ -816,12 +825,12 @@ function renderIncidentsOnCall() {
       <section class="card">
         <h2>Current on-call</h2>
         ${current.length === 0 ? `<p class="muted">No active on-call assignments.</p>` : `
-        <ul>${current.map((c) => `<li class="muted" style="font-size:12px;">${escapeHtml(c.service_name || c.schedule_name || "Schedule")} → ${escapeHtml(c.user_id ? String(c.user_id).slice(0, 8) : "—")}</li>`).join("")}</ul>`}
+        <ul>${current.map((c) => `<li class="muted" style="font-size:12px;">${escapeHtml(c.service_name || c.schedule_name || "Schedule")} → ${escapeHtml(onCallUserLabel(c))}</li>`).join("")}</ul>`}
       </section>
       <section class="card">
         <h2>Schedules (${schedules.length})</h2>
         ${schedules.length === 0 ? `<p class="muted">No schedules configured.</p>` : `
-        <ul>${schedules.map((s) => `<li class="muted" style="font-size:12px;">${escapeHtml(s.name || s.id)}${s.team ? ` · ${escapeHtml(s.team)}` : ""}${s.current_oncall_user_id ? ` · on-call: ${escapeHtml(String(s.current_oncall_user_id).slice(0, 8))}` : ""}</li>`).join("")}</ul>`}
+        <ul>${schedules.map((s) => `<li class="muted" style="font-size:12px;">${escapeHtml(s.name || s.id)}${s.team ? ` · ${escapeHtml(s.team)}` : ""}${s.current_oncall_user_id ? ` · on-call: ${escapeHtml(onCallUserLabel(s))}` : ""}</li>`).join("")}</ul>`}
         ${canWriteResources() ? `
         <form data-oncall-schedule-create style="margin-top:12px;display:grid;gap:8px;max-width:480px;">
           <h3 style="font-size:13px;margin:0;">Create schedule</h3>

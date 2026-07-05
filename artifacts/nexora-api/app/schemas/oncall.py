@@ -58,6 +58,8 @@ class OnCallScheduleResponse(BaseModel):
     anchor_at: datetime
     is_active: bool
     current_oncall_user_id: str | None = None
+    current_oncall_user_name: str | None = None
+    current_oncall_user_email: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -172,3 +174,5 @@ class CurrentOnCall(BaseModel):
     schedule_name: str
     team: str | None = None
     user_id: str | None = None
+    user_name: str | None = None
+    user_email: str | None = None

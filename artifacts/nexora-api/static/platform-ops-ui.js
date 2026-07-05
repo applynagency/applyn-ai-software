@@ -4,13 +4,13 @@
  * canWriteResources, hasVerifiedIntegration, renderOpsConnectBanner.
  */
 
-function peConnectBanner(label, key, needs) {
+function peConnectBanner(label, key, needs, message) {
   if (!needs) return "";
   if (typeof renderOpsConnectBanner === "function") {
-    return renderOpsConnectBanner(label, key);
+    return renderOpsConnectBanner(label, key, message);
   }
   return `<div class="ops-connect-banner" role="status">
-    <span class="muted">Connect ${escapeHtml(label)} for live platform engineering data.</span>
+    <span class="muted">${escapeHtml(message || `Connect ${label} for live platform engineering data.`)}</span>
     <a href="/integrations/onboarding?provider=${encodeURIComponent(key)}" data-nav="/integrations/onboarding?provider=${encodeURIComponent(key)}">Connect ${escapeHtml(label)}</a>
   </div>`;
 }
@@ -48,7 +48,7 @@ function renderPeDashboard() {
   return `<div class="container">
     ${renderHeader("Platform Engineering", "IaC, environments, and platform templates")}
     ${renderAlerts()}
-    ${peConnectBanner("Terraform or Kubernetes", "TERRAFORM", needs)}
+    ${peConnectBanner("Terraform or Kubernetes", "TERRAFORM", needs, "Connect Terraform Cloud or Kubernetes for live stack and environment data.")}
     <section class="card"><div class="ops-stats">
       ${rdMetric("Stacks", d.stacks || 0)}
       ${rdMetric("Environments", d.environments || 0)}
@@ -80,8 +80,14 @@ function renderPeInfrastructure() {
   const stackRows = stacks.map((s) => `
     <div class="ops-list-row"><span>${escapeHtml(s.name)} <span class="muted">${escapeHtml(s.provider)}</span></span>
     ${canWrite ? `<button class="btn btn-secondary" type="button" data-pe-plan="${escapeHtml(s.id)}">Plan</button>` : ""}</div>`).join("");
-  const runRows = runs.slice(0, 20).map((r) => `
-    <div class="ops-list-row"><span>${escapeHtml(r.kind)} — ${escapeHtml(r.status)}</span></div>`).join("");
+  const runRows = runs.slice(0, 20).map((r) => {
+    const simulated = r.outputs?.simulated === true;
+    const badge = simulated
+      ? `<span class="badge" style="background:#fffbeb;color:#92400e;">Simulated</span>`
+      : (r.outputs?.simulated === false ? `<span class="badge" style="background:#f0fdf4;color:#166534;">Live</span>` : "");
+    return `
+    <div class="ops-list-row"><span>${escapeHtml(r.kind)} — ${escapeHtml(r.status)} ${badge}</span></div>`;
+  }).join("");
   return `<div class="container">${renderHeader("Infrastructure", "Terraform stacks and operations")}${renderAlerts()}
     ${peConnectBanner("Terraform Cloud", "TERRAFORM", !stacks.length && !peHas("TERRAFORM"))}
     <section class="card"><h2>Stacks</h2><div class="ops-list">${stackRows || `<p class="muted">No stacks.</p>`}</div></section>

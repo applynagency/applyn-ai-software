@@ -132,7 +132,7 @@ function integrationDashboardActions(c, enrich, canWrite) {
 async function loadIntegrationEnterpriseSummary(connectionId, integrationKey) {
   const key = (integrationKey || "").toUpperCase();
   state.integrationEnterpriseSummary = null;
-  if (!["SERVICENOW", "SPLUNK", "SENTRY"].includes(key)) return;
+  if (!["SERVICENOW", "SPLUNK", "SENTRY", "PAGERDUTY", "JIRA"].includes(key)) return;
   try {
     const summary = await api("/v1/integrations/enterprise/summary");
     const row = (summary?.providers || []).find((p) => p.connection_id === connectionId);
@@ -144,7 +144,7 @@ async function loadIntegrationEnterpriseSummary(connectionId, integrationKey) {
 
 function renderIntegrationEnterprisePanel(c) {
   const key = (c.integration_key || "").toUpperCase();
-  if (!["SERVICENOW", "SPLUNK", "SENTRY"].includes(key)) return "";
+  if (!["SERVICENOW", "SPLUNK", "SENTRY", "PAGERDUTY", "JIRA"].includes(key)) return "";
   const row = state.integrationEnterpriseSummary;
   if (!row) {
     return `<section class="card" style="margin-top:12px;">
@@ -186,6 +186,25 @@ function renderIntegrationEnterprisePanel(c) {
       actions = `<div class="actions" style="margin-top:8px;gap:8px;flex-wrap:wrap;">
         <input class="form-input" data-enterprise-resource placeholder="Issue id" style="max-width:220px;font-size:12px;" />
         <button type="button" class="btn btn-secondary btn-sm" data-enterprise-mutate="resolve_issue">Resolve issue</button>
+      </div>`;
+    }
+  } else if (key === "PAGERDUTY") {
+    stats = `<p class="muted" style="font-size:12px;">${row.open_incidents || 0} open incident(s)</p>
+      ${(row.top_incidents || []).length ? `<ul class="muted" style="font-size:11px;margin:8px 0 0;padding-left:18px;">${row.top_incidents.map((i) => `<li>${escapeHtml(i.title || "Incident")} · ${escapeHtml(i.status || "")}</li>`).join("")}</ul>` : ""}`;
+    if (canWrite && (row.mutations_supported || []).includes("acknowledge_incident")) {
+      actions = `<div class="actions" style="margin-top:8px;gap:8px;flex-wrap:wrap;">
+        <input class="form-input" data-enterprise-resource placeholder="PagerDuty incident id" style="max-width:220px;font-size:12px;" />
+        <button type="button" class="btn btn-secondary btn-sm" data-enterprise-mutate="acknowledge_incident">Acknowledge incident</button>
+      </div>`;
+    }
+  } else if (key === "JIRA") {
+    stats = `<p class="muted" style="font-size:12px;">${row.open_issues || 0} open issue(s)</p>
+      ${(row.top_issues || []).length ? `<ul class="muted" style="font-size:11px;margin:8px 0 0;padding-left:18px;">${row.top_issues.map((i) => `<li>${escapeHtml(i.key || i.id || "Issue")}: ${escapeHtml(i.title || "")}</li>`).join("")}</ul>` : ""}`;
+    if (canWrite && (row.mutations_supported || []).includes("add_comment")) {
+      actions = `<div class="actions" style="margin-top:8px;gap:8px;flex-wrap:wrap;">
+        <input class="form-input" data-enterprise-resource placeholder="Jira issue id or key" style="max-width:220px;font-size:12px;" />
+        <input class="form-input" data-enterprise-note placeholder="Comment (optional)" style="max-width:220px;font-size:12px;" />
+        <button type="button" class="btn btn-secondary btn-sm" data-enterprise-mutate="add_comment">Add comment</button>
       </div>`;
     }
   }
@@ -1026,6 +1045,8 @@ function bindIntegrationOnboardingEvents() {
       const card = btn.closest("section");
       const input = card?.querySelector("[data-enterprise-resource]");
       const resourceId = (input?.value || "").trim();
+      const noteInput = card?.querySelector("[data-enterprise-note]");
+      const note = (noteInput?.value || "").trim();
       if (!resourceId) {
         state.error = "Enter a resource id (incident sys_id, search name, or issue id).";
         render();
@@ -1036,9 +1057,11 @@ function bindIntegrationOnboardingEvents() {
       state.error = null;
       state.message = null;
       try {
+        const body = { action, resource_id: resourceId };
+        if (note) body.note = note;
         const r = await api(`/v1/integrations/connections/${state.integrationDetail.id}/mutate`, {
           method: "POST",
-          body: JSON.stringify({ action, resource_id: resourceId }),
+          body: JSON.stringify(body),
         });
         state.message = r.status === "failed" ? (r.reason || "Mutation failed") : `${action} completed`;
         await loadIntegrationEnterpriseSummary(state.integrationDetail.id, state.integrationDetail.integration_key);

@@ -101,9 +101,14 @@ function renderObsMetrics() {
     const last = points ? s.values[points - 1][1] : "—";
     return `<div class="ops-list-row"><span style="font-family:monospace;font-size:11px;">${escapeHtml(String(name))}</span><span class="muted">${points} pts · last ${escapeHtml(String(last))}</span></div>`;
   }).join("");
+  const needsBanner = obsNeedsConnectBanner(result, "Prometheus", "PROMETHEUS");
+  const fidelityBadge = needsBanner && typeof computeOpsDataFidelity === "function" && typeof renderOpsDataFidelityBadge === "function"
+    ? renderOpsDataFidelityBadge(computeOpsDataFidelity(state))
+    : "";
   return `<div class="container">${renderHeader("Metrics Explorer", "Prometheus, Datadog, and cloud metrics")}
     ${renderAlerts()}
-    ${obsNeedsConnectBanner(result, "Prometheus", "PROMETHEUS") ? renderObsConnectBanner("Prometheus or Datadog", "PROMETHEUS") : ""}
+    ${fidelityBadge}
+    ${needsBanner ? renderObsConnectBanner("Prometheus or Datadog", "PROMETHEUS") : ""}
     <section class="card">
       <form data-obs-metric-query style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
         <label style="flex:1;min-width:200px;">PromQL / query<input name="query" placeholder="up OR avg:system.cpu.user{*}" value="${escapeHtml(state.obsMetricQuery || "up")}" style="width:100%;font-size:12px;" /></label>

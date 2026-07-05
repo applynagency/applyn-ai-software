@@ -125,10 +125,15 @@ function renderBillingForbidden() {
 }
 
 function renderBillingModuleUnavailable() {
+  const adminBanner = isOrgAdminRole()
+    ? `<div class="ops-connect-banner" role="status" style="margin-bottom:12px;">
+        <span class="muted">Billing is not enabled on this deployment. Contact your platform operator to configure Stripe billing.</span>
+      </div>`
+    : "";
   return renderBillingShell(
     "Billing",
     "Feature unavailable",
-    `<section class="card">
+    `${adminBanner}<section class="card">
       <h2>Feature unavailable</h2>
       <p class="muted">Billing is not enabled on this deployment.</p>
     </section>`,

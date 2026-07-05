@@ -64,14 +64,16 @@ class SimulatedIaCProvider:
             logs=f"{self.cli_name} apply -auto-approve\nApply complete! Resources: {plan.add} added.",
             plan=plan,
             outputs=plan.outputs,
-            state_metadata={"serial": 1, "lineage": _hash_key(self.cli_name, "state", variables)},
+            state_metadata={"serial": 1, "lineage": _hash_key(self.cli_name, "state", variables), "simulated": True},
+            simulated=True,
         )
 
     def destroy(self, *, working_dir: str, variables: dict) -> IaCRunResult:
         return IaCRunResult(
             success=True,
             logs=f"{self.cli_name} destroy -auto-approve\nDestroy complete!",
-            state_metadata={"serial": 0},
+            state_metadata={"serial": 0, "simulated": True},
+            simulated=True,
         )
 
     def refresh(self, *, working_dir: str, variables: dict) -> IaCRunResult:

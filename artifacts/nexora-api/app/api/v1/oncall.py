@@ -27,6 +27,7 @@ from app.schemas.oncall import (
     ServiceOwnerUpdate,
     StateUpdateRequest,
 )
+from app.repositories.user import UserRepository
 from app.services.oncall import (
     EscalationEngine,
     IncidentRoutingService,
@@ -38,7 +39,22 @@ from app.services.oncall import (
 router = APIRouter(prefix="/oncall", tags=["On-Call & Escalation"])
 
 
-def _schedule_response(s) -> OnCallScheduleResponse:
+async def _user_labels(session: DBSession, user_ids: set[str]) -> dict[str, dict[str, str | None]]:
+    labels: dict[str, dict[str, str | None]] = {}
+    repo = UserRepository(session)
+    for uid in user_ids:
+        if not uid:
+            continue
+        user = await repo.get_by_id(uid)
+        if user:
+            labels[uid] = {"user_name": user.full_name, "user_email": user.email}
+    return labels
+
+
+async def _schedule_response(session: DBSession, s) -> OnCallScheduleResponse:
+    uid = resolve_current_oncall(s)
+    labels = await _user_labels(session, {uid} if uid else set())
+    user = labels.get(uid or "", {})
     return OnCallScheduleResponse(
         id=s.id,
         organization_id=s.organization_id,
@@ -49,7 +65,9 @@ def _schedule_response(s) -> OnCallScheduleResponse:
         participants=list(s.participants or []),
         anchor_at=s.anchor_at,
         is_active=s.is_active,
-        current_oncall_user_id=resolve_current_oncall(s),
+        current_oncall_user_id=uid,
+        current_oncall_user_name=user.get("user_name"),
+        current_oncall_user_email=user.get("user_email"),
         created_at=s.created_at,
     )
 
@@ -106,13 +124,13 @@ async def create_schedule(
     data: OnCallScheduleCreate, current_user: CurrentUser, session: DBSession, org_context: OrgContextDep
 ):
     s = await OnCallService(session).create_schedule(current_user, org_context, data)
-    return _schedule_response(s)
+    return await _schedule_response(session, s)
 
 
 @router.get("/schedules", response_model=list[OnCallScheduleResponse])
 async def list_schedules(current_user: CurrentUser, session: DBSession, org_context: OrgContextDep):
     schedules = await OnCallService(session).list_schedules(current_user, org_context)
-    return [_schedule_response(s) for s in schedules]
+    return [await _schedule_response(session, s) for s in schedules]
 
 
 @router.get("/schedules/{schedule_id}", response_model=OnCallScheduleResponse)
@@ -122,7 +140,7 @@ async def get_schedule(
     s = await OnCallService(session).get_schedule(current_user, org_context, schedule_id)
     if s is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Schedule not found")
-    return _schedule_response(s)
+    return await _schedule_response(session, s)
 
 
 @router.delete("/schedules/{schedule_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -160,8 +178,17 @@ async def delete_policy(
 @router.get("/current", response_model=list[CurrentOnCall])
 async def current_oncall(current_user: CurrentUser, session: DBSession, org_context: OrgContextDep):
     pairs = await OnCallService(session).current_oncall(current_user, org_context)
+    user_ids = {uid for _, uid in pairs if uid}
+    labels = await _user_labels(session, user_ids)
     return [
-        CurrentOnCall(schedule_id=s.id, schedule_name=s.name, team=s.team, user_id=uid)
+        CurrentOnCall(
+            schedule_id=s.id,
+            schedule_name=s.name,
+            team=s.team,
+            user_id=uid,
+            user_name=(labels.get(uid or "", {}) or {}).get("user_name"),
+            user_email=(labels.get(uid or "", {}) or {}).get("user_email"),
+        )
         for s, uid in pairs
     ]
 

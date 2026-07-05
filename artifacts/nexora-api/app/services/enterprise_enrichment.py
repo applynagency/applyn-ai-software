@@ -176,15 +176,136 @@ def sentry_resolve_issue(secret: dict, issue_id: str) -> dict:
     return {"status": "resolved", "issue_id": issue_id, "title": data.get("title")}
 
 
+def pagerduty_summary(secret: dict) -> dict:
+    api_key = secret.get("api_key")
+    if not api_key:
+        return {"available": False}
+    headers = {
+        "Authorization": f"Token token={api_key}",
+        "Accept": "application/vnd.pagerduty+json;version=2",
+    }
+    data = _http_get_json(
+        "https://api.pagerduty.com/incidents?statuses[]=triggered&statuses[]=acknowledged&limit=25",
+        headers=headers,
+    )
+    incidents = data.get("incidents") if isinstance(data, dict) else []
+    rows = incidents if isinstance(incidents, list) else []
+    return {
+        "available": True,
+        "open_incidents": len(rows),
+        "top_incidents": [
+            {"id": i.get("id"), "title": i.get("title"), "status": i.get("status")}
+            for i in rows[:5]
+            if isinstance(i, dict)
+        ],
+        "mutations_supported": ["acknowledge_incident"],
+    }
+
+
+def pagerduty_acknowledge_incident(secret: dict, incident_id: str, **kwargs) -> dict:
+    api_key = secret.get("api_key")
+    if not api_key or not incident_id:
+        return {"status": "failed", "reason": "missing_credentials_or_incident"}
+    headers = {
+        "Authorization": f"Token token={api_key}",
+        "Accept": "application/vnd.pagerduty+json;version=2",
+        "Content-Type": "application/json",
+    }
+    body = {"type": "incident_reference", "status": "acknowledged"}
+    payload = json.dumps(body).encode()
+    url = f"https://api.pagerduty.com/incidents/{incident_id}"
+    req = urllib.request.Request(url, data=payload, method="PUT", headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=20.0) as resp:  # noqa: S310
+            data = json.loads(resp.read().decode()) if resp.length else {}
+    except urllib.error.HTTPError as exc:
+        return {"status": "failed", "reason": exc.read().decode(errors="replace")[:200]}
+    incident = (data.get("incident") or {}) if isinstance(data, dict) else {}
+    return {
+        "status": "acknowledged",
+        "incident_id": incident_id,
+        "title": incident.get("title"),
+    }
+
+
+def jira_summary(secret: dict) -> dict:
+    base = (secret.get("base_url") or "").rstrip("/")
+    email = secret.get("email")
+    api_token = secret.get("api_token")
+    if not base or not email or not api_token:
+        return {"available": False}
+    import base64
+    auth = base64.b64encode(f"{email}:{api_token}".encode()).decode()
+    headers = {
+        "Authorization": f"Basic {auth}",
+        "Accept": "application/json",
+    }
+    search = _http_get_json(
+        f"{base}/rest/api/3/search?jql=statusCategory!=Done&maxResults=25",
+        headers=headers,
+    )
+    issues = search.get("issues") if isinstance(search, dict) else []
+    rows = issues if isinstance(issues, list) else []
+    return {
+        "available": True,
+        "open_issues": search.get("total", len(rows)) if isinstance(search, dict) else len(rows),
+        "top_issues": [
+            {
+                "id": i.get("id"),
+                "key": (i.get("key") or ""),
+                "title": ((i.get("fields") or {}).get("summary") or ""),
+            }
+            for i in rows[:5]
+            if isinstance(i, dict)
+        ],
+        "mutations_supported": ["add_comment"],
+    }
+
+
+def jira_add_comment(secret: dict, issue_id: str, *, note: str = "") -> dict:
+    base = (secret.get("base_url") or "").rstrip("/")
+    email = secret.get("email")
+    api_token = secret.get("api_token")
+    if not base or not email or not api_token or not issue_id:
+        return {"status": "failed", "reason": "missing_credentials_or_issue"}
+    import base64
+    auth = base64.b64encode(f"{email}:{api_token}".encode()).decode()
+    headers = {
+        "Authorization": f"Basic {auth}",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+    text = note or "Updated via Nexora"
+    body = {
+        "body": {
+            "type": "doc",
+            "version": 1,
+            "content": [{"type": "paragraph", "content": [{"type": "text", "text": text}]}],
+        },
+    }
+    payload = json.dumps(body).encode()
+    url = f"{base}/rest/api/3/issue/{issue_id}/comment"
+    req = urllib.request.Request(url, data=payload, method="POST", headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=20.0) as resp:  # noqa: S310
+            data = json.loads(resp.read().decode()) if resp.length else {}
+    except urllib.error.HTTPError as exc:
+        return {"status": "failed", "reason": exc.read().decode(errors="replace")[:200]}
+    return {"status": "commented", "issue_id": issue_id, "comment_id": data.get("id")}
+
+
 _SUMMARIZERS = {
     "SERVICENOW": servicenow_summary,
     "SPLUNK": splunk_summary,
     "SENTRY": sentry_summary,
+    "PAGERDUTY": pagerduty_summary,
+    "JIRA": jira_summary,
 }
 
 _MUTATORS: dict[str, Any] = {
     "SERVICENOW": servicenow_acknowledge_incident,
     "SENTRY": sentry_resolve_issue,
+    "PAGERDUTY": pagerduty_acknowledge_incident,
 }
 
 
@@ -212,8 +333,12 @@ def mutate_provider(integration_key: str, secret: dict, action: str, resource_id
     key = (integration_key or "").upper()
     if action == "acknowledge_incident" and key == "SERVICENOW":
         return servicenow_acknowledge_incident(secret, resource_id, note=kwargs.get("note", ""))
+    if action == "acknowledge_incident" and key == "PAGERDUTY":
+        return pagerduty_acknowledge_incident(secret, resource_id, note=kwargs.get("note", ""))
     if action == "resolve_issue" and key == "SENTRY":
         return sentry_resolve_issue(secret, resource_id)
     if action == "trigger_search" and key == "SPLUNK":
         return splunk_trigger_search(secret, resource_id)
+    if action == "add_comment" and key == "JIRA":
+        return jira_add_comment(secret, resource_id, note=kwargs.get("note", ""))
     return {"status": "failed", "reason": f"unsupported_action:{action}"}

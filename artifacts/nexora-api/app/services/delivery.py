@@ -927,7 +927,11 @@ class DeliveryService:
             "history": a.history,
         } for a in apps]
         count = await self.gitops.replace_for_org(organization_id, rows)
-        return {"applications": count, "connections_synced": connections_synced}
+        return {
+            "applications": count,
+            "connections_synced": connections_synced,
+            "simulated": connections_synced == 0,
+        }
 
     async def trigger_gitops_app_sync(
         self,

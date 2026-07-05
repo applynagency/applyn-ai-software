@@ -133,3 +133,38 @@ async def test_enterprise_mutate_requires_write(client):
         json={"action": "resolve_issue", "resource_id": "123"},
     )
     assert r.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_enterprise_summary_includes_pagerduty(client, monkeypatch):
+    _, t = await create_authenticated_user(client, email="ent5@e.com", username="ent5")
+    token = t["access_token"]
+    pd = (await client.post(
+        "/v1/integrations/connect",
+        headers=H(token),
+        json={"integration_key": "PAGERDUTY", "credentials": {"api_key": "pd-test-key"}},
+    )).json()
+
+    async def _fake_resolve(*_args, **_kwargs):
+        return None, {"api_key": "pd-test-key"}
+
+    with patch(
+        "app.api.v1.integration.SecretManagerService.resolve_secret",
+        new_callable=AsyncMock,
+        side_effect=_fake_resolve,
+    ):
+        with patch(
+            "app.api.v1.integration.summarize_provider",
+            return_value={
+                "integration_key": "PAGERDUTY",
+                "available": True,
+                "open_incidents": 3,
+            },
+        ):
+            r = await client.get("/v1/integrations/enterprise/summary", headers=H(token))
+
+    assert r.status_code == 200
+    providers = r.json()["providers"]
+    assert len(providers) == 1
+    assert providers[0]["connection_id"] == pd["id"]
+    assert providers[0]["integration_key"] == "PAGERDUTY"

@@ -192,7 +192,7 @@ INTEGRATION_VALUE: dict[str, dict] = {
     },
 }
 
-ENTERPRISE_MUTATION_KEYS = frozenset({"SERVICENOW", "SENTRY", "SPLUNK"})
+ENTERPRISE_MUTATION_KEYS = frozenset({"SERVICENOW", "SENTRY", "SPLUNK", "PAGERDUTY", "JIRA"})
 
 
 def _default_value(key: str, definition: dict) -> dict:

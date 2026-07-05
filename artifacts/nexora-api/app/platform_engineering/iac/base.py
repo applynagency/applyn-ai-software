@@ -26,6 +26,7 @@ class IaCRunResult:
     outputs: dict = field(default_factory=dict)
     state_metadata: dict = field(default_factory=dict)
     error: str | None = None
+    simulated: bool = False
 
 
 class IaCProvider(Protocol):

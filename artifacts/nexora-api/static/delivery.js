@@ -376,6 +376,10 @@ async function loadDeliveryOverviewData() {
       api("/v1/delivery/environments").then((rows) => { state.dlvEnvironments = rows || []; }).catch(() => { state.dlvEnvironments = []; }),
     );
 
+    tasks.push(
+      api("/v1/delivery/dora").then((d) => { state.dlvOverviewDora = d || null; }).catch(() => { state.dlvOverviewDora = null; }),
+    );
+
     await Promise.all(tasks);
     state.dlvOverviewRecommended = computeDeliveryRecommendedNextAction(cards);
     state.dlvOverviewLoaded = true;
@@ -500,10 +504,14 @@ async function loadApprovalsData() {
     state.dlvApprovalsList = (rows || [])
       .filter((o) => String(o.status) === "PENDING_APPROVAL")
       .map(sanitizeOperationRow);
+    state.dlvExecuteQueue = (rows || [])
+      .filter((o) => String(o.status) === "APPROVED")
+      .map(sanitizeOperationRow);
   } catch (e) {
     if (e instanceof ApiError && e.status === 403) state.dlvApprovalsDenied = true;
     else if (e instanceof ApiError && e.status === 404) state.dlvApprovalsUnavailable = true;
     state.dlvApprovalsList = [];
+    state.dlvExecuteQueue = [];
   } finally {
     state.dlvApprovalsLoading = false;
   }
@@ -614,6 +622,56 @@ function renderDeliveryOverviewSkeleton() {
   return `<div class="delivery-skeleton-cards">${cards}</div>`;
 }
 
+function renderDeliveryOverviewDoraCard(d) {
+  if (!d) return "";
+  const insufficient = d.data_sufficient === false;
+  const fmt = (val, suffix = "") => (val == null || val === "" ? "—" : `${val}${suffix}`);
+  const insufficientNote = insufficient
+    ? `<p class="muted" style="font-size:11px;margin-top:8px;color:#92400e;">Insufficient CI/CD data in the last ${d.window_days || 30} days — connect and sync pipelines.</p>`
+    : "";
+  return `<section class="card delivery-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+      <h2 style="margin:0;">DORA metrics</h2>
+      <a class="btn btn-secondary btn-sm" href="/delivery/dora" data-nav="/delivery/dora">Full dashboard</a>
+    </div>
+    <div class="ops-stats" style="margin-top:12px;">
+      ${rdMetric("Deploy freq.", `${fmt(d.deployment_frequency_per_day)}/day`)}
+      ${rdMetric("Lead time", `${fmt(d.lead_time_hours)}h`)}
+      ${rdMetric("CFR", `${fmt(d.change_failure_rate_percent)}%`)}
+      ${rdMetric("MTTR", `${fmt(d.mttr_hours)}h`)}
+    </div>
+    ${insufficientNote}
+  </section>`;
+}
+
+function renderDeliveryOperationActions(o, canWrite) {
+  if (!canWrite) return `<span class="muted">Read-only</span>`;
+  if (String(o.status) === "PENDING_APPROVAL") {
+    return `
+      <button class="btn btn-primary" type="button" data-dlv-approval-approve="${escapeHtml(o.id)}">Approve</button>
+      <button class="btn btn-secondary" type="button" data-dlv-approval-reject="${escapeHtml(o.id)}">Reject</button>`;
+  }
+  if (String(o.status) === "APPROVED") {
+    return `<button class="btn btn-primary" type="button" data-dlv-operation-execute="${escapeHtml(o.id)}">Execute</button>`;
+  }
+  if (o.error) {
+    return `<span class="muted" style="font-size:11px;">${escapeHtml(truncateDeliveryText(o.error, 80))}</span>`;
+  }
+  return "";
+}
+
+function renderDeliveryOperationMeta(o) {
+  return `
+    ${o.environment_id ? `<span>Environment: ${escapeHtml(dlvEnvName(o.environment_id))}</span>` : ""}
+    ${o.release_id ? `<span>Release: ${escapeHtml(o.release_id.slice(0, 8))}</span>` : ""}
+    ${o.deployment_id ? `<span>Deployment: ${escapeHtml(o.deployment_id.slice(0, 8))}</span>` : ""}
+    ${o.requested_by ? `<span>Requester: ${escapeHtml(o.requested_by.slice(0, 8))}</span>` : ""}
+    ${o.approved_by ? `<span>Approver: ${escapeHtml(o.approved_by.slice(0, 8))}</span>` : ""}
+    <span>Created: ${formatDate(o.created_at)}</span>
+    ${o.executed_at ? `<span>Executed: ${formatDate(o.executed_at)}</span>` : ""}
+  `;
+}
+
 function renderDeliveryOverview() {
   if (state.dlvOverviewLoading && !state.dlvOverviewLoaded) {
     return `<div class="container">
@@ -645,6 +703,7 @@ function renderDeliveryOverview() {
       ${renderDeliveryOverviewCard("releaseHealth", "Release health", cards.releaseHealth)}
       ${renderDeliveryOverviewCard("linkedIncidents", "Linked incidents", cards.linkedIncidents)}
     </div>
+    ${renderDeliveryOverviewDoraCard(state.dlvOverviewDora)}
     <section class="card delivery-card">
       <div class="actions">
         <a class="btn btn-secondary" href="/delivery/deployments">Deployments</a>
@@ -882,7 +941,7 @@ function renderDeliveryApprovals() {
   if (state.dlvApprovalsDenied) return renderAccessDeniedPage("Delivery approvals", "You do not have permission to view approvals.");
   if (state.dlvApprovalsUnavailable) return renderFeatureUnavailablePage("Delivery approvals", "Delivery operations API is not available.");
   const canWrite = canWriteResources();
-  const cards = state.dlvApprovalsLoading
+  const pendingCards = state.dlvApprovalsLoading
     ? `<p class="muted">Loading…</p>`
     : (state.dlvApprovalsList || []).map((o) => `
       <div class="delivery-approval-card">
@@ -893,24 +952,34 @@ function renderDeliveryApprovals() {
           </div>
           <span>${cpHealthBadge(o.status)}</span>
         </div>
-        <div class="delivery-approval-meta">
-          ${o.environment_id ? `<span>Environment: ${escapeHtml(dlvEnvName(o.environment_id))}</span>` : ""}
-          ${o.release_id ? `<span>Release: ${escapeHtml(o.release_id.slice(0, 8))}</span>` : ""}
-          ${o.deployment_id ? `<span>Deployment: ${escapeHtml(o.deployment_id.slice(0, 8))}</span>` : ""}
-          ${o.requested_by ? `<span>Requester: ${escapeHtml(o.requested_by.slice(0, 8))}</span>` : ""}
-          <span>Created: ${formatDate(o.created_at)}</span>
-        </div>
-        <div class="actions" style="margin-top:12px;">
-          ${canWrite ? `
-            <button class="btn btn-primary" type="button" data-dlv-approval-approve="${escapeHtml(o.id)}">Approve</button>
-            <button class="btn btn-secondary" type="button" data-dlv-approval-reject="${escapeHtml(o.id)}">Reject</button>` : `<span class="muted">Read-only</span>`}
-        </div>
+        <div class="delivery-approval-meta">${renderDeliveryOperationMeta(o)}</div>
+        <div class="actions" style="margin-top:12px;">${renderDeliveryOperationActions(o, canWrite)}</div>
       </div>`).join("") || `<p class="muted">No pending delivery approvals.</p>`;
+  const executeCards = (state.dlvExecuteQueue || []).map((o) => `
+    <div class="delivery-approval-card">
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div>
+          <strong>${escapeHtml(o.kind)}</strong>
+          <p class="muted" style="margin:4px 0 0;font-size:12px;">${escapeHtml(o.id)}</p>
+        </div>
+        <span>${cpHealthBadge(o.status)}</span>
+      </div>
+      <div class="delivery-approval-meta">${renderDeliveryOperationMeta(o)}</div>
+      <div class="actions" style="margin-top:12px;">${renderDeliveryOperationActions(o, canWrite)}</div>
+    </div>`).join("");
   return `<div class="container">
     ${renderHeader("Delivery approvals", "Pending delivery operation approvals")}
     ${renderAlerts()}
-    <p class="muted">Approving records a decision only — deployment is never triggered automatically from this page.</p>
-    <section class="card delivery-card">${cards}</section>
+    <section class="card delivery-card">
+      <h2>Pending approval</h2>
+      <p class="muted" style="font-size:12px;">Approving records a decision only — use Execute after approval to run the operation.</p>
+      ${pendingCards}
+    </section>
+    ${executeCards ? `<section class="card delivery-card" style="margin-top:12px;">
+      <h2>Ready to execute</h2>
+      <p class="muted" style="font-size:12px;">Approved operations can be executed manually. Production runs require live observability evidence.</p>
+      ${executeCards}
+    </section>` : ""}
   </div>`;
 }
 
@@ -1038,7 +1107,11 @@ function renderDeliveryPipelines() {
   const connectBanner = needsCi && typeof renderOpsConnectBanner === "function"
     ? renderOpsConnectBanner("Jenkins, GitHub Actions, or Buildkite", "JENKINS", "Sync CI/CD pipelines to populate the unified pipeline view.")
     : (needsCi ? renderDeliveryConnectBanner("Jenkins, GitHub Actions, or Buildkite", "JENKINS") : "");
+  const fidelityBadge = needsCi && typeof computeOpsDataFidelity === "function" && typeof renderOpsDataFidelityBadge === "function"
+    ? renderOpsDataFidelityBadge(computeOpsDataFidelity(state))
+    : "";
   return `<div class="container">${renderHeader("Pipelines", "Unified CI/CD view — sync jobs and read build logs in Nexora")}${renderAlerts()}
+    ${fidelityBadge}
     ${connectBanner}
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
       ${syncMeta}
@@ -1076,6 +1149,10 @@ function renderDeliveryGitops() {
   const canWrite = canWriteResources();
   const hasGitops = deliveryHasVerifiedProvider("ARGOCD") || deliveryHasVerifiedProvider("FLUX");
   const needsConnect = !hasGitops || apps.length === 0;
+  const gitopsLive = hasGitops && apps.length > 0 && state.dlvGitopsSimulated !== true;
+  const fidelityBadge = !gitopsLive && typeof computeOpsDataFidelity === "function" && typeof renderOpsDataFidelityBadge === "function"
+    ? renderOpsDataFidelityBadge(computeOpsDataFidelity(state))
+    : "";
   const rows = apps.map((a) => {
     const syncBtn = (canWrite && a.drift)
       ? `<button type="button" class="btn btn-primary btn-sm" data-delivery-gitops-app-sync="${escapeHtml(a.name)}">Sync</button>`
@@ -1085,6 +1162,7 @@ function renderDeliveryGitops() {
       <span style="display:flex;gap:8px;align-items:center;">${cpHealthBadge(a.health)} ${a.sync_status ? escapeHtml(a.sync_status) : ""} ${a.drift ? "· drift" : ""} ${syncBtn}</span></div>`;
   }).join("");
   return `<div class="container">${renderHeader("GitOps", "Argo CD and Flux CD applications from connected integrations")}${renderAlerts()}
+    ${fidelityBadge}
     ${needsConnect ? renderDeliveryConnectBanner("Argo CD or Flux CD", "ARGOCD") : ""}
     <p class="muted" style="font-size:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
       ${canWrite ? `<button type="button" class="btn btn-primary btn-sm" data-delivery-gitops-sync>Refresh GitOps state</button>` : ""}
@@ -1135,12 +1213,22 @@ function renderDeliveryDora() {
 
 function renderDeliveryOperations() {
   const ops = (state.dlvOperations || []).map(sanitizeOperationRow);
+  const canWrite = canWriteResources();
   const rows = ops.map((o) => `
-    <div class="ops-list-row"><span><strong>${escapeHtml(o.kind)}</strong></span>
-      <span>${cpHealthBadge(o.status)}</span></div>`).join("");
-  return `<div class="container">${renderHeader("Operations", "Delivery operations (read-only)")}${renderAlerts()}
-    <p class="muted">Use <a href="/delivery/approvals">Delivery approvals</a> to review pending items. Execution is not available from the UI.</p>
-    <section class="card"><div class="ops-list">${rows || `<p class="muted">No operations.</p>`}</div></section>
+    <div class="delivery-approval-card">
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div>
+          <strong>${escapeHtml(o.kind)}</strong>
+          <p class="muted" style="margin:4px 0 0;font-size:12px;">${escapeHtml(o.id)}</p>
+        </div>
+        <span>${cpHealthBadge(o.status)}</span>
+      </div>
+      <div class="delivery-approval-meta">${renderDeliveryOperationMeta(o)}</div>
+      <div class="actions" style="margin-top:12px;">${renderDeliveryOperationActions(o, canWrite)}</div>
+    </div>`).join("");
+  return `<div class="container">${renderHeader("Operations", "Delivery operations")}${renderAlerts()}
+    <p class="muted" style="font-size:12px;">Approve pending items on <a href="/delivery/approvals" data-nav="/delivery/approvals">Delivery approvals</a>, then execute approved operations here.</p>
+    <section class="card delivery-card"><div class="ops-list">${rows || `<p class="muted">No operations.</p>`}</div></section>
   </div>`;
 }
 
@@ -1230,6 +1318,7 @@ function bindDeliveryEvents() {
     state.message = null;
     try {
       const r = await api("/v1/delivery/gitops/sync", { method: "POST", body: JSON.stringify({}) });
+      state.dlvGitopsSimulated = r.simulated === true;
       state.message = `Synced ${r.applications || 0} GitOps app(s) from ${r.connections_synced || 0} connection(s)`;
       await loadDeliveryRouteData(state.route.page);
       render();
@@ -1377,6 +1466,29 @@ function bindDeliveryEvents() {
       } catch (error) {
         state.error = sanitizeDeliveryError(error.message);
         render();
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-dlv-operation-execute]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      if (!canWriteResources()) return;
+      const id = btn.dataset.dlvOperationExecute;
+      if (!window.confirm("Execute this approved delivery operation? Production runs require live observability evidence.")) return;
+      btn.disabled = true;
+      try {
+        const result = await api(`/v1/delivery/operations/${id}/execute`, { method: "POST", body: JSON.stringify({}) });
+        state.message = `Operation ${result.status || "completed"}`;
+        if (state.route.page === "delivery-operations") {
+          try { state.dlvOperations = await api("/v1/delivery/operations"); } catch { state.dlvOperations = []; }
+        }
+        await loadApprovalsData();
+        render();
+      } catch (error) {
+        state.error = sanitizeDeliveryError(error.message);
+        render();
+      } finally {
+        btn.disabled = false;
       }
     });
   });

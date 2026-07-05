@@ -100,7 +100,8 @@ test("no mutations on delivery chunk page load", () => {
 
 test("no deployment rollback or provider mutation endpoints in delivery chunk", () => {
   const source = readSource("delivery.js");
-  assert.doesNotMatch(source, /\/execute/);
+  assert.match(source, /\/v1\/delivery\/operations\/\$\{id\}\/execute/);
+  assert.match(source, /data-dlv-operation-execute/);
   assert.doesNotMatch(source, /\/rollback/);
   assert.match(source, /gitops\/sync/);
   assert.doesNotMatch(source, /pipelines\/[^`'"]+\/runs\/sync/);
@@ -114,6 +115,7 @@ test("mutations require confirmation in bindDeliveryEvents", () => {
   assert.match(source, /window\.confirm/);
   assert.match(source, /data-dlv-approval-approve/);
   assert.match(source, /data-dlv-approval-reject/);
+  assert.match(source, /data-dlv-operation-execute/);
   assert.match(source, /data-dlv-create-change/);
   assert.match(source, /data-dlv-change-submit/);
   assert.match(source, /data-dlv-change-approve/);

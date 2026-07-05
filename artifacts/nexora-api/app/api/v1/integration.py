@@ -262,7 +262,7 @@ async def enterprise_integration_summary(
     session: DBSession,
     org_context: OrgContextDep,
 ):
-    """Live CMDB, index, and issue stats for ServiceNow, Splunk, and Sentry."""
+    """Live CMDB, index, issue, and incident stats for enterprise connectors."""
     organization_id = org_context.requires_organization
     repos = IntegrationConnectionRepository(session)
     secrets = SecretManagerService(session)
@@ -270,7 +270,7 @@ async def enterprise_integration_summary(
     providers: list[dict] = []
     for conn in conns:
         key = (conn.integration_key or "").upper()
-        if key not in {"SERVICENOW", "SPLUNK", "SENTRY"}:
+        if key not in {"SERVICENOW", "SPLUNK", "SENTRY", "PAGERDUTY", "JIRA"}:
             continue
         row = {"connection_id": conn.id, "integration_key": key, "available": False}
         if conn.credential_id:
