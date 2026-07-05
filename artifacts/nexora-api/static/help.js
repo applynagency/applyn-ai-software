@@ -607,12 +607,43 @@ function renderHelpTroubleshooting() {
 
 function renderHelpGettingStarted() {
   const arts = state.helpGSArticles || [];
+  const workflowLanes = [
+    { order: 1, title: "Respond", when: "Something broke — alert fired, build failed, or customers impacted.", href: "/incidents" },
+    { order: 2, title: "Connect", when: "First setup or adding a new tool to your estate.", href: "/integrations" },
+    { order: 3, title: "Observe", when: "Proactive monitoring — catch degradation before customers do.", href: "/alerts" },
+    { order: 4, title: "Deliver", when: "Releasing code or reviewing CI/CD health.", href: "/delivery" },
+    { order: 5, title: "Improve", when: "After resolving — capture lessons and automate recovery.", href: "/incident-response/postmortems" },
+  ];
+  const workflowHtml = workflowLanes.map((flow) => `
+    <article class="help-workflow-lane card">
+      <div class="help-workflow-lane-head">
+        <span class="ops-guide-flow-num">${flow.order}</span>
+        <h4><a href="${escapeHtml(flow.href)}" data-nav="${escapeHtml(flow.href)}">${escapeHtml(flow.title)}</a></h4>
+      </div>
+      <p class="muted">${escapeHtml(flow.when)}</p>
+    </article>`).join("");
+  const roadmapHtml = `
+    <section class="help-section card" style="margin-top:16px;">
+      <h3>Integration roadmap</h3>
+      <p class="muted">Core 26 integrations ship today. On the roadmap for enterprise buyers:</p>
+      <ul class="muted" style="margin:8px 0 0;padding-left:20px;">
+        <li>Alertmanager (webhook ingest supported — catalog entry coming)</li>
+        <li>Splunk, ServiceNow, Sentry, Dynatrace</li>
+        <li>OpenTelemetry Collector (first-class)</li>
+        <li>Harness / Buildkite, Flux CD</li>
+      </ul>
+    </section>`;
   const body = `
     <section class="help-section">
       <h3>Getting Started</h3>
-      <p class="muted">New to Nexora? Start here.</p>
+      <p class="muted">New to Nexora? Follow the five-lane SRE workflow below, then connect your estate.</p>
+      <div class="help-workflow-grid">${workflowHtml}</div>
+    </section>
+    <section class="help-section">
+      <h3>Guides & articles</h3>
       ${arts.length ? `<div class="help-card-grid">${arts.map(helpArticleCard).join("")}</div>` : helpEmptyState("No getting-started guides yet.")}
-    </section>`;
+    </section>
+    ${roadmapHtml}`;
   return renderHelpLayout([{ label: "Help Center", path: "/help" }, { label: "Getting Started" }], body, "getting-started");
 }
 

@@ -129,10 +129,8 @@ const OPS_OPERATIONAL_FLOWS = [
 ];
 
 const OPS_DASHBOARD_SECTIONS = [
-  { anchor: "ops-guide", title: "How to read this page", hint: "Your shift workflow in plain language" },
-  { anchor: "ops-priority", title: "Recommended next step", hint: "One action based on live signals" },
   { anchor: "ops-signals", title: "Live signals", hint: "Click a number to jump to that area" },
-  { anchor: "ops-workflow", title: "Operational workflow", hint: "5-step SRE path with links" },
+  { anchor: "ops-modules", title: "Operations areas", hint: "Respond, observe, deliver, connect" },
   { anchor: "ops-attention", title: "Needs attention", hint: "Specific items waiting for you" },
 ];
 
@@ -199,46 +197,16 @@ function renderOpsDashboardSetupStrip() {
       </div>
     </section>`;
 }
-function renderOpsDashboardWelcome(snapshot) {
-  const showExpanded = !state.dashboardGuideDismissed;
-  if (!showExpanded) {
-    return `
-      <section class="card ops-guide-compact" id="ops-guide">
-        <div class="ops-guide-compact-inner">
-          <p class="muted">Welcome back, <strong>${escapeHtml(dashboardGreetingName())}</strong> · ${escapeHtml(activeOrgLabel())}</p>
-          <button type="button" class="btn btn-secondary btn-sm" data-show-dashboard-guide>Show dashboard guide</button>
-        </div>
-      </section>`;
-  }
+function renderOpsDashboardWelcome() {
   return `
-    <section class="card ops-guide-card" id="ops-guide">
-      <div class="section-heading">
+    <section class="ops-dashboard-header" id="ops-guide" aria-label="Dashboard header">
+      <div class="ops-dashboard-header-inner">
         <div>
-          <p class="ops-guide-eyebrow">Welcome, ${escapeHtml(dashboardGreetingName())}</p>
-          <h2>How to use this dashboard</h2>
-          <p class="muted">You are operating <strong>${escapeHtml(activeOrgLabel())}</strong>. Follow one path every shift: <strong>Connect</strong> tools → <strong>Respond</strong> to alerts & incidents → <strong>Observe</strong> health → <strong>Deliver</strong> changes → <strong>Improve</strong> with postmortems.</p>
+          <h2 class="ops-dashboard-greeting">Command Center</h2>
+          <p class="muted">Welcome back, <strong>${escapeHtml(dashboardGreetingName())}</strong> · ${escapeHtml(activeOrgLabel())}</p>
         </div>
-        <button type="button" class="btn btn-secondary" data-dismiss-dashboard-guide aria-label="Dismiss dashboard guide">Got it</button>
+        <a class="btn btn-secondary btn-sm" href="/help/getting-started" data-nav="/help/getting-started">Getting started guide</a>
       </div>
-      <div class="ops-guide-flow-strip" aria-label="Shift workflow">
-        ${OPS_OPERATIONAL_FLOWS.map((flow, idx) => `
-          <div class="ops-guide-flow-step">
-            <span class="ops-guide-flow-num">${flow.order}</span>
-            <strong>${escapeHtml(flow.title)}</strong>
-            <span class="muted">${escapeHtml(flow.when)}</span>
-            ${idx < OPS_OPERATIONAL_FLOWS.length - 1 ? '<span class="ops-guide-flow-arrow" aria-hidden="true">→</span>' : ""}
-          </div>`).join("")}
-      </div>
-      <div class="ops-guide-read-order">
-        <h3>Read this page top to bottom</h3>
-        <ol>
-          <li><strong>Recommended next step</strong> — the one action Nexora suggests right now.</li>
-          <li><strong>Live signals</strong> — click any number to jump to incidents, health, delivery, etc.</li>
-          <li><strong>Operational workflow</strong> — the 5 lanes with links for each type of work.</li>
-          <li><strong>Needs attention</strong> — specific incidents, approvals, and at-risk services.</li>
-        </ol>
-      </div>
-      ${renderOpsDashboardSectionNav()}
     </section>`;
 }
 function buildOpsDashboardSnapshot(stateObj) {
@@ -359,8 +327,11 @@ function opsFlowLaneCount(flowId, snapshot) {
 }
 function renderOpsEstateStatCard(label, value, href, opts = {}) {
   const warn = opts.warn ? " ops-estate-stat-warn" : "";
+  const iconHtml = opts.iconName
+    ? `<span class="ops-estate-stat-icon" aria-hidden="true">${navIcon(opts.iconName)}</span>`
+    : "";
   return `<a class="ops-estate-stat${warn}" href="${escapeHtml(href)}" data-nav="${escapeHtml(href)}" style="--estate-accent:${opts.color || "#2563eb"}">
-    <span class="ops-estate-stat-icon" aria-hidden="true">${opts.icon || "•"}</span>
+    ${iconHtml}
     <span class="ops-estate-stat-value">${value}</span>
     <span class="ops-estate-stat-label">${escapeHtml(label)}</span>
   </a>`;
@@ -378,12 +349,12 @@ function renderOpsEstateOverview(snapshot) {
     <section class="ops-estate-overview" aria-label="Estate overview">
       ${connectBanner}
       <div class="ops-estate-grid">
-        ${renderOpsEstateStatCard("Integrations", snapshot.integrations, "/integrations", { icon: "🔌", color: "#7c3aed" })}
-        ${renderOpsEstateStatCard("Infrastructure", snapshot.infrastructure, "/connections-secrets", { icon: "☁️", color: "#0891b2" })}
-        ${renderOpsEstateStatCard("Services", snapshot.servicesTracked, "/services", { icon: "💚", color: "#2563eb" })}
-        ${renderOpsEstateStatCard("Runbooks", snapshot.runbooks, "/runbooks", { icon: "📖", color: "#059669" })}
-        ${renderOpsEstateStatCard("Open incidents", snapshot.openIncidents, "/incidents", { icon: "🚨", color: "#dc2626", warn: snapshot.openIncidents > 0 })}
-        ${renderOpsEstateStatCard("Firing alerts", snapshot.firingAlerts, "/alerts", { icon: "⚡", color: "#ea580c", warn: snapshot.firingAlerts > 0 })}
+        ${renderOpsEstateStatCard("Integrations", snapshot.integrations, "/integrations", { iconName: "plug", color: "#7c3aed" })}
+        ${renderOpsEstateStatCard("Infrastructure", snapshot.infrastructure, "/connections-secrets", { iconName: "cloud", color: "#0891b2" })}
+        ${renderOpsEstateStatCard("Services", snapshot.servicesTracked, "/services", { iconName: "health", color: "#2563eb" })}
+        ${renderOpsEstateStatCard("Runbooks", snapshot.runbooks, "/runbooks", { iconName: "book", color: "#059669" })}
+        ${renderOpsEstateStatCard("Open incidents", snapshot.openIncidents, "/incidents", { iconName: "incident", color: "#dc2626", warn: snapshot.openIncidents > 0 })}
+        ${renderOpsEstateStatCard("Firing alerts", snapshot.firingAlerts, "/alerts", { iconName: "zap", color: "#ea580c", warn: snapshot.firingAlerts > 0 })}
       </div>
     </section>`;
 }
@@ -399,22 +370,40 @@ function renderOpsAlertStrip(snapshot) {
 }
 function renderOpsPriorityCard(snapshot) {
   const action = computeOpsRecommendedAction(snapshot);
-  if (!action) return "";
-  const cls = action.priority === "critical" ? "ops-priority-critical"
-    : action.priority === "high" ? "ops-priority-high"
-      : action.priority === "medium" ? "ops-priority-medium"
-        : action.priority === "clear" ? "ops-priority-clear" : "";
+  if (!action || ["critical", "high"].includes(action.priority)) return "";
+  const cls = action.priority === "medium" ? "ops-priority-medium"
+    : action.priority === "clear" ? "ops-priority-clear" : "";
   return `
-    <section class="card ops-priority-card ${cls}" id="ops-priority" aria-label="Recommended next action">
+    <section class="card ops-priority-card ops-priority-compact ${cls}" id="ops-priority" aria-label="Recommended next action">
       <div class="ops-priority-inner">
         <div>
-          <p class="ops-priority-eyebrow">① Recommended next step</p>
+          <p class="ops-priority-eyebrow">Next step</p>
           <h2 class="ops-priority-title">${escapeHtml(action.title)}</h2>
           <p class="muted">${escapeHtml(action.description)}</p>
-          <p class="ops-priority-why muted">Why here? Nexora ranks open incidents and alerts first, then service risk, then delivery approvals, then your queue.</p>
         </div>
-        <a class="btn" href="${escapeHtml(action.href)}" data-nav="${escapeHtml(action.href)}">${escapeHtml(action.cta)}</a>
+        <a class="btn btn-sm" href="${escapeHtml(action.href)}" data-nav="${escapeHtml(action.href)}">${escapeHtml(action.cta)}</a>
       </div>
+    </section>`;
+}
+function renderOpsDomainBars(snapshot) {
+  const domains = [
+    { label: "Incidents", value: snapshot.openIncidents, max: 20, color: "#dc2626", href: "/incidents" },
+    { label: "Alerts", value: snapshot.firingAlerts, max: 50, color: "#ea580c", href: "/alerts" },
+    { label: "At risk", value: snapshot.servicesAtRisk, max: 10, color: "#2563eb", href: "/services" },
+    { label: "Delivery", value: snapshot.pendingApprovals + snapshot.pendingChanges, max: 10, color: "#7c3aed", href: "/delivery" },
+  ];
+  const bars = domains.map((d) => {
+    const pct = Math.min(100, Math.round((d.value / Math.max(d.max, 1)) * 100));
+    return `<a class="ops-domain-bar" href="${escapeHtml(d.href)}" data-nav="${escapeHtml(d.href)}">
+      <span class="ops-domain-bar-label">${escapeHtml(d.label)}</span>
+      <span class="ops-domain-bar-track"><span class="ops-domain-bar-fill" style="width:${pct}%;background:${d.color}"></span></span>
+      <span class="ops-domain-bar-value">${d.value}</span>
+    </a>`;
+  }).join("");
+  return `
+    <section class="card ops-domain-bars" aria-label="Operational load">
+      <h2 class="ops-panel-title">Operational load</h2>
+      <div class="ops-domain-bar-list">${bars}</div>
     </section>`;
 }
 function renderOpsSignalsBar(snapshot) {
@@ -613,31 +602,24 @@ function renderOpsCommandCenterDashboard() {
   const needsConnect = snapshot.integrations === 0 && snapshot.infrastructure === 0;
   return `
     <div class="container ops-command-center">
-      ${renderHeader("AI Ops Command Center", "Detect → investigate → fix — across all your tools")}
+      ${renderHeader("AI Ops Command Center", "Live signals across your estate")}
       ${renderAlerts()}
-      ${renderOpsDashboardWelcome(snapshot)}
-      ${renderOpsPriorityCard(snapshot)}
+      ${renderOpsDashboardWelcome()}
+      ${renderOpsAlertStrip(snapshot)}
       ${renderOpsSignalsBar(snapshot)}
+      ${renderOpsPriorityCard(snapshot)}
       ${needsConnect ? renderOpsDashboardSetupStrip() : ""}
-      <div id="ops-workflow">${renderOpsFlowLanes(snapshot)}</div>
       <div class="ops-dashboard-grid">
         ${renderOpsModuleStats(snapshot)}
-        ${renderOpsAttentionList(state, snapshot)}
+        <div class="ops-dashboard-side">
+          ${renderOpsDomainBars(snapshot)}
+          ${renderOpsAttentionList(state, snapshot)}
+        </div>
       </div>
     </div>`;
 }
 
 function bindOpsCommandCenterEvents() {
-  document.querySelector("[data-dismiss-dashboard-guide]")?.addEventListener("click", () => {
-    state.dashboardGuideDismissed = true;
-    saveDashboardGuideDismissed(true);
-    render();
-  });
-  document.querySelector("[data-show-dashboard-guide]")?.addEventListener("click", () => {
-    state.dashboardGuideDismissed = false;
-    saveDashboardGuideDismissed(false);
-    render();
-  });
   document.querySelectorAll("[data-scroll-to]").forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault();

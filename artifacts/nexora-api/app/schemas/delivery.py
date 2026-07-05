@@ -44,8 +44,21 @@ class PipelineView(BaseModel):
     name: str
     status: str
     repository_id: str | None
+    integration_connection_id: str | None = None
 
     model_config = {"from_attributes": True}
+
+
+class PipelineRunLogsView(BaseModel):
+    run_id: str
+    provider: str
+    available: bool
+    source: str
+    logs_preview: str | None = None
+    console_excerpt: str | None = None
+    truncated: bool | None = None
+    url: str | None = None
+    reason: str | None = None
 
 
 class PipelineRunView(BaseModel):

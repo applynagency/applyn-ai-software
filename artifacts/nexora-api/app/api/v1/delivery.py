@@ -21,6 +21,7 @@ from app.schemas.delivery import (
     OperationCreate,
     OperationDecision,
     OperationView,
+    PipelineRunLogsView,
     PipelineRunView,
     PipelineView,
     ReleaseCreate,
@@ -141,6 +142,14 @@ async def sync_pipelines(
 async def list_pipeline_runs(current_user: CurrentUser, session: DBSession, org_context: OrgContextDep):
     rows = await _svc(session).list_pipeline_runs(current_user, org_context)
     return [PipelineRunView.model_validate(r) for r in rows]
+
+
+@router.get("/pipeline-runs/{run_id}/logs", response_model=PipelineRunLogsView)
+async def get_pipeline_run_logs(
+    run_id: str, current_user: CurrentUser, session: DBSession, org_context: OrgContextDep,
+):
+    result = await _svc(session).get_pipeline_run_logs(current_user, org_context, run_id)
+    return PipelineRunLogsView.model_validate(result)
 
 
 @router.post("/pipelines/{pipeline_id}/runs/sync")

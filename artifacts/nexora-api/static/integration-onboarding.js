@@ -43,6 +43,143 @@ var INTEGRATION_FIELD_HINTS = {
 
 var NOTIFICATION_INTEGRATION_KEYS = new Set(["SLACK", "MICROSOFT_TEAMS"]);
 
+var PIPELINE_INTEGRATION_KEYS = new Set([
+  "JENKINS", "GITHUB", "GITLAB", "BITBUCKET", "CIRCLECI", "AZURE_DEVOPS",
+]);
+
+var INTEGRATION_PAGE_ACTIONS = {
+  "/delivery/pipelines": "Pipelines & build logs",
+  "/delivery/gitops": "GitOps apps",
+  "/delivery/dora": "DORA metrics",
+  "/delivery": "Delivery overview",
+  "/delivery/changes": "Change requests",
+  "/metrics": "Metrics explorer",
+  "/logs": "Log search",
+  "/alerts": "Alerts",
+  "/monitoring": "Monitoring dashboard",
+  "/discovery": "Discovery",
+  "/control-plane": "Control plane",
+  "/security-platform": "Security platform",
+  "/incidents": "Incidents",
+  "/incidents/on-call": "On-call",
+  "/war-rooms": "War rooms",
+  "/observability-platform": "Observability",
+  "/platform-engineering": "Platform engineering",
+  "/connections-secrets": "Connections & secrets",
+  "/customer-pilot": "Customer pilot",
+};
+
+function integrationPageActionLabel(path) {
+  if (INTEGRATION_PAGE_ACTIONS[path]) return INTEGRATION_PAGE_ACTIONS[path];
+  return path.replace(/^\//, "").replace(/-/g, " ").replace(/\//g, " → ");
+}
+
+function renderBuildLogPanel(log, closeAttr) {
+  if (!log) return "";
+  const body = log.console_excerpt || log.logs_preview || log.reason || "No log output available.";
+  const meta = log.source === "live"
+    ? "Live console (tail)"
+    : log.source === "cached"
+      ? "Cached summary"
+      : log.source === "loading"
+        ? "Loading…"
+        : "Unavailable";
+  return `<section class="card" style="margin-top:12px;border-left:4px solid #2563eb;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+      <h2 style="margin:0;">Build logs</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="badge">${escapeHtml(meta)}</span>
+        ${log.url ? `<a class="btn btn-secondary btn-sm" href="${escapeHtml(log.url)}" target="_blank" rel="noopener">Open in ${escapeHtml(log.provider || "CI")} ↗</a>` : ""}
+        <button type="button" class="btn btn-secondary btn-sm" ${closeAttr}>Close</button>
+      </div>
+    </div>
+    ${log.reason && !log.console_excerpt && !log.logs_preview && log.source !== "loading"
+      ? `<p class="muted" style="font-size:12px;">${escapeHtml(log.reason)}</p>` : ""}
+    <pre class="ai-run-response" style="margin-top:10px;max-height:360px;overflow:auto;white-space:pre-wrap;">${escapeHtml(body)}</pre>
+    ${log.truncated ? `<p class="muted" style="font-size:11px;">Showing tail of console output.</p>` : ""}
+  </section>`;
+}
+
+function integrationDashboardActions(c, enrich, canWrite) {
+  const buttons = [];
+  if (canWrite && enrich?.pipeline_sync) {
+    buttons.push(`<button class="btn btn-primary btn-sm" type="button" data-integration-sync="${escapeHtml(c.id)}">Sync pipelines & builds</button>`);
+  }
+  if (canWrite && enrich?.gitops_sync) {
+    buttons.push(`<button class="btn btn-primary btn-sm" type="button" data-integration-sync="${escapeHtml(c.id)}">Sync GitOps apps</button>`);
+  }
+  if (canWrite && enrich?.discovery && !enrich?.pipeline_sync && !enrich?.gitops_sync) {
+    buttons.push(`<a class="btn btn-primary btn-sm" href="/discovery" data-nav="/discovery">Run discovery</a>`);
+  }
+  const seen = new Set();
+  for (const p of (enrich?.pages || [])) {
+    if (seen.has(p)) continue;
+    seen.add(p);
+    const label = integrationPageActionLabel(p);
+    const primary = p === "/delivery/pipelines" && enrich?.pipeline_sync;
+    buttons.push(`<a class="btn ${primary ? "btn-primary" : "btn-secondary"} btn-sm" href="${escapeHtml(p)}" data-nav="${escapeHtml(p)}">${escapeHtml(label)}</a>`);
+  }
+  return buttons.length
+    ? `<section class="card" style="margin-top:12px;border-left:4px solid #16a34a;">
+        <h2>Dashboard actions</h2>
+        <p class="muted" style="font-size:12px;">Perform read-only operations from Nexora — no need to open the external tool for day-to-day work.</p>
+        <div class="actions" style="margin-top:10px;gap:8px;flex-wrap:wrap;">${buttons.join("")}</div>
+      </section>`
+    : "";
+}
+
+async function loadIntegrationPipelineActivity(connectionId, integrationKey) {
+  const key = (integrationKey || "").toUpperCase();
+  state.integrationPipelines = [];
+  state.integrationPipelineRuns = [];
+  if (!PIPELINE_INTEGRATION_KEYS.has(key)) return;
+  try {
+    const [pipes, runs] = await Promise.all([
+      api("/v1/delivery/pipelines"),
+      api("/v1/delivery/pipeline-runs"),
+    ]);
+    state.integrationPipelines = (pipes || []).filter(
+      (p) => p.integration_connection_id === connectionId,
+    );
+    const pipeIds = new Set(state.integrationPipelines.map((p) => p.id));
+    state.integrationPipelineRuns = (runs || []).filter((r) => pipeIds.has(r.pipeline_id)).slice(0, 20);
+  } catch {
+    state.integrationPipelines = [];
+    state.integrationPipelineRuns = [];
+  }
+}
+
+function renderIntegrationPipelineActivity(c) {
+  const key = (c.integration_key || "").toUpperCase();
+  if (!PIPELINE_INTEGRATION_KEYS.has(key)) return "";
+  const pipes = state.integrationPipelines || [];
+  const runs = state.integrationPipelineRuns || [];
+  const runRows = runs.map((r) => {
+    const pipe = pipes.find((p) => p.id === r.pipeline_id);
+    const label = pipe ? `${pipe.name} #${r.external_id}` : `Build #${r.external_id}`;
+    return `<div class="ops-list-row" style="flex-direction:column;align-items:stretch;gap:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <span><strong>${escapeHtml(label)}</strong></span>
+        ${cpHealthBadge(r.status)}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button type="button" class="btn btn-primary btn-sm" data-integration-pipeline-logs="${escapeHtml(r.id)}">View logs</button>
+        ${r.url ? `<a class="muted" style="font-size:12px;" href="${escapeHtml(r.url)}" target="_blank" rel="noopener">Open in ${escapeHtml(pipe?.provider || key)} ↗</a>` : ""}
+      </div>
+    </div>`;
+  }).join("");
+  const empty = !runRows
+    ? `<p class="muted">No builds synced yet. Use <strong>Sync pipelines & builds</strong> above, then jobs and logs appear here.</p>`
+    : "";
+  return `<section class="card" style="margin-top:12px;">
+    <h2>Jobs & build logs</h2>
+    <p class="muted" style="font-size:12px;">${pipes.length} pipeline(s) · ${runs.length} recent run(s) — view console output without leaving Nexora.</p>
+    <div class="ops-list" style="margin-top:8px;">${runRows || empty}</div>
+    ${renderBuildLogPanel(state.integrationPipelineLogPanel, 'data-integration-pipeline-logs-close')}
+    <p class="muted" style="font-size:11px;margin-top:8px;"><a href="/delivery/pipelines" data-nav="/delivery/pipelines">Open full pipelines dashboard →</a></p>
+  </section>`;
+}
+
 var INTEGRATION_SENSITIVE_RE = /secret|token|password|credential|api[_-]?key|kubeconfig|bearer|authorization|client_secret/i;
 
 function sanitizeIntegrationError(message) {
@@ -146,6 +283,9 @@ function resetIntegrationOnboardingCache() {
   state.onboardingProviders = [];
   state.onboardingSessions = [];
   state.onboardingReadiness = null;
+  state.integrationPipelines = [];
+  state.integrationPipelineRuns = [];
+  state.integrationPipelineLogPanel = null;
 }
 
 function integrationRdMetric(label, value) {
@@ -157,14 +297,25 @@ function integrationHealthColor(health) {
   return map[health] || "#64748b";
 }
 
+async function ensureIntegrationsMarketplace() {
+  if (state.marketplace) return;
+  try {
+    state.marketplace = await api("/v1/integrations");
+  } catch {
+    state.marketplace = state.marketplace || null;
+  }
+}
+
 async function loadIntegrationRouteData(page) {
   const connectionId = state.route.connectionId;
   if (page === "integration-detail" || page === "integration-health") {
+    await ensureIntegrationsMarketplace();
     await loadIntegrationDetailData(connectionId);
     if (page === "integration-health") await loadIntegrationHealthData(connectionId);
     return;
   }
   if (page === "integration-onboarding") {
+    await ensureIntegrationsMarketplace();
     await loadIntegrationOnboardingData();
     return;
   }
@@ -243,6 +394,7 @@ async function loadIntegrationDetailData(connectionId) {
     const readiness = await api("/v1/integrations/connections/readiness").catch(() => []);
     const ready = (readiness || []).find((r) => r.resource_id === connectionId || r.id === connectionId);
     state.integrationDetailReadiness = ready ? redactSensitiveObject(ready) : null;
+    await loadIntegrationPipelineActivity(connectionId, match.integration_key);
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) {
       state.integrationDetailDenied = true;
@@ -545,6 +697,8 @@ function renderIntegrationDetail() {
         </div>
       </section>
       ${unlocksPanel}
+      ${integrationDashboardActions(c, enrich, canWrite)}
+      ${renderIntegrationPipelineActivity(c)}
       ${notificationPanel}
       ${rotateForm}
     </div>`;
@@ -678,6 +832,9 @@ function bindIntegrationOnboardingEvents() {
         state.message = apps != null
           ? `Synced ${apps} GitOps application(s)`
           : `Synced ${r.pipelines_synced || 0} pipeline(s), ${r.runs_synced || 0} run(s)`;
+        if (state.route.page === "integration-detail" && state.integrationDetail) {
+          await loadIntegrationPipelineActivity(state.integrationDetail.id, state.integrationDetail.integration_key);
+        }
         await loadIntegrationRouteData(state.route.page);
         render();
       } catch (error) {
@@ -754,6 +911,39 @@ function bindIntegrationOnboardingEvents() {
       state.error = sanitizeIntegrationError(error.message);
       render();
     }
+  });
+
+  document.querySelectorAll("[data-integration-pipeline-logs]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const runId = btn.getAttribute("data-integration-pipeline-logs");
+      if (!runId) return;
+      btn.disabled = true;
+      state.error = null;
+      state.integrationPipelineLogPanel = {
+        run_id: runId, provider: "…", available: false, source: "loading", logs_preview: "Loading…",
+      };
+      render();
+      try {
+        state.integrationPipelineLogPanel = await api(
+          `/v1/delivery/pipeline-runs/${encodeURIComponent(runId)}/logs`,
+        );
+        render();
+      } catch (error) {
+        state.integrationPipelineLogPanel = null;
+        const msg = String(error.message || "");
+        state.error = /not found/i.test(msg)
+          ? "Build logs API is not available yet — rebuild the API container (docker compose build api)."
+          : sanitizeIntegrationError(msg);
+        render();
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+
+  document.querySelector("[data-integration-pipeline-logs-close]")?.addEventListener("click", () => {
+    state.integrationPipelineLogPanel = null;
+    render();
   });
 
   document.querySelectorAll("[data-integration-notify-test]").forEach((btn) => {

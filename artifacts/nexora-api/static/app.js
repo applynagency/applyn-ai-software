@@ -274,7 +274,7 @@ const state = {
   pilotEvidenceExport: null,
   pilotDeliveryEnvironments: [],
   opsDashboard: null,
-  dashboardGuideDismissed: false,
+  dashboardGuideDismissed: true,
   secretsHubTab: "overview",
   secretsHubLoading: false,
   secretsHubVariables: [],
@@ -2444,8 +2444,13 @@ function loadIntegrationOnboardingChunk() {
 function lazyIntegrationOnboardingView(name) {
   const fn = typeof window !== "undefined" ? window[name] : undefined;
   if (typeof fn === "function") return fn();
-  loadIntegrationOnboardingChunk().then(() => {
-    if (integrationOnboardingChunkReady()) render();
+  loadIntegrationOnboardingChunk().then(async () => {
+    if (integrationOnboardingChunkReady()) {
+      if (typeof loadIntegrationRouteData === "function") {
+        await loadIntegrationRouteData(state.route.page);
+      }
+      render();
+    }
   });
   return renderSkeleton("page");
 }
@@ -2578,8 +2583,13 @@ function loadDeliveryChunk() {
 function lazyDeliveryView(name) {
   const fn = typeof window !== "undefined" ? window[name] : undefined;
   if (typeof fn === "function") return fn();
-  loadDeliveryChunk().then(() => {
-    if (deliveryChunkReady()) render();
+  loadDeliveryChunk().then(async () => {
+    if (deliveryChunkReady()) {
+      if (typeof loadDeliveryRouteData === "function") {
+        await loadDeliveryRouteData(state.route.page);
+      }
+      render();
+    }
   });
   return renderSkeleton("page");
 }
@@ -3774,6 +3784,23 @@ const NAV_GROUPS = [
     ],
   },
   {
+    id: "platform-engineering",
+    title: "Platform Engineering",
+    discipline: "devops",
+    module: "devops",
+    defaultCollapsed: true,
+    items: [
+      { label: "Overview", path: "/platform-engineering", icon: "cloud", match: ["platform-engineering"] },
+      { label: "Templates", path: "/platform-engineering/templates", icon: "file", match: ["pe-templates"] },
+      { label: "Infrastructure", path: "/platform-engineering/infrastructure", icon: "cloud", match: ["pe-infrastructure"] },
+      { label: "Provisioning", path: "/platform-engineering/provisioning", icon: "upload", match: ["pe-provisioning"] },
+      { label: "Catalog", path: "/platform-engineering/catalog", icon: "grid", match: ["pe-catalog"] },
+      { label: "Secrets", path: "/platform-engineering/secrets", icon: "lock", match: ["pe-secrets"] },
+      { label: "Drift", path: "/platform-engineering/drift", icon: "activity", match: ["pe-drift"] },
+      { label: "Compliance", path: "/platform-engineering/compliance", icon: "shield", match: ["pe-compliance"] },
+    ],
+  },
+  {
     id: "security",
     title: "Secure",
     discipline: "devops",
@@ -4718,9 +4745,11 @@ function estimatedTimeRemainingLabel(execution) {
 
 function loadDashboardGuideDismissed() {
   try {
-    return localStorage.getItem(DASHBOARD_GUIDE_STORAGE_KEY) === "true";
+    const stored = localStorage.getItem(DASHBOARD_GUIDE_STORAGE_KEY);
+    if (stored === null) return true;
+    return stored === "true";
   } catch (_e) {
-    return false;
+    return true;
   }
 }
 
@@ -5197,7 +5226,15 @@ function actionStatusBadge(status) {
 
 function integrationStatusBadge(s) {
   if (!s) return `<span class="muted" style="font-size:12px;">Not connected</span>`;
-  const c = INTEGRATION_STATUS_COLORS[s] || "#64748b";
+  const colors = {
+    VERIFIED: "#16a34a",
+    CONNECTED: "#2563eb",
+    NEEDS_ATTENTION: "#d97706",
+    DISCONNECTED: "#64748b",
+    FAILED: "#dc2626",
+    DEGRADED: "#d97706",
+  };
+  const c = colors[s] || "#64748b";
   return `<span class="risk-score-badge" style="background:${c}1a;color:${c};font-weight:700;">${escapeHtml(s.replace(/_/g, " "))}</span>`;
 }
 

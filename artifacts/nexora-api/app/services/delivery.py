@@ -296,6 +296,74 @@ class DeliveryService:
         self._ensure_read(user, org_context)
         return await self.pipeline_runs.list_for_org(org_context.requires_organization)
 
+    async def get_pipeline_run_logs(
+        self, user: User, org_context: OrgContext, run_id: str,
+    ) -> dict:
+        organization_id = org_context.requires_organization
+        self._ensure_read(user, org_context)
+        run = await self.pipeline_runs.get_by_id(run_id)
+        if not run or run.organization_id != organization_id:
+            raise NotFoundError("PipelineRun", run_id)
+
+        pipe = await self.pipelines.get_by_id(run.pipeline_id)
+        if not pipe or pipe.organization_id != organization_id:
+            raise NotFoundError("Pipeline", run.pipeline_id)
+
+        provider = (pipe.provider or "").upper()
+        base = {
+            "run_id": run_id,
+            "provider": provider,
+            "url": run.url,
+            "logs_preview": run.logs_preview,
+        }
+
+        if provider != "JENKINS":
+            return {
+                **base,
+                "available": bool(run.logs_preview),
+                "source": "cached",
+                "reason": "Full console logs open in your CI provider when a run URL is available.",
+            }
+
+        conn_repo = IntegrationConnectionRepository(self.session)
+        conn = (
+            await conn_repo.get_for_org(pipe.integration_connection_id, organization_id)
+            if pipe.integration_connection_id
+            else None
+        )
+        if not conn or not conn.credential_id:
+            return {
+                **base,
+                "available": bool(run.logs_preview),
+                "source": "cached",
+                "reason": "Link Jenkins via Integrations to stream console output here.",
+            }
+
+        secret = await self._resolve_secret(conn.credential_id, user, org_context)
+        from app.delivery.pipelines.jenkins_live import fetch_build_console_excerpt
+
+        excerpt = await asyncio.to_thread(
+            fetch_build_console_excerpt,
+            secret,
+            pipe.external_id,
+            run.external_id,
+        )
+        if excerpt.get("available"):
+            return {
+                **base,
+                "available": True,
+                "source": "live",
+                "console_excerpt": excerpt.get("console_excerpt"),
+                "truncated": excerpt.get("truncated"),
+                "url": excerpt.get("url") or run.url,
+            }
+        return {
+            **base,
+            "available": bool(run.logs_preview),
+            "source": "unavailable",
+            "reason": excerpt.get("reason") or "Could not fetch Jenkins console output.",
+        }
+
     # --------------------------------------------------------------- artifacts
     async def sync_artifacts(
         self, user: User, org_context: OrgContext, registry: str, credential_id: str,

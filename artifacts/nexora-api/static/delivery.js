@@ -973,33 +973,65 @@ function renderDeliveryPipelines() {
   const pipeRows = pipes.map((p) => {
     const pipeRuns = runs.filter((r) => r.pipeline_id === p.id);
     const latest = pipeRuns[0];
+    const latestLogs = latest
+      ? `<button type="button" class="btn btn-primary btn-sm" data-dlv-pipeline-logs="${escapeHtml(latest.id)}">View logs</button>`
+      : "";
     return `<div class="ops-list-row" style="flex-direction:column;align-items:stretch;gap:4px;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
         <span><strong>${escapeHtml(p.name)}</strong> <span class="badge">${escapeHtml(p.provider)}</span></span>
         ${cpHealthBadge(p.status)}
       </div>
-      ${latest ? `<span class="muted" style="font-size:12px;">Latest: build #${escapeHtml(latest.external_id)} · ${escapeHtml(latest.status)}</span>` : `<span class="muted" style="font-size:12px;">No runs synced</span>`}
+      ${latest
+        ? `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <span class="muted" style="font-size:12px;">Latest: build #${escapeHtml(latest.external_id)} · ${escapeHtml(latest.status)}</span>
+            ${latestLogs}
+          </div>`
+        : `<span class="muted" style="font-size:12px;">No runs synced — trigger a build then Sync</span>`}
     </div>`;
   }).join("");
   const runRows = runs.slice(0, 20).map((r) => {
     const pipe = pipes.find((p) => p.id === r.pipeline_id);
     const label = pipe ? `${pipe.name} #${r.external_id}` : `#${r.external_id}`;
-    const link = r.url ? `<a href="${escapeHtml(r.url)}" target="_blank" rel="noopener">Open in ${escapeHtml(pipe?.provider || "CI")}</a>` : "";
+    const externalLink = r.url ? `<a href="${escapeHtml(r.url)}" target="_blank" rel="noopener">Open in ${escapeHtml(pipe?.provider || "CI")} ↗</a>` : "";
     const dur = r.duration_seconds != null ? `${r.duration_seconds}s` : "—";
     return `<div class="ops-list-row" style="flex-direction:column;align-items:stretch;gap:4px;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
         <span><strong>${escapeHtml(label)}</strong> <span class="muted">${escapeHtml(r.branch || "")}</span></span>
         ${cpHealthBadge(r.status)}
       </div>
-      <div class="muted" style="font-size:12px;display:flex;gap:12px;flex-wrap:wrap;">
-        <span>${dur}</span>${link}
+      <div class="muted" style="font-size:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <span>${dur}</span>
+        <button type="button" class="btn btn-primary btn-sm" data-dlv-pipeline-logs="${escapeHtml(r.id)}">View logs</button>
+        ${externalLink ? `<span>${externalLink}</span>` : ""}
       </div>
     </div>`;
   }).join("");
+  const logPanel = state.dlvPipelineLogPanel ? (() => {
+    const log = state.dlvPipelineLogPanel;
+    const body = log.console_excerpt || log.logs_preview || log.reason || "No log output available.";
+    const meta = log.source === "live"
+      ? "Live console (tail)"
+      : log.source === "cached"
+        ? "Cached summary"
+        : "Unavailable";
+    return `<section class="card" style="margin-top:12px;border-left:4px solid #2563eb;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+        <h2 style="margin:0;">Build logs</h2>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="badge">${escapeHtml(meta)}</span>
+          ${log.url ? `<a class="btn btn-secondary btn-sm" href="${escapeHtml(log.url)}" target="_blank" rel="noopener">Open in ${escapeHtml(log.provider || "CI")} ↗</a>` : ""}
+          <button type="button" class="btn btn-secondary btn-sm" data-dlv-pipeline-logs-close>Close</button>
+        </div>
+      </div>
+      ${log.reason && !log.console_excerpt && !log.logs_preview ? `<p class="muted" style="font-size:12px;">${escapeHtml(log.reason)}</p>` : ""}
+      <pre class="ai-run-response" style="margin-top:10px;max-height:360px;overflow:auto;white-space:pre-wrap;">${escapeHtml(body)}</pre>
+      ${log.truncated ? `<p class="muted" style="font-size:11px;">Showing tail of console output. Use Open in CI for the full log.</p>` : ""}
+    </section>`;
+  })() : "";
   const emptyRuns = !runRows && pipes.length
     ? `<p class="muted">Runs appear after sync. Trigger a build in Jenkins, then click <strong>Sync JENKINS</strong>.</p>`
     : `<p class="muted">No runs.</p>`;
-  return `<div class="container">${renderHeader("Pipelines", "Unified CI/CD view across all connected tools")}${renderAlerts()}
+  return `<div class="container">${renderHeader("Pipelines", "Unified CI/CD view — sync jobs and read build logs in Nexora")}${renderAlerts()}
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
       ${syncMeta}
       <div class="actions">${syncBtns}</div>
@@ -1010,6 +1042,7 @@ function renderDeliveryPipelines() {
     <section class="card"><h2>Recent Runs</h2><div class="ops-list">
       ${runRows || emptyRuns}
     </div></section>
+    ${logPanel}
   </div>`;
 }
 
@@ -1375,5 +1408,34 @@ function bindDeliveryEvents() {
         btn.disabled = false;
       }
     });
+  });
+
+  document.querySelectorAll("[data-dlv-pipeline-logs]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const runId = btn.getAttribute("data-dlv-pipeline-logs");
+      if (!runId) return;
+      btn.disabled = true;
+      state.error = null;
+      state.dlvPipelineLogPanel = { run_id: runId, provider: "…", available: false, source: "loading", logs_preview: "Loading…" };
+      render();
+      try {
+        state.dlvPipelineLogPanel = await api(`/v1/delivery/pipeline-runs/${encodeURIComponent(runId)}/logs`);
+        render();
+      } catch (error) {
+        state.dlvPipelineLogPanel = null;
+        const msg = String(error.message || "");
+        state.error = /not found/i.test(msg)
+          ? "Build logs API is not available yet — rebuild the API container (docker compose build api)."
+          : sanitizeDeliveryError(msg);
+        render();
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+
+  document.querySelector("[data-dlv-pipeline-logs-close]")?.addEventListener("click", () => {
+    state.dlvPipelineLogPanel = null;
+    render();
   });
 }

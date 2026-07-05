@@ -13,6 +13,21 @@ async function loadObsPlatform() {
   try { state.obsPlatformTopMetrics = await api("/v1/observability/metrics/top"); } catch { state.obsPlatformTopMetrics = null; }
   try { state.obsPlatformProviders = await api("/v1/observability/providers"); } catch { state.obsPlatformProviders = null; }
 }
+function renderObsConnectBanner(providerLabel, integrationKey) {
+  const href = integrationKey
+    ? `/integrations/onboarding?provider=${encodeURIComponent(integrationKey)}`
+    : "/integrations/onboarding";
+  return `<div class="ops-connect-banner" role="status">
+    <span class="muted">No live ${escapeHtml(providerLabel)} connection — showing sample or empty data.</span>
+    <a href="${escapeHtml(href)}" data-nav="${escapeHtml(href)}">Connect ${escapeHtml(providerLabel)}</a>
+  </div>`;
+}
+function obsNeedsConnectBanner(result, defaultProvider, integrationKey) {
+  if (!result) return true;
+  if (result.simulated) return true;
+  if (result.unavailable_reason) return true;
+  return !marketplaceBacked(result);
+}
 function renderObsPlatform() {
   const page = state.route.page;
   if (page === "obs-platform-metrics") return renderObsMetrics();
@@ -78,6 +93,7 @@ function renderObsMetrics() {
   }).join("");
   return `<div class="container">${renderHeader("Metrics Explorer", "Prometheus, Datadog, and cloud metrics")}
     ${renderAlerts()}
+    ${obsNeedsConnectBanner(result, "Prometheus", "PROMETHEUS") ? renderObsConnectBanner("Prometheus or Datadog", "PROMETHEUS") : ""}
     <section class="card">
       <form data-obs-metric-query style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
         <label style="flex:1;min-width:200px;">PromQL / query<input name="query" placeholder="up OR avg:system.cpu.user{*}" value="${escapeHtml(state.obsMetricQuery || "up")}" style="width:100%;font-size:12px;" /></label>
@@ -125,6 +141,7 @@ function renderObsLogs() {
       : "No lines matched.";
   return `<div class="container">${renderHeader("Logs Explorer", "Search connected log backends")}
     ${renderAlerts()}
+    ${obsNeedsConnectBanner(result, "Loki or Elastic", "LOKI") ? renderObsConnectBanner("Loki, Elastic, or CloudWatch", "LOKI") : ""}
     <section class="card">
       <form data-obs-log-search style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
         <label style="flex:1;min-width:200px;">Query<input name="query" placeholder="error OR service name" value="${escapeHtml(state.obsLogQuery || "")}" style="width:100%;font-size:12px;" /></label>
@@ -217,7 +234,10 @@ function bindObservabilityUiEvents() {
         body: JSON.stringify({ query, limit: 50 }),
       });
     } catch (error) {
-      state.error = error.message;
+      const msg = String(error.message || "");
+      state.error = msg.includes("Not Found") || msg.includes("404")
+        ? "Log search endpoint unavailable — refresh the page or contact support."
+        : msg;
       state.obsLogSearchResult = null;
     } finally {
       state.obsLogSearchBusy = false;

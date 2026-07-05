@@ -146,12 +146,6 @@ function renderOnboarding() {
     </div>`;
 }
 
-const INTEGRATION_STATUS_COLORS = {
-  VERIFIED: "#16a34a", CONNECTED: "#2563eb", NEEDS_ATTENTION: "#d97706", DISCONNECTED: "#64748b",
-};
-const INTEGRATION_HEALTH_COLORS = {
-  HEALTHY: "#16a34a", DEGRADED: "#d97706", UNHEALTHY: "#dc2626", UNKNOWN: "#64748b",
-};
 function renderCustomerPilot() {
   const page = state.route.page || "customer-pilot";
   const ov = state.customerPilotOverview;

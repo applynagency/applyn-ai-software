@@ -19,14 +19,25 @@ test("ops dashboard: production mode uses command center not module grid", () =>
   assert.doesNotMatch(prodBranch, /renderPlatformModules\(\)/);
 });
 
-test("ops dashboard: SRE flow order in guide and lanes", () => {
+test("ops dashboard: SRE flow order retained for Help Center", () => {
   const opsSource = readFileSync(opsChunkPath, "utf8");
-  assert.match(opsSource, /renderOpsFlowLanes/);
+  assert.match(opsSource, /OPS_OPERATIONAL_FLOWS/);
   assert.match(opsSource, /renderOpsModuleStats/);
   assert.match(opsSource, /AI Ops Command Center/);
   const { OPS_OPERATIONAL_FLOWS } = loadFrontendExports();
   assert.equal(OPS_OPERATIONAL_FLOWS.length, 5);
   assert.equal(OPS_OPERATIONAL_FLOWS[0].id, "respond");
+});
+
+test("ops dashboard: stats-first command center composition", () => {
+  const opsSource = readFileSync(opsChunkPath, "utf8");
+  const dashFn = opsSource.slice(
+    opsSource.indexOf("function renderOpsCommandCenterDashboard()"),
+    opsSource.indexOf("function bindOpsCommandCenterEvents"),
+  );
+  assert.match(dashFn, /renderOpsAlertStrip/);
+  assert.match(dashFn, /renderOpsDomainBars/);
+  assert.doesNotMatch(dashFn, /renderOpsFlowLanes/);
 });
 
 test("ops dashboard: recommended action prioritizes critical incidents", () => {
