@@ -201,7 +201,10 @@ function renderWarRooms() {
           ${typing}
           ${chatForm}
         </section>`;
-      })() : ""}`;
+      })() : `<section class="card" style="border-left:4px solid #e2e8f0;">
+          <h2>Live Collaboration <span class="badge" style="background:#f1f5f9;color:#64748b;">offline</span></h2>
+          <p class="muted" style="font-size:13px;">Real-time chat and presence require <code>WAR_ROOM_REALTIME_ENABLED=true</code> on the API. Multi-agent discussion and remediation planning above remain available.</p>
+        </section>`}`;
   }
 
   const hasNotify = typeof hasVerifiedIntegration === "function"

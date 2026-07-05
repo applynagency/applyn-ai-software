@@ -633,6 +633,37 @@ function resolveP2RouteRedirect(path) {
   return exact[path] || null;
 }
 
+const P2_REDIRECT_LABELS = {
+  "/": "Command Center",
+  "/incidents": "Incidents",
+  "/incidents/on-call": "On-call",
+  "/alerts": "Alerts",
+  "/services": "Services",
+  "/delivery": "Delivery",
+  "/delivery/changes": "Change requests",
+  "/delivery/dora": "DORA metrics",
+  "/copilot": "Copilot",
+  "/metrics": "Metrics",
+  "/logs": "Logs",
+  "/traces": "Traces",
+  "/discovery": "Service discovery",
+  "/reliability-dashboard": "Reliability dashboard",
+  "/ops-workspace": "Ops workspace",
+  "/operations": "Operations hub",
+  "/operations-overview": "Operations overview",
+  "/monitoring": "Monitoring",
+  "/service-health": "Service health",
+  "/incident-response": "Incident response",
+  "/observability-platform": "Observability",
+  "/operator": "Operator console",
+};
+
+function formatP2RedirectMessage(fromPath, toPath) {
+  const fromLabel = P2_REDIRECT_LABELS[fromPath] || fromPath;
+  const toLabel = P2_REDIRECT_LABELS[toPath] || toPath;
+  return `${fromLabel} was retired — redirected to ${toLabel}.`;
+}
+
 
 function parseRoute(pathname) {
   let path = pathname.replace(/\/$/, "") || "/";
@@ -1012,6 +1043,10 @@ async function navigate(path, options = {}) {
     window.history.pushState({}, "", targetPath);
   }
   state.route = parseRoute(targetPath);
+  if (state.route.redirectFrom) {
+    const destPath = resolveP2RouteRedirect(state.route.redirectFrom) || targetPath;
+    state.message = formatP2RedirectMessage(state.route.redirectFrom, destPath);
+  }
   if (state.route.settingsTab) {
     state.settingsTab = state.route.settingsTab;
   }

@@ -187,8 +187,12 @@ function renderSecProviders() {
   ).join("");
   return `<div class="container">${renderHeader("Provider Integrations", "Live vs offline scanner providers")}${renderAlerts()}
     ${secPageBanner("sec-providers")}
-    <section class="card"><p class="muted">Offline/simulated results are used when binaries are unavailable or providers are disabled.</p>
+    <section class="card"><p class="muted">Offline/simulated results are used when binaries are unavailable or providers are disabled. <strong>SonarQube</strong> is the only live scanner path today.</p>
     <div class="ops-list">${rows || `<p class="muted">No providers configured.</p>`}</div></section>
+    <section class="card" style="margin-top:12px;border-left:3px solid #e2e8f0;">
+      <h2>Planned scanner connectors</h2>
+      <p class="muted" style="font-size:13px;">Snyk, Trivy, Checkmarx, and additional SAST/DAST vendors are on the integration roadmap — connect SonarQube for live posture until they ship.</p>
+    </section>
   </div>`;
 }
 function renderSecScanRuns() {

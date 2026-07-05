@@ -367,10 +367,18 @@ function docMetaBadges(tags, { compact = false } = {}) {
 
 function helpEmptyState(message) {
   const portalEmpty = (state.helpNav?.total_articles || 0) === 0;
+  const quickLinks = `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+    <a class="btn btn-secondary btn-sm" href="/integrations" data-nav="/integrations">Connect integrations</a>
+    <a class="btn btn-secondary btn-sm" href="/help/getting-started" data-nav="/help/getting-started">Getting started</a>
+    <a class="btn btn-secondary btn-sm" href="/help/onboarding" data-nav="/help/onboarding">Onboarding</a>
+  </div>`;
   const cta = portalEmpty && canWriteResources()
     ? `<div style="margin-top:12px;"><button class="btn btn-primary" data-help-generate ${state.helpGenerating ? "disabled" : ""}>${state.helpGenerating ? "Generating…" : "Generate Documentation"}</button></div>
-       <p class="muted" style="margin-top:8px;">This builds the full documentation portal from your live platform (one click).</p>`
-    : (portalEmpty ? `<p class="muted" style="margin-top:8px;">No documentation has been generated yet. Please ask an administrator to generate it.</p>` : "");
+       <p class="muted" style="margin-top:8px;">This builds the full documentation portal from your live platform (one click).</p>
+       ${quickLinks}`
+    : (portalEmpty
+      ? `<p class="muted" style="margin-top:8px;">No documentation has been generated yet. Ask an administrator to generate it, or explore the links below.</p>${quickLinks}`
+      : `<div style="margin-top:12px;">${quickLinks}</div>`);
   return `<div class="help-empty"><p class="muted">${message}</p>${cta}</div>`;
 }
 
@@ -627,8 +635,11 @@ function renderHelpGettingStarted() {
       <h3>Integration roadmap</h3>
       <p class="muted">35 integrations ship today with live pipeline sync (Harness, Buildkite), Flux GitOps (Kustomizations + HelmReleases), trace waterfall explorer, and enterprise CMDB/issue enrichment.</p>
       <ul class="muted" style="margin:8px 0 0;padding-left:20px;">
-        <li>Expanded security scanner connectors (planned)</li>
+        <li>Expanded security scanner connectors (Snyk, Trivy, Checkmarx — planned)</li>
+        <li>Drone CI and Argo Workflows pipeline sync (backend registry — marketplace onboarding planned)</li>
+        <li>Multi-cluster federation and DR orchestration (control plane inventory today — scale roadmap)</li>
       </ul>
+      <p class="muted" style="font-size:12px;margin-top:8px;">Production hardening: set <code>RATE_LIMIT_FAIL_OPEN=false</code> when Redis is HA so abuse protection fails closed.</p>
     </section>`;
   const body = `
     <section class="help-section">

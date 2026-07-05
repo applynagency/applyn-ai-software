@@ -1166,6 +1166,7 @@ function renderDeliveryGitops() {
     ${needsConnect ? renderDeliveryConnectBanner("Argo CD or Flux CD", "ARGOCD") : ""}
     <p class="muted" style="font-size:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
       ${canWrite ? `<button type="button" class="btn btn-primary btn-sm" data-delivery-gitops-sync>Refresh GitOps state</button>` : ""}
+      <span>When <code>INTEGRATION_GITOPS_SYNC_ENABLED</code> is on, inventory refreshes automatically every ~5 minutes.</span>
     </p>
     <section class="card"><div class="ops-list">${rows || `<p class="muted">No GitOps apps yet. Connect Argo CD or Flux CD and run sync.</p>`}</div></section>
   </div>`;
@@ -1319,7 +1320,9 @@ function bindDeliveryEvents() {
     try {
       const r = await api("/v1/delivery/gitops/sync", { method: "POST", body: JSON.stringify({}) });
       state.dlvGitopsSimulated = r.simulated === true;
-      state.message = `Synced ${r.applications || 0} GitOps app(s) from ${r.connections_synced || 0} connection(s)`;
+      state.message = r.simulated
+        ? `GitOps sync simulated — connect Argo CD or Flux CD, then retry (${r.applications || 0} apps).`
+        : `Synced ${r.applications || 0} GitOps app(s) from ${r.connections_synced || 0} connection(s)`;
       await loadDeliveryRouteData(state.route.page);
       render();
     } catch (error) {

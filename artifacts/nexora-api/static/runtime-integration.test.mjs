@@ -39,6 +39,42 @@ test("parseRoute resolves organizations and pilot deep links", () => {
   assert.equal(parseRoute("/customer-onboarding").page, "customer-onboarding");
 });
 
+test("parseRoute marks retired hub routes with redirectFrom", () => {
+  const { parseRoute } = loadFrontendExports();
+  const ops = parseRoute("/ops-workspace");
+  assert.equal(ops.page, "incidents");
+  assert.equal(ops.redirectFrom, "/ops-workspace");
+  const deliveryOps = parseRoute("/delivery/operations");
+  assert.equal(deliveryOps.page, "delivery");
+  assert.equal(deliveryOps.redirectFrom, "/delivery/operations");
+});
+
+test("navigate shows message when retired route redirects", async () => {
+  const { navigate, state, localStorage } = loadFrontendExports({
+    lightweight: true,
+    fetch: async (url) => {
+      const u = String(url);
+      if (u.includes("/v1/auth/me")) {
+        return { ok: true, status: 200, headers: { get: () => "application/json" }, json: async () => ({ email: "t@example.com" }) };
+      }
+      if (u.includes("/v1/incidents")) {
+        return { ok: true, status: 200, headers: { get: () => "application/json" }, json: async () => ({ items: [] }) };
+      }
+      if (u.includes("/v1/organizations")) {
+        return { ok: true, status: 200, headers: { get: () => "application/json" }, json: async () => ({ items: [{ id: "org-1", name: "Org One" }] }) };
+      }
+      return { ok: true, status: 200, headers: { get: () => "application/json" }, json: async () => ({}) };
+    },
+  });
+  state.user = { email: "t@example.com" };
+  localStorage.setItem("nexora_access_token", "eyJhbGciOiJIUzI1NiJ9.eyJ0eXBlIjoiYWNjZXNzIiwiZXhwIjo5OTk5OTk5OTk5LCJvcmdhbml6YXRpb25faWQiOiJvcmctMSIsInJvbGUiOiJPV05FUiJ9.x");
+  localStorage.setItem("nexora_refresh_token", "refresh");
+  await navigate("/ops-workspace", { updateHistory: false });
+  assert.equal(state.route.page, "incidents");
+  assert.equal(state.route.redirectFrom, "/ops-workspace");
+  assert.match(state.message || "", /retired|redirected/i);
+});
+
 test("navigate does not rewrite /organizations to dashboard", async () => {
   const { navigate, state, localStorage } = loadFrontendExports({
     lightweight: true,
@@ -92,6 +128,12 @@ test("switchOrganization refreshes pilot mode probe and renders", async () => {
           headers: { get: () => "application/json" },
           json: async () => ({ items: [{ id: "pilot-org", name: "INTERNAL_DRY_RUN_ONLY" }] }),
         };
+      }
+      if (u.includes("/v1/customer-pilot/overview")) {
+        return { ok: true, status: 200, headers: { get: () => "application/json" }, json: async () => ({ portal_visible: true }) };
+      }
+      if (u.includes("/v1/audit/logs") || u.includes("/v1/jobs") || u.includes("/v1/billing/subscription")) {
+        return { ok: true, status: 403, headers: { get: () => "application/json" }, json: async () => ({ detail: "forbidden" }) };
       }
       return { ok: true, status: 200, headers: { get: () => "application/json" }, json: async () => ({}) };
     },

@@ -382,6 +382,7 @@ function renderSettingsNotificationsTab() {
           <button type="button" class="btn btn-secondary btn-sm" data-settings-notify-test="slack">Test Slack</button>
           <button type="button" class="btn btn-secondary btn-sm" data-settings-notify-test="teams">Test Teams</button>
         </div>
+        <p class="muted" style="font-size:12px;margin:0;">Live tests require org webhooks above; otherwise the API returns <strong>simulated</strong> (no outbound delivery).</p>
       </form>` : `<p class="muted">View only — ask an admin to configure notification channels.</p>`}
       <ul class="muted" style="font-size:12px;line-height:1.6;margin-top:12px;">
         <li>Slack: ${ch.slack_webhook_configured ? `configured (${escapeHtml(ch.slack_webhook_preview || "")})` : "not configured"}</li>
@@ -1883,7 +1884,9 @@ function bindSettingsOrgEvents() {
           method: "POST",
           body: JSON.stringify({ channel, dry_run: false }),
         });
-        state.message = r.message || (r.simulated ? `${channel} test simulated` : `${channel} test sent`);
+        state.message = r.simulated
+          ? `${channel}: simulated — ${r.message || "configure org webhook above before expecting delivery"}`
+          : (r.message || `${channel} test delivered`);
         render();
       } catch (error) {
         state.error = error.message;

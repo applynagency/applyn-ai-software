@@ -94,7 +94,8 @@ docker compose --profile jobs up -d worker
 | **Jenkins console tail** | Failed Jenkins alerts show build console excerpt on incident page |
 | **Metrics snapshot** | Top discovered metrics on incident evidence panel |
 | **Alert detail drawer** | Alerts page → **Details** expands labels + investigate |
-| **On-call schedule UI** | `/incidents/on-call` → create schedule form (no API-only) |
+| **On-call schedule UI** | `/incidents/on-call` → create schedule form with org member picker |
+| **P3 smoke** | `node scripts/smoke-p3-pass.mjs` (evidence, on-call, alerts, security providers) |
 
 ## Production SRE loop (required env flags)
 

@@ -154,6 +154,53 @@ test("on-call unavailable when no backend data", () => {
   assert.match(html, /not available/i);
 });
 
+test("on-call schedule form uses org member picker", () => {
+  const source = readSource("incidents.js");
+  assert.match(source, /function onCallMemberPickerHtml/);
+  assert.match(source, /participant_ids/);
+  assert.match(source, /\/v1\/organizations\/\$\{memberOrgId\}\/members/);
+});
+
+test("incident evidence panels show empty and loading states", () => {
+  const source = readSource("incidents.js");
+  assert.match(source, /incidentEvidenceLoaded/);
+  assert.match(source, /Operational evidence/);
+  assert.match(source, /\/v1\/incidents\/\$\{incidentId\}\/evidence/);
+  const { renderIncidentDetail, state } = loadFrontendWithIncidents();
+  state.incidentDetailLoading = false;
+  state.incidentDetailNotFound = false;
+  state.incidentDetailDenied = false;
+  state.incidentEvidenceLoaded = true;
+  state.incidentEvidence = { service: "checkout-api", logs: { entries: [] }, metrics: [], build_context: null };
+  state.incidentDetail = { id: "i1", title: "Outage", status: "OPEN", lifecycle_status: "OPEN", source: "ALERT", created_at: "2026-01-01" };
+  state.incidentCommand = { available_transitions: [], comments: [] };
+  state.route = { page: "incident-detail", id: "i1" };
+  const html = renderIncidentDetail();
+  assert.match(html, /Operational evidence/i);
+  assert.match(html, /Connect Loki|Connect integrations|Metrics explorer/i);
+});
+
+test("alerts page exposes detail drawer with labels", () => {
+  const source = readSource("incidents.js");
+  assert.match(source, /data-alert-select/);
+  assert.match(source, /data-alert-close/);
+  const { renderAlertsList, state } = loadFrontendWithIncidents();
+  state.alertsLoading = false;
+  state.alertsUnavailable = false;
+  state.alertsList = [{
+    id: "a1", alert_name: "HighCPU", provider: "PROMETHEUS", severity: "HIGH", status: "FIRING",
+    service: "api", environment: "prod", labels: { instance: "10.0.0.1" },
+    first_seen_at: "2026-01-01", last_seen_at: "2026-01-01",
+  }];
+  state.selectedAlertId = "a1";
+  state.user = { id: "u1" };
+  state.activeRole = "OWNER";
+  const html = renderAlertsList();
+  assert.match(html, /instance=10\.0\.0\.1/);
+  assert.match(html, /data-alert-investigate/);
+  assert.match(html, /data-alert-close/);
+});
+
 test("lazy chunk not loaded on dashboard bootstrap", () => {
   const exports = loadFrontendExports();
   assert.equal(typeof exports.renderIncidentsList, "undefined");

@@ -88,6 +88,7 @@ function renderControlPlaneOverview() {
           <a class="btn btn-secondary" href="/control-plane/inventory">Inventory</a>
           <a class="btn btn-secondary" href="/control-plane/operations">Operations</a>
         </div>
+        <p class="muted" style="font-size:12px;margin-top:12px;">Per-org cluster inventory is supported today. Cross-cluster federation and disaster-recovery orchestration are on the roadmap — register each cluster separately for now.</p>
       </section>
     </div>`;
 }

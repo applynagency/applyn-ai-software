@@ -185,6 +185,7 @@ async function loadIncidentDetailData(incidentId) {
   state.incidentRemediationActions = [];
   state.incidentCredentials = [];
   state.incidentEvidence = null;
+  state.incidentEvidenceLoaded = false;
   try {
     const [detail, command, assignment, recs, actions, creds, evidence] = await Promise.all([
       api(`/v1/incidents/${incidentId}`),
@@ -207,10 +208,12 @@ async function loadIncidentDetailData(incidentId) {
     state.incidentRemediationActions = (actions.actions || actions.items || []).map(redactSensitiveObject);
     state.incidentCredentials = (creds.items || creds || []).map(redactSensitiveObject);
     state.incidentEvidence = evidence ? redactSensitiveObject(evidence) : null;
+    state.incidentEvidenceLoaded = true;
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) state.incidentDetailDenied = true;
     else if (error instanceof ApiError && error.status === 404) state.incidentDetailNotFound = true;
     else state.error = sanitizeIncidentError(error.message);
+    state.incidentEvidenceLoaded = true;
   } finally {
     state.incidentDetailLoading = false;
   }
@@ -277,12 +280,18 @@ async function loadOnCallPageData() {
   state.onCallUnavailable = true;
   state.onCallData = null;
   try {
-    const [platform, schedules, current, policies] = await Promise.all([
+    const memberOrgId = state.activeOrganization;
+    const memberFetch = (canWriteResources() && memberOrgId)
+      ? api(`/v1/organizations/${memberOrgId}/members`).catch(() => ({ items: [] }))
+      : Promise.resolve({ items: state.organizationMembers || [] });
+    const [platform, schedules, current, policies, members] = await Promise.all([
       api("/v1/incidents/oncall").catch(() => null),
       api("/v1/oncall/schedules").catch(() => []),
       api("/v1/oncall/current").catch(() => []),
       api("/v1/oncall/escalation-policies").catch(() => []),
+      memberFetch,
     ]);
+    if (members?.items) state.organizationMembers = members.items;
     if (!platform && (!schedules || !schedules.length) && (!current || !current.length) && (!policies || !policies.length)) {
       state.onCallUnavailable = true;
       return;
@@ -434,8 +443,39 @@ function renderIncidentRcaPanel(inc) {
   </section>`;
 }
 
+function onCallMemberPickerHtml() {
+  const members = state.organizationMembers || [];
+  if (!members.length) {
+    return `<input name="participants" placeholder="User IDs, comma-separated" style="font-size:12px;" />
+      <p class="muted" style="font-size:11px;margin:0;">Invite teammates under Organization → Members, then refresh this page.</p>`;
+  }
+  const checks = members.map((m) => {
+    const label = m.full_name || m.email || m.user_id || m.id;
+    const uid = m.user_id || m.id;
+    return `<label style="font-size:12px;display:block;margin:2px 0;"><input type="checkbox" name="participant_ids" value="${escapeHtml(uid)}" /> ${escapeHtml(label)}</label>`;
+  }).join("");
+  return `<div style="display:grid;gap:6px;">
+    <span class="muted" style="font-size:11px;">Rotation participants</span>
+    <div style="max-height:140px;overflow:auto;border:1px solid var(--border,#e2e8f0);padding:8px;border-radius:6px;">${checks}</div>
+    <input name="participants" placeholder="Or paste user IDs (comma-separated)" style="font-size:12px;" />
+  </div>`;
+}
+
 function renderIncidentEvidencePanels(inc) {
+  if (state.incidentDetailLoading && !state.incidentEvidenceLoaded) {
+    return `<section class="card"><h2>Operational evidence</h2><p class="muted" style="font-size:13px;">Loading log excerpts, metrics snapshot, and CI build context…</p></section>`;
+  }
   const ev = state.incidentEvidence;
+  if (!ev && state.incidentEvidenceLoaded) {
+    return `<section class="card" style="border-left:3px solid #94a3b8;">
+      <h2>Operational evidence</h2>
+      <p class="muted" style="font-size:13px;">Evidence could not be loaded. Connect log and CI integrations, then reopen this incident.</p>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+        <a class="btn btn-secondary btn-sm" href="/integrations" data-nav="/integrations">Connect integrations</a>
+        <a class="btn btn-secondary btn-sm" href="/logs" data-nav="/logs">Search logs</a>
+      </div>
+    </section>`;
+  }
   if (!ev) return "";
   const parts = [];
   const build = ev.build_context;
@@ -473,6 +513,21 @@ function renderIncidentEvidencePanels(inc) {
       </div>
       <p class="muted" style="font-size:11px;margin-top:6px;">Top discovered metrics for your org — correlate with alert timing above.</p>
     </section>`);
+  }
+  if (!parts.length) {
+    const connect = typeof renderOpsConnectBanner === "function"
+      ? renderOpsConnectBanner("Loki, Jenkins, or Prometheus", "LOKI", "Connect log, CI, and metrics backends to populate operational evidence on incidents.")
+      : "";
+    return `<section class="card" style="border-left:3px solid #94a3b8;">
+      <h2>Operational evidence</h2>
+      <p class="muted" style="font-size:13px;">No log lines, metrics snapshot, or Jenkins console excerpt yet for <strong>${escapeHtml(ev.service || "this service")}</strong>.</p>
+      ${connect}
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+        <a class="btn btn-secondary btn-sm" href="/integrations" data-nav="/integrations">Connect Loki or Elasticsearch</a>
+        <a class="btn btn-secondary btn-sm" href="/integrations" data-nav="/integrations">Connect Jenkins</a>
+        <a class="btn btn-secondary btn-sm" href="/metrics" data-nav="/metrics">Metrics explorer</a>
+      </div>
+    </section>`;
   }
   return parts.join("");
 }
@@ -836,7 +891,7 @@ function renderIncidentsOnCall() {
           <h3 style="font-size:13px;margin:0;">Create schedule</h3>
           <input name="name" required placeholder="Primary on-call" style="font-size:12px;" />
           <input name="team" placeholder="Team name (optional)" style="font-size:12px;" />
-          <input name="participants" placeholder="User IDs, comma-separated" style="font-size:12px;" />
+          ${onCallMemberPickerHtml()}
           <select name="rotation_type" style="font-size:12px;">
             <option value="WEEKLY">Weekly rotation</option>
             <option value="DAILY">Daily rotation</option>
@@ -1475,7 +1530,14 @@ function bindIncidentsEvents() {
     ev.preventDefault();
     if (!canWriteResources()) return;
     const fd = new FormData(ev.currentTarget);
-    const participants = (fd.get("participants") || "").split(",").map((s) => s.trim()).filter(Boolean);
+    const fromCheckboxes = fd.getAll("participant_ids");
+    const fromText = (fd.get("participants") || "").split(",").map((s) => s.trim()).filter(Boolean);
+    const participants = [...new Set([...fromCheckboxes, ...fromText])];
+    if (!participants.length) {
+      state.error = "Select at least one org member for the rotation.";
+      render();
+      return;
+    }
     state.error = null;
     try {
       await api("/v1/oncall/schedules", {

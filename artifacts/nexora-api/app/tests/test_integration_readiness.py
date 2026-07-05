@@ -280,6 +280,22 @@ async def test_test_notification_dry_run(client):
 
 
 @pytest.mark.asyncio
+async def test_test_notification_live_without_webhook_is_simulated(client):
+    tokens, _org_id = await _org_user(client, email="int5@e.com", username="intuser5", slug="int-org-5")
+    headers = auth_headers(tokens["access_token"])
+    resp = await client.post(
+        "/v1/integrations/notifications/test",
+        headers=headers,
+        json={"channel": "slack", "dry_run": False},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["simulated"] is True
+    assert body["sent"] is False
+    assert "webhook" in body["message"].lower() or "simulated" in body["message"].lower()
+
+
+@pytest.mark.asyncio
 async def test_live_preflight_persists_evidence(setup_db):
     from app.auth.org_context import OrgContext
     from app.database.session import AsyncSessionLocal
